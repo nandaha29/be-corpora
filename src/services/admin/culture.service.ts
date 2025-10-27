@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma.js';
-import { CreateCultureInput, UpdateCultureInput } from '@/lib/validators.js';
+import { prisma } from '../../lib/prisma.js';
+import { CreateCultureInput, UpdateCultureInput } from '../../lib/validators.js';
 
 export const getAllCultures = async (page: number, limit: number) => {
   return prisma.culture.findMany();

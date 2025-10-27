@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as assetService from '../../services/admin/asset.service.js';
-import { createAssetSchema, updateAssetSchema, CreateAssetInput } from '@/lib/validators.js';
+import { createAssetSchema, updateAssetSchema, CreateAssetInput } from '../../lib/validators.js';
 import { put } from '@vercel/blob';
 import crypto from 'crypto';
 
@@ -42,8 +42,10 @@ export const getAssetById = async (req: Request, res: Response) => {
     const asset = await assetService.getAssetById(id);
     if (!asset) return res.status(404).json({ message: 'Asset not found' });
     res.status(200).json({ success: true, data: asset });
+    return;
   } catch {
     res.status(500).json({ message: 'Failed to fetch asset' });
+    return;
   }
 };
 
@@ -64,6 +66,7 @@ export const createAsset = async (req: Request, res: Response) => {
       }
       const newAsset = await assetService.createAsset(parsed, req.file);
       res.status(201).json({ success: true, data: newAsset });
+      return;
     } else if (['VIDEO', 'MODEL_3D'].includes(parsed.tipe)) {
       if (req.file) {
         return res.status(400).json({ message: 'File not allowed for VIDEO and MODEL_3D types' });
@@ -71,11 +74,13 @@ export const createAsset = async (req: Request, res: Response) => {
       // URL is ensured by schema
       const newAsset = await assetService.createAssetFromUrl(parsed as CreateAssetInput & { url: string });
       res.status(201).json({ success: true, data: newAsset });
+      return;
     } else {
       return res.status(400).json({ message: 'Invalid asset type' });
     }
   } catch (error: any) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -111,8 +116,10 @@ export const updateAsset = async (req: Request, res: Response) => {
 
     const updated = await assetService.updateAsset(id, updateData);
     res.status(200).json({ success: true, data: updated });
+    return;
   } catch (error: any) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -163,6 +170,9 @@ export const bulkUploadAssets = async (req: Request, res: Response) => {
     // Check file sizes
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      if (!file) {
+        return res.status(400).json({ message: `File ${i + 1} is missing` });
+      }
       const asset = assets[i];
       const maxSize = asset.tipe === 'FOTO' ? 500 * 1024 : 10 * 1024 * 1024;
       if (file.size > maxSize) {
@@ -173,8 +183,10 @@ export const bulkUploadAssets = async (req: Request, res: Response) => {
 
     const result = await assetService.bulkUploadAssets(assets, files);
     res.status(201).json({ success: true, data: result });
+    return;
   } catch (error: any) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -195,11 +207,13 @@ export const searchAssets = async (req: Request, res: Response) => {
       message: `Found ${results.length} assets matching "${q}"`,
       data: results,
     });
+    return;
   } catch (error) {
     console.error('Error searching assets:', error);
     res.status(500).json({
       success: false,
       message: error,
     });
+    return;
   }
 };

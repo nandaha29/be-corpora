@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import * as cultureService from '@/services/admin/culture.service.js';
-import { createCultureSchema, updateCultureSchema } from '@/lib/validators.js';
+import * as cultureService from '../../services/admin/culture.service.js';
+import { createCultureSchema, updateCultureSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 
 // ✅ GET all cultures
@@ -31,8 +31,10 @@ export const getAllCulturesPaginated = async (req: Request, res: Response) => {
       message: 'Successfully retrieved all cultures',
       ...result, // akan menampilkan data, total, page, totalPages
     });
+    return;
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to retrieve cultures' });
+    return;
   }
 };
 
@@ -50,8 +52,10 @@ export const getCultureById = async (req: Request, res: Response) => {
       message: 'Successfully retrieved culture',
       data: culture,
     });
+    return;
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to retrieve culture' });
+    return;
   }
 };
 
@@ -65,6 +69,7 @@ export const createCulture = async (req: Request, res: Response) => {
       message: 'Culture created successfully',
       data: newCulture,
     });
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -74,6 +79,7 @@ export const createCulture = async (req: Request, res: Response) => {
       });
     }
     res.status(500).json({ success: false, message: 'Failed to create culture' });
+    return;
   }
 };
 
@@ -89,6 +95,7 @@ export const updateCulture = async (req: Request, res: Response) => {
       message: 'Culture updated successfully',
       data: updatedCulture,
     });
+    return;
   } catch (error) {
     console.error('Error updating culture:', error);
 
@@ -103,6 +110,7 @@ export const updateCulture = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Culture not found' });
     }
     res.status(500).json({ success: false, message: 'Failed to update culture' });
+    return;
   }
 };
 
@@ -115,10 +123,12 @@ export const deleteCulture = async (req: Request, res: Response) => {
       success: true,
       message: 'Culture deleted successfully',
     });
+    return;
   } catch (error) {
     if (error instanceof Error && error.message.includes('Record to delete not found')) {
       return res.status(404).json({ success: false, message: 'Culture not found' });
     }
     res.status(500).json({ success: false, message: 'Failed to delete culture' });
+    return;
   }
 };

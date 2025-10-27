@@ -1,10 +1,10 @@
 
 
-import { prisma } from '@/lib/prisma.js';
+import { prisma } from '../../lib/prisma.js';
 import {
   CreateDomainKodifikasiInput,
   UpdateDomainKodifikasiInput,
-} from '@/lib/validators.js';
+} from '../../lib/validators.js';
 import { Prisma } from '@prisma/client';
 
 export const getAllDomainKodifikasi = async () => {

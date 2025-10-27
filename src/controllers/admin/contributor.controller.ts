@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import * as contributorService from '@/services/admin/contributor.service.js';
-import { createContributorSchema, updateContributorSchema } from '@/lib/validators.js';
+import * as contributorService from '../../services/admin/contributor.service.js';
+import { createContributorSchema, updateContributorSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 
 // GET all contributors
@@ -30,12 +30,14 @@ export const getContributors = async (req: Request, res: Response) => {
       message: 'Contributors retrieved successfully',
       ...result, // akan menampilkan data, total, page, totalPages
     });
+    return;
   } catch (error) {
     console.error('Error retrieving contributors:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve contributors',
     });
+    return;
   }
 };
 
@@ -53,8 +55,10 @@ export const getContributorById = async (req: Request, res: Response) => {
       message: 'Contributor retrieved successfully',
       data: contributor,
     });
+    return;
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to retrieve contributor' });
+    return;
   }
 };
 
@@ -68,6 +72,7 @@ export const createContributor = async (req: Request, res: Response) => {
       message: 'Contributor created successfully',
       data: newContributor,
     });
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -77,6 +82,7 @@ export const createContributor = async (req: Request, res: Response) => {
       });
     }
     res.status(500).json({ success: false, message: 'Failed to create contributor' });
+    return;
   }
 };
 
@@ -91,6 +97,7 @@ export const updateContributor = async (req: Request, res: Response) => {
       message: 'Contributor updated successfully',
       data: updatedContributor,
     });
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -103,6 +110,7 @@ export const updateContributor = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Contributor not found' });
     }
     res.status(500).json({ success: false, message: 'Failed to update contributor' });
+    return;
   }
 };
 
@@ -115,11 +123,13 @@ export const deleteContributor = async (req: Request, res: Response) => {
       success: true,
       message: 'Contributor deleted successfully',
     });
+    return;
   } catch (error) {
     if (error instanceof Error && error.message.includes('Record to delete not found')) {
       return res.status(404).json({ success: false, message: 'Contributor not found' });
     }
     res.status(500).json({ success: false, message: 'Failed to delete contributor' });
+    return;
   }
 };
 
@@ -140,11 +150,13 @@ export const searchContributors = async (req: Request, res: Response) => {
       message: `Found ${results.length} contributors matching "${q}"`,
       data: results,
     });
+    return;
   } catch (error) {
     console.error('Error searching contributors:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to search contributors',
     });
+    return;
   }
 };

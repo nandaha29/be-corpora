@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as cultureController from '@/controllers/admin/culture.controller.js';
+import * as cultureController from '../../controllers/admin/culture.controller.js';
 
 const router = Router();
 

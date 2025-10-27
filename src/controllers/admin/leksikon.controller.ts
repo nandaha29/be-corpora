@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import * as leksikonService from '@/services/admin/leksikon.service.js';
-import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema } from '@/lib/validators.js';
+import * as leksikonService from '../../services/admin/leksikon.service.js';
+import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
 
@@ -89,6 +89,7 @@ export const deleteLeksikon = async (req: Request, res: Response) => {
       success: true,
       message: 'Domain deleted successfully',
     });
+    return;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Leksikon not found' });
@@ -389,18 +390,22 @@ export const getAllLeksikonsPaginated = async (req: Request, res: Response) => {
   try {
     const result = await leksikonService.getAllLeksikonsPaginated(page, limit);
     res.status(200).json(result);
+    return;
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch leksikons", error });
+    return;
   }
 };
 
 export const getLeksikonsByDomain = async (req: Request, res: Response) => {
-  const dk_id = parseInt(req.params.dk_id);
+  const dk_id = parseInt(req.params.dk_id || '0');
   try {
     const data = await leksikonService.getLeksikonsByDomain(dk_id);
     res.status(200).json(data);
+    return;
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch leksikons by domain", error });
+    return;
   }
 };
 
@@ -409,13 +414,15 @@ export const getLeksikonsByStatus = async (req: Request, res: Response) => {
   try {
     const data = await leksikonService.getLeksikonsByStatus(status);
     res.status(200).json(data);
+    return;
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch leksikons by status", error });
+    return;
   }
 };
 
 export const updateLeksikonStatus = async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id || '0');
   const { status } = req.body;
 
   if (!["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)) {
@@ -425,7 +432,9 @@ export const updateLeksikonStatus = async (req: Request, res: Response) => {
   try {
     const updated = await leksikonService.updateLeksikonStatus(id, status);
     res.status(200).json({ message: "Status updated successfully", data: updated });
+    return;
   } catch (error) {
     res.status(500).json({ message: "Failed to update leksikon status", error });
+    return;
   }
 };

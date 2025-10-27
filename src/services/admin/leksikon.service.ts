@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma.js';
-import { CreateLeksikonInput, UpdateLeksikonInput } from '@/lib/validators.js';
+import { prisma } from '../../lib/prisma.js';
+import { CreateLeksikonInput, UpdateLeksikonInput } from '../../lib/validators.js';
 import { Prisma } from '@prisma/client';
 
 export const getAllLeksikons = async () => {

@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/prisma.js";
+import { prisma } from "../../lib/prisma.js";
 import { Prisma } from "@prisma/client";
 
-import { CreateReferensiInput, UpdateReferensiInput } from '@/lib/validators.js';
+import { CreateReferensiInput, UpdateReferensiInput } from '../../lib/validators.js';
 
 export const getAllReferences = async () => {
   return prisma.referensi.findMany();

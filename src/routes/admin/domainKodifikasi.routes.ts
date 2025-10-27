@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as domainController from '@/controllers/admin/domainKodifikasi.controller.js';
+import * as domainController from '../../controllers/admin/domainKodifikasi.controller.js';
 
 const router = Router();
 

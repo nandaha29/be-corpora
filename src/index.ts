@@ -2,12 +2,12 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cultureRoutes from './routes/admin/culture.routes.js'; 
-import contributorRoutes from '@/routes/admin/contributor.routes.js';
-import referensiRoutes from '@/routes/admin/reference.routes.js';
-import assetRoutes from '@/routes/admin/asset.routes.js';
+import contributorRoutes from './routes/admin/contributor.routes.js';
+import referensiRoutes from './routes/admin/reference.routes.js';
+import assetRoutes from './routes/admin/asset.routes.js';
 import subcultureRoutes from './routes/admin/subculture.routes.js';
 import domainKodifikasiRoutes from './routes/admin/domainKodifikasi.routes.js';
-import leksikonRoutes from '@/routes/admin/leksikon.routes.js';
+import leksikonRoutes from './routes/admin/leksikon.routes.js';
 
 // import publicCultureRoutes from "@/routes/public/culturePublic.routes.js";
 // import publicSubcultureRoutes from "@/routes/public/subculturePublic.routes.js";

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import * as referenceService from "@/services/admin/reference.service.js";
-import { createReferensiSchema, updateReferensiSchema } from "@/lib/validators.js";
+import * as referenceService from "../../services/admin/reference.service.js";
+import { createReferensiSchema, updateReferensiSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
 
 // Get All
@@ -30,8 +30,10 @@ export const getReferenceById = async (req: Request, res: Response) => {
       message: "Success",
       data: reference,
     });
+    return;
   } catch (error) {
     res.status(500).json({ message: "Failed to retrieve reference" });
+    return;
   }
 };
 
@@ -45,6 +47,7 @@ export const createReference = async (req: Request, res: Response) => {
       message: "Reference created successfully",
       data: newReference,
     });
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -54,6 +57,7 @@ export const createReference = async (req: Request, res: Response) => {
     }
 
     res.status(500).json({ message: "Failed to create reference" });
+    return;
   }
 };
 
@@ -68,6 +72,7 @@ export const updateReference = async (req: Request, res: Response) => {
       message: "Reference updated successfully",
       data: updatedReference,
     });
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -81,6 +86,7 @@ export const updateReference = async (req: Request, res: Response) => {
     }
 
     res.status(500).json({ message: "Failed to update reference" });
+    return;
   }
 };
 
@@ -91,12 +97,14 @@ export const deleteReference = async (req: Request, res: Response) => {
     await referenceService.deleteReference(Number(id));
 
     res.status(200).json({ message: "Reference deleted successfully" });
+    return;
   } catch (error) {
     if (error instanceof Error && error.message.includes("Record to delete not found")) {
       return res.status(404).json({ message: "Reference not found" });
     }
 
     res.status(500).json({ message: "Failed to delete reference" });
+    return;
   }
 };
 
@@ -112,9 +120,11 @@ export const getAllReferensiPaginated = async (req: Request, res: Response) => {
       message: 'Successfully retrieved all referensi',
       ...result, // akan menampilkan data, total, page, totalPages
     });
+    return;
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to retrieve referensi' });
+    return;
   }
 };
 
@@ -139,8 +149,10 @@ export const searchReferensi = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'No references found matching the keyword' });
     }
     res.status(200).json({ success: true, data: results });
+    return;
 
   } catch (error) {
     res.status(500).json({ message: error });
+    return;
   }
 };

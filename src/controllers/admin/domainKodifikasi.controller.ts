@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import * as domainService from '@/services/admin/domainKodifikasi.service.js';
+import * as domainService from '../../services/admin/domainKodifikasi.service.js';
 import {
   createDomainKodifikasiSchema,
   updateDomainKodifikasiSchema,
-} from '@/lib/validators.js';
+} from '../../lib/validators.js';
 import { ZodError } from 'zod';
 
 // GET /api/domains
@@ -11,8 +11,10 @@ export const getDomains = async (req: Request, res: Response) => {
   try {
     const items = await domainService.getAllDomainKodifikasi();
     res.status(200).json(items);
+    return;
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve domains' });
+    return;
   }
 };
 
@@ -23,8 +25,10 @@ export const getDomainById = async (req: Request, res: Response) => {
     const item = await domainService.getDomainKodifikasiById(Number(id));
     if (!item) return res.status(404).json({ message: 'Domain not found' });
     res.status(200).json(item);
+    return;
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve domain' });
+    return;
   }
 };
 
@@ -34,6 +38,7 @@ export const createDomain = async (req: Request, res: Response) => {
     const validated = createDomainKodifikasiSchema.parse(req.body);
     const created = await domainService.createDomainKodifikasi(validated);
     res.status(201).json(created);
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({ message: 'Validation failed', errors: error });
@@ -42,6 +47,7 @@ export const createDomain = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Referenced subculture does not exist' });
     }
     res.status(500).json({ message: 'Failed to create domain' });
+    return;
   }
 };
 
@@ -52,6 +58,7 @@ export const updateDomain = async (req: Request, res: Response) => {
     const validated = updateDomainKodifikasiSchema.parse(req.body);
     const updated = await domainService.updateDomainKodifikasi(Number(id), validated);
     res.status(200).json(updated);
+    return;
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({ message: 'Validation failed', errors: error });
@@ -63,6 +70,7 @@ export const updateDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Domain not found' });
     }
     res.status(500).json({ message: 'Failed to update domain' });
+    return;
   }
 };
 
@@ -75,10 +83,12 @@ export const deleteDomain = async (req: Request, res: Response) => {
       success: true,
       message: 'Domain deleted successfully',
     });
+    return;
   } catch (error) {
     if (error instanceof Error && error.message.includes('Record to delete not found')) {
       return res.status(404).json({ message: 'Domain not found' });
     }
     res.status(500).json({ message: 'Failed to delete domain' });
+    return;
   }
 };

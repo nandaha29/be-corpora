@@ -1,7 +1,7 @@
 import { PrismaClient, StatusFile, AssetType } from '@prisma/client';
 import { put } from '@vercel/blob';
 import crypto from 'crypto';
-import { CreateAssetInput, UpdateAssetInput } from '@/lib/validators.js';
+import { CreateAssetInput, UpdateAssetInput } from '../../lib/validators.js';
 
 const prisma = new PrismaClient();
 

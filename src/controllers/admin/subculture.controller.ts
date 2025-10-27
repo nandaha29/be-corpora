@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as subcultureService from "../../services/admin/subculture.service.js";
-import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema } from "@/lib/validators.js";
+import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { de } from "zod/locales";
@@ -18,10 +18,12 @@ export const getSubcultureById = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const subculture = await subcultureService.getSubcultureById(id);
-    if (!subculture) return res.status(404).json({ error: "Subculture not found" });
-    res.json(subculture);
+    if (!subculture) {
+      return res.status(404).json({ error: "Subculture not found" });
+    }
+    return res.json(subculture);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch subculture" });
+    return res.status(500).json({ error: "Failed to fetch subculture" });
   }
 };
 
@@ -33,9 +35,9 @@ export const createSubculture = async (req: Request, res: Response) => {
     }
 
     const subculture = await subcultureService.createSubculture(parsed.data);
-    res.status(201).json(subculture);
+    return res.status(201).json(subculture);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create subculture" });
+    return res.status(500).json({ error: "Failed to create subculture" });
   }
 };
 
@@ -48,9 +50,9 @@ export const updateSubculture = async (req: Request, res: Response) => {
     }
 
     const subculture = await subcultureService.updateSubculture(id, parsed.data);
-    res.json(subculture);
+    return res.json(subculture);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update subculture" });
+    return res.status(500).json({ error: "Failed to update subculture" });
   }
 };
 
@@ -58,9 +60,9 @@ export const deleteSubculture = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await subcultureService.deleteSubculture(id);
-    res.json({ message: "Subculture deleted successfully" });
+    return res.json({ message: "Subculture deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete subculture" });
+    return res.status(500).json({ error: "Failed to delete subculture" });
   }
 };
 
@@ -158,12 +160,12 @@ export const getSubculturesByCulture = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "No subcultures found for this culture" });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
       data: subcultures,
     });
   } catch (error) {
     console.error("Error fetching subcultures by culture:", error);
-    res.status(500).json({ error: "Failed to fetch subcultures by culture" });
+    return res.status(500).json({ error: "Failed to fetch subcultures by culture" });
   }
 };

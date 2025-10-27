@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma.js';
-import { CreateContributorInput, UpdateContributorInput } from '@/lib/validators.js';
+import { prisma } from '../../lib/prisma.js';
+import { CreateContributorInput, UpdateContributorInput } from '../../lib/validators.js';
 
 // Get all contributors
 export const getAllContributors = async () => {

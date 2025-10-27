@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import * as assetController from '@/controllers/admin/asset.controller.js';
+import * as assetController from '../../controllers/admin/asset.controller.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() }); // Store files in memory for upload to blob

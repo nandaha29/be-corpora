@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { CreateSubcultureInput, UpdateSubcultureInput } from "@/lib/validators.js";
+import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
 const prisma = new PrismaClient();
 

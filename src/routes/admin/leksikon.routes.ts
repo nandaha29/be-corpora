@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as leksikonController from '@/controllers/admin/leksikon.controller.js';
+import * as leksikonController from '../../controllers/admin/leksikon.controller.js';
 
 const router = Router();
 

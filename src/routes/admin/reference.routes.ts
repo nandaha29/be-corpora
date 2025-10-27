@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as referenceController from "@/controllers/admin/reference.controller.js";
+import * as referenceController from "../../controllers/admin/reference.controller.js";
 
 const router = Router();
 
