@@ -10,5 +10,13 @@ router.post('/', contributorController.createContributor);
 router.put('/:id', contributorController.updateContributor);
 router.delete('/:id', contributorController.deleteContributor);
 
+router
+  .route('/:id/assets')
+  .get(contributorController.getContributorAssets)
+  .post(contributorController.addAssetToContributor);
+
+router
+  .route('/:id/assets/:assetId')
+  .delete(contributorController.removeAssetFromContributor);
 
 export default router;

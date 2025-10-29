@@ -62,4 +62,27 @@ export const getAllCulturesPaginated = async (page = 1, limit = 10) => {
   };
 };
 
-   
+  export async function getCultureWithAssets(cultureId: number) {
+  return await prisma.culture.findUnique({
+    where: { cultureId },
+    select: {
+      cultureId: true,
+      namaBudaya: true,
+      subcultures: {
+        select: {
+          subcultureAssets: {
+            select: {
+              asset: {
+                select: {
+                  assetId: true,
+                  url: true,
+                  namaFile: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}

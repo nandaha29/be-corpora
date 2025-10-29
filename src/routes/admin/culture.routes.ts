@@ -16,4 +16,6 @@ router
   .put(cultureController.updateCulture)
   .delete(cultureController.deleteCulture);
 
+  router.get("/cultures/:cultureId", cultureController.getCultureWithAssets);
+
 export default router;

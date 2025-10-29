@@ -169,9 +169,15 @@ export const createLeksikonReferensiSchema = z.object({
   referensiId: z.number().min(1, { message: "Referensi ID is required" }),
   citationNote: z.string().optional(),
 });
+export const createContributorAssetSchema = z.object({
+  contributorId: z.number().min(1, { message: "Contributor ID is required" }),
+  assetId: z.number().min(1, { message: "Asset ID is required" }),
+  assetNote: z.string().optional(),
+});
 
 export type CreateLeksikonAssetInput = z.infer<typeof createLeksikonAssetSchema>;
 export type CreateSubcultureAssetInput = z.infer<typeof createSubcultureAssetSchema>;
 export type CreateLeksikonReferensiInput = z.infer<typeof createLeksikonReferensiSchema>;
+export type CreateContributorAssetInput = z.infer<typeof createContributorAssetSchema>;
 
 

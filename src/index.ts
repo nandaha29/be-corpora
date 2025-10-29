@@ -14,6 +14,7 @@ import leksikonRoutes from './routes/admin/leksikon.routes.js';
 // import publicAboutRoutes from "@/routes/public/aboutPublic.routes.js";
 // import publicContactRoutes from "@/routes/public/contactPublic.routes.js";
 // import publicPartnerRoutes from "@/routes/public/partnerPublic.routes.js";
+import landingPageRoute from "@/routes/public/landingPage.routes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -42,12 +43,7 @@ app.use('/api/v1/leksikons', leksikonRoutes);
 app.use("/api/v1/cultures", subcultureRoutes);
 
 //public
-// app.use("/api/v1/public/cultures", publicCultureRoutes);
-// app.use("/api/v1/public/subcultures", publicSubcultureRoutes);
-// app.use("/api/v1/public/about", publicAboutRoutes);
-// app.use("/api/v1/public/contact", publicContactRoutes);
-// app.use("/api/v1/public/partners", publicPartnerRoutes);
-
+app.use("/api/v1/public/landing", landingPageRoute);
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

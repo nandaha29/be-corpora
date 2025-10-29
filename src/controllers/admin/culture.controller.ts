@@ -132,3 +132,27 @@ export const deleteCulture = async (req: Request, res: Response) => {
     return;
   }
 };
+
+// controllers/culture.controller.ts
+export async function getCultureWithAssets(req: Request, res: Response) {
+  const cultureId = Number(req.params.cultureId);
+  try {
+    const data = await cultureService.getCultureWithAssets(cultureId);
+    if (!data) return res.status(404).json({ message: "Culture not found" });
+
+    const assetsSubculture = data.subcultures
+      .flatMap((sub) => sub.subcultureAssets.map((sa) => sa.asset))
+      .slice(0, 4); // ambil maksimal 4 foto
+
+    res.json({
+      cultureId: data.cultureId,
+      namaBudaya: data.namaBudaya,
+      assetsSubculture,
+    });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
+}

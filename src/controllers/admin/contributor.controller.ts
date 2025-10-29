@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import * as contributorService from '../../services/admin/contributor.service.js';
-import { createContributorSchema, updateContributorSchema } from '../../lib/validators.js';
+import { createContributorSchema, updateContributorSchema, createContributorAssetSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
+import { Prisma } from '@prisma/client';
 
 // GET all contributors
 // export const getContributors = async (req: Request, res: Response) => {
@@ -158,5 +159,70 @@ export const searchContributors = async (req: Request, res: Response) => {
       message: 'Failed to search contributors',
     });
     return;
+  }
+};
+
+// GET contributor assets
+export const getContributorAssets = async (req: Request, res: Response) => {
+  try {
+    const contributorId = Number(req.params.id);
+    const assets = await contributorService.getContributorAssets(contributorId);
+    res.status(200).json({
+      success: true,
+      message: 'Contributor assets retrieved successfully',
+      data: assets,
+    });
+    return;
+  } catch (error) {
+    console.error('Error retrieving contributor assets:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve contributor assets',
+    });
+    return;
+  }
+};
+
+// POST add asset to contributor
+export const addAssetToContributor = async (req: Request, res: Response) => {
+  try {
+    const contributorId = Number(req.params.id);
+    if (Number.isNaN(contributorId)) return res.status(400).json({ message: 'Invalid contributor ID' });
+
+    const { assetId, assetNote } = req.body;
+    const validated = createContributorAssetSchema.parse({ contributorId, assetId, assetNote });
+
+    const result = await contributorService.addAssetToContributor(contributorId, assetId, assetNote);
+    return res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Validation failed', errors: error });
+    }
+    if ((error as any)?.code === 'CONTRIBUTOR_NOT_FOUND') {
+      return res.status(404).json({ message: 'Contributor not found' });
+    }
+    if ((error as any)?.code === 'ASSET_NOT_FOUND') {
+      return res.status(404).json({ message: 'Asset not found' });
+    }
+    console.error('Failed to add asset to contributor:', error);
+    return res.status(500).json({ message: 'Failed to add asset', details: error });
+  }
+};
+
+// DELETE remove asset from contributor
+export const removeAssetFromContributor = async (req: Request, res: Response) => {
+  try {
+    const contributorId = Number(req.params.id);
+    const assetId = Number(req.params.assetId);
+    if (Number.isNaN(contributorId) || Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid IDs' });
+
+    await contributorService.removeAssetFromContributor(contributorId, assetId);
+    return res.status(200).json({ message: 'Asset removed from contributor' });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return res.status(404).json({ message: 'Association not found' });
+    }
+    console.error('Failed to remove asset from contributor:', error);
+    return res.status(500).json({ message: 'Failed to remove asset' });
   }
 };

@@ -92,6 +92,7 @@ model Contributor {
   contactInfo     String     @map("contact_info")
   registeredAt    DateTime   @default(now()) @map("registered_at")
   leksikons       Leksikon[]
+  contributorAssets ContributorAsset[]
 
   @@map("CONTRIBUTOR")
 }
@@ -110,6 +111,7 @@ model Asset {
   updatedAt        DateTime          @updatedAt @map("updated_at")
   leksikonAssets   LeksikonAsset[]
   subcultureAssets SubcultureAsset[]
+  contributorAssets ContributorAsset[]
 
   @@map("ASSET")
 }
@@ -152,6 +154,18 @@ model SubcultureAsset {
 
   @@id([subcultureId, assetId])
   @@map("SUBCULTURE_ASSETS")
+}
+
+model ContributorAsset {
+  contributorId Int        @map("contributor_id")
+  assetId       Int        @map("asset_id")
+  assetNote     String     @map("asset_note")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  asset         Asset      @relation(fields: [assetId], references: [assetId])
+  contributor   Contributor @relation(fields: [contributorId], references: [contributorId])
+
+  @@id([contributorId, assetId])
+  @@map("CONTRIBUTOR_ASSETS")
 }
 
 model LeksikonReferensi {
@@ -200,3 +214,4 @@ enum StatusKonservasi {
   CRITICAL
   ARCHIVED
 }
+
