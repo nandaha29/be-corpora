@@ -1,9 +1,12 @@
 import { prisma } from '../../lib/prisma.js';
 
 export const getLandingPageData = async () => {
-  // HEROSECTION: Get first published culture and its photo assets
-  const heroCulture = await prisma.culture.findFirst({
-    where: { status: 'PUBLISHED' },
+  // HEROSECTION: Get a random published culture from Jawa Timur province and its photo assets
+  const cultures = await prisma.culture.findMany({
+    where: {
+      status: 'PUBLISHED',
+      provinsi: 'Jawa Timur' // Only get cultures from Jawa Timur province
+    },
     include: {
       subcultures: {
         where: { status: 'PUBLISHED' },
@@ -21,16 +24,41 @@ export const getLandingPageData = async () => {
     },
   });
 
+  const randomIndex = Math.floor(Math.random() * cultures.length);
+  const heroCulture = cultures[randomIndex];
+
   const heroSection = {
-    cultureName: heroCulture?.namaBudaya || 'Default Culture',
-    assets: heroCulture?.subcultures.flatMap(sub => sub.subcultureAssets.map(sa => sa.asset.url)) || [],
+    cultureName: heroCulture?.provinsi || 'Default Culture',
+    assets: heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => sub.subcultureAssets.map(sa => sa.asset.url)) || [],
   };
 
-  // SUBCULTURE SECTION: Get 4 published subcultures
+  // SUBCULTURE SECTION: Get 4 published subcultures from the same province as hero culture
   const subcultures = await prisma.subculture.findMany({
-    where: { status: 'PUBLISHED' },
+    where: {
+      status: 'PUBLISHED',
+      cultureId: heroCulture?.cultureId // Only get subcultures from the same province as hero culture
+    },
     take: 4,
+    include: {
+      culture: true,
+      subcultureAssets: {
+        include: { asset: true },
+        where: {
+          asset: { tipe: 'FOTO' },
+        },
+      },
+    },
   });
+
+  const subcultureSection = subcultures.map((sub: { subcultureId: any; slug: any; namaSubculture: any; penjelasan: any; culture: { namaBudaya: any; provinsi: any; }; subcultureAssets: string | any[]; }) => ({
+    id: sub.subcultureId,
+    slug: sub.slug,
+    name: sub.namaSubculture,
+    description: sub.penjelasan,
+    culture: sub.culture.namaBudaya,
+    province: sub.culture.provinsi,
+    heroImage: sub.subcultureAssets && sub.subcultureAssets.length > 0 ? sub.subcultureAssets[0]!.asset.url : null,
+  }));
 
   // COLLABORATIONASSET: Get photo assets with notes
   const collaborationAssets = await prisma.contributorAsset.findMany({
@@ -70,7 +98,7 @@ export const getLandingPageData = async () => {
 
   return {
     heroSection,
-    subcultures,
+    subcultureSection,
     collaborationAssets,
     visiMisiSection,
     teamScientis,

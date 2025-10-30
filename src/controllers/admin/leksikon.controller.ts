@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
 import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 // GET /api/leksikons
 // export const getLeksikons = async (req: Request, res: Response) => {
@@ -70,7 +70,7 @@ export const updateLeksikon = async (req: Request, res: Response) => {
     if ((error as any)?.code === 'CONTRIBUTOR_NOT_FOUND') {
       return res.status(400).json({ message: 'Referenced contributor does not exist' });
     }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Leksikon not found' });
     }
     console.error('Failed to update leksikon:', error);
@@ -91,7 +91,7 @@ export const deleteLeksikon = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Leksikon not found' });
     }
     console.error('Failed to delete leksikon:', error);
@@ -202,7 +202,7 @@ export const removeAssetFromLeksikon = async (req: Request, res: Response) => {
     await leksikonService.removeAssetFromLeksikon(leksikonId, assetId);
     return res.status(200).json({ message: 'Asset removed from leksikon' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from leksikon:', error);
@@ -308,7 +308,7 @@ export const removeReferenceFromLeksikon = async (req: Request, res: Response) =
     await leksikonService.removeReferenceFromLeksikon(leksikonId, referensiId);
     return res.status(200).json({ message: 'Reference removed from leksikon' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove reference from leksikon:', error);

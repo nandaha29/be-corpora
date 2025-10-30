@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { prisma } from '../../lib/prisma.js';
 import { CreateContributorInput, UpdateContributorInput, CreateContributorAssetInput } from '../../lib/validators.js';
 
@@ -125,7 +126,7 @@ export const removeAssetFromContributor = async (contributorId: number, assetId:
       where: { contributorId_assetId: { contributorId, assetId } },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       const err = new Error('Association not found');
       (err as any).code = 'ASSOCIATION_NOT_FOUND';
       throw err;

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as contributorService from '../../services/admin/contributor.service.js';
 import { createContributorSchema, updateContributorSchema, createContributorAssetSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 // GET all contributors
 // export const getContributors = async (req: Request, res: Response) => {
@@ -219,7 +219,7 @@ export const removeAssetFromContributor = async (req: Request, res: Response) =>
     await contributorService.removeAssetFromContributor(contributorId, assetId);
     return res.status(200).json({ message: 'Asset removed from contributor' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from contributor:', error);

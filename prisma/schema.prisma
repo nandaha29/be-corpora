@@ -29,6 +29,7 @@ model Culture {
 model Subculture {
   subcultureId      Int                @id @default(autoincrement()) @map("subculture_id")
   namaSubculture    String             @map("nama_subkultur")
+  slug              String             @unique @map("slug")
   penjelasan        String
   cultureId         Int                @map("culture_id")
   status            StatusPublish      @default(DRAFT) @map("status")

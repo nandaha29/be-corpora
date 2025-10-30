@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateLeksikonInput, UpdateLeksikonInput } from '../../lib/validators.js';
 import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export const getAllLeksikons = async () => {
   return prisma.leksikon.findMany({
@@ -73,7 +74,7 @@ export const createLeksikon = async (data: CreateLeksikonInput) => {
     });
     return created;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof PrismaClientKnownRequestError) {
       // handle known Prisma errors if you add unique constraints later
     }
     throw error;
@@ -131,7 +132,7 @@ export const updateLeksikon = async (id: number, data: UpdateLeksikonInput) => {
     });
     return updated;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof PrismaClientKnownRequestError) {
       // P2025: record to update not found
       if (error.code === 'P2025') {
         throw error; // bubble to controller to map to 404

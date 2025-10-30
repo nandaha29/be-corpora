@@ -1,7 +1,18 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
 const prisma = new PrismaClient();
+
+// Helper function to generate slug
+const generateSlug = (name: string): string => {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with dash
+    .replace(/(^-|-$)/g, ""); // Remove leading/trailing dashes
+};
 
 export const getAllSubcultures = async () => {
   return prisma.subculture.findMany({
@@ -28,14 +39,24 @@ export const getSubcultureById = async (id: number) => {
   });
 };
 
-export const createSubculture = async (data: CreateSubcultureInput) => {
-  return prisma.subculture.create({ data });
+export const createSubculture = async (data: any) => {
+  const slug = generateSlug(data.namaSubculture);
+  return prisma.subculture.create({ 
+    data: {
+      ...data,
+      slug,
+    }
+  });
 };
 
-export const updateSubculture = async (id: number, data: UpdateSubcultureInput) => {
+export const updateSubculture = async (id: number, data: any) => {
+  let updateData = data;
+  if (data.namaSubculture) {
+    updateData.slug = generateSlug(data.namaSubculture);
+  }
   return prisma.subculture.update({
     where: { subcultureId: id },
-    data,
+    data: updateData,
   });
 };
 
@@ -80,7 +101,7 @@ export const removeAssetFromSubculture = async (subcultureId: number, assetId: n
       where: { subcultureId_assetId: { subcultureId, assetId } },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       const err = new Error('Association not found');
       (err as any).code = 'ASSOCIATION_NOT_FOUND';
       throw err;

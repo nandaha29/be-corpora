@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import * as subcultureService from "../../services/admin/subculture.service.js";
 import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
-import { Prisma } from "@prisma/client";
-import { de } from "zod/locales";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 // export const getAllSubcultures = async (req: Request, res: Response) => {
 //   try {
@@ -116,7 +115,7 @@ export const removeAssetFromSubculture = async (req: Request, res: Response) => 
     await subcultureService.removeAssetFromSubculture(subcultureId, assetId);
     return res.status(200).json({ message: 'Asset removed from subculture' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from subculture:', error);

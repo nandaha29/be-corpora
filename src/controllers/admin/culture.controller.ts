@@ -141,7 +141,7 @@ export async function getCultureWithAssets(req: Request, res: Response) {
     if (!data) return res.status(404).json({ message: "Culture not found" });
 
     const assetsSubculture = data.subcultures
-      .flatMap((sub) => sub.subcultureAssets.map((sa) => sa.asset))
+      .flatMap((sub: { subcultureAssets: any[]; }) => sub.subcultureAssets.map((sa) => sa.asset))
       .slice(0, 4); // ambil maksimal 4 foto
 
     res.json({
