@@ -14,8 +14,8 @@ import leksikonRoutes from './routes/admin/leksikon.routes.js';
 // import publicAboutRoutes from "@/routes/public/aboutPublic.routes.js";
 // import publicContactRoutes from "@/routes/public/contactPublic.routes.js";
 // import publicPartnerRoutes from "@/routes/public/partnerPublic.routes.js";
-import landingPageRoute from "@/routes/public/landingPage.routes.js";
-import subculturePublicRoutes from "@/routes/public/subculture.routes.js";
+import landingPageRoute from "./routes/public/landingPage.routes.js";
+import subculturePublicRoutes from "./routes/public/subculture.routes.js";
 
 // Load environment variables from .env file
 dotenv.config();

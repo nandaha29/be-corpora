@@ -18,7 +18,7 @@ async function populateSlugs() {
 
     // Get all subcultures without slug
     const subcultures = await prisma.subculture.findMany({
-      where: { slug: null },
+      where: { slug: "" },
     });
 
     console.log(`Found ${subcultures.length} subcultures without slug`);
