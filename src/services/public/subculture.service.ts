@@ -12,6 +12,43 @@ const generateSlug = (name: string): string => {
     .replace(/(^-|-$)/g, ""); // Remove leading/trailing dashes
 };
 
+export const getSubculturesGallery = async (searchQuery: string = '') => {
+  const subcultures = await prisma.subculture.findMany({
+    where: {
+      status: 'PUBLISHED',
+      ...(searchQuery && {
+        namaSubculture: {
+          contains: searchQuery,
+          mode: 'insensitive'
+        }
+      })
+    },
+    include: {
+      culture: true,
+      subcultureAssets: {
+        include: { asset: true },
+        where: { asset: { tipe: 'FOTO' } },
+      },
+    },
+    orderBy: {
+      namaSubculture: 'asc'
+    }
+  });
+
+  return subcultures.map(subculture => ({
+    id: subculture.slug || (subculture.subcultureId ? subculture.subcultureId.toString() : `subculture-${Math.random()}`),
+    name: subculture.namaSubculture || 'Unnamed Subculture',
+    description: subculture.penjelasan || 'No description available',
+    image: subculture.subcultureAssets.length > 0
+      ? subculture.subcultureAssets[0]!.asset.url
+      : null,
+    culture: {
+      name: subculture.culture?.namaBudaya || 'Unknown Culture',
+      province: subculture.culture?.provinsi || 'Unknown Province',
+    }
+  }));
+};
+
 export const getSubcultureDetail = async (identifier: string) => {
   // Try to find by slug first, then by ID if not found
   let subculture = await prisma.subculture.findUnique({
@@ -76,8 +113,8 @@ export const getSubcultureDetail = async (identifier: string) => {
 
   // Transform data to match frontend expectations
   const profile = {
-    displayName: subculture.namaSubculture,
-    history: subculture.penjelasan,
+    displayName: subculture.namaSubculture || 'Unnamed Subculture',
+    history: subculture.penjelasan || 'No description available',
     highlights: [], // TODO: add if needed
   };
 
@@ -88,43 +125,43 @@ export const getSubcultureDetail = async (identifier: string) => {
   const model3dArray = subculture.subcultureAssets
     .filter((sa: { asset: { tipe: string; }; }) => sa.asset.tipe === 'MODEL_3D')
     .map((sa: { asset: { url: string; namaFile: any; penjelasan: any; }; }) => ({
-      sketchfabId: sa.asset.url.split('/').pop() || '', // Assuming URL contains sketchfab ID
-      title: sa.asset.namaFile,
+      sketchfabId: sa.asset.url?.split('/').pop() || '',
+      title: sa.asset.namaFile || 'Untitled Model',
       description: sa.asset.penjelasan || '',
-      artifactType: 'Cultural Artifact', // TODO: add field if needed
-      tags: [], // TODO: add if needed
+      artifactType: 'Cultural Artifact',
+      tags: [],
     }));
 
   const lexicon = subculture.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) =>
     dk.leksikons.map(l => ({
-      term: l.kataLeksikon,
-      ipa: l.ipa,
-      transliteration: l.transliterasi,
-      etymology: l.maknaEtimologi,
-      culturalMeaning: l.maknaKultural,
-      commonMeaning: l.commonMeaning,
-      translation: l.translation,
-      variants: l.varian,
-      translationVariants: l.translationVarians,
-      otherDescription: l.deskripsiLain,
-      domain: dk.namaDomain,
-      contributor: l.contributor.namaContributor,
+      term: l.kataLeksikon || 'Unknown Term',
+      ipa: l.ipa || '',
+      transliteration: l.transliterasi || '',
+      etymology: l.maknaEtimologi || '',
+      culturalMeaning: l.maknaKultural || '',
+      commonMeaning: l.commonMeaning || '',
+      translation: l.translation || '',
+      variants: l.varian || '',
+      translationVariants: l.translationVarians || '',
+      otherDescription: l.deskripsiLain || '',
+      domain: dk.namaDomain || 'Unknown Domain',
+      contributor: l.contributor?.namaContributor || 'Unknown Contributor',
     }))
   );
 
   const heroImage = galleryImages.length > 0 ? galleryImages[0]!.url : null;
 
   return {
-    subcultureId: subculture.subcultureId,
+    subcultureId: subculture.subcultureId || 0,
     profile,
     galleryImages,
     model3dArray,
     lexicon,
     heroImage,
     culture: {
-      name: subculture.culture.namaBudaya,
-      province: subculture.culture.provinsi,
-      region: subculture.culture.kotaDaerah,
+      name: subculture.culture?.namaBudaya || 'Unknown Culture',
+      province: subculture.culture?.provinsi || 'Unknown Province',
+      region: subculture.culture?.kotaDaerah || 'Unknown Region',
     },
   };
 };
@@ -162,18 +199,18 @@ export const searchLexicon = async (identifier: string, query: string) => {
 
   return subcultureData.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) =>
     dk.leksikons.map(l => ({
-      term: l.kataLeksikon,
-      ipa: l.ipa,
-      transliteration: l.transliterasi,
-      etymology: l.maknaEtimologi,
-      culturalMeaning: l.maknaKultural,
-      commonMeaning: l.commonMeaning,
-      translation: l.translation,
-      variants: l.varian,
-      translationVariants: l.translationVarians,
-      otherDescription: l.deskripsiLain,
-      domain: dk.namaDomain,
-      contributor: l.contributor.namaContributor,
+      term: l.kataLeksikon || 'Unknown Term',
+      ipa: l.ipa || '',
+      transliteration: l.transliterasi || '',
+      etymology: l.maknaEtimologi || '',
+      culturalMeaning: l.maknaKultural || '',
+      commonMeaning: l.commonMeaning || '',
+      translation: l.translation || '',
+      variants: l.varian || '',
+      translationVariants: l.translationVarians || '',
+      otherDescription: l.deskripsiLain || '',
+      domain: dk.namaDomain || 'Unknown Domain',
+      contributor: l.contributor?.namaContributor || 'Unknown Contributor',
     }))
   );
 };

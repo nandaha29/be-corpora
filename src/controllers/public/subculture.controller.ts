@@ -1,6 +1,27 @@
 import { Request, Response } from 'express';
 import * as subcultureService from '../../services/public/subculture.service.js';
 
+// GET /api/public/subcultures (gallery)
+export const getSubculturesGallery = async (req: Request, res: Response) => {
+  try {
+    const searchQuery = req.query.q as string || '';
+
+    const data = await subcultureService.getSubculturesGallery(searchQuery);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Subcultures gallery retrieved successfully',
+      data,
+    });
+  } catch (error) {
+    console.error('Error retrieving subcultures gallery:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve subcultures gallery',
+    });
+  }
+};
+
 // GET /api/public/subcultures/:identifier (slug or ID)
 export const getSubcultureDetail = async (req: Request, res: Response) => {
   try {
