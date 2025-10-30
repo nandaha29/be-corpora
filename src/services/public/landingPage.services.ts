@@ -5,7 +5,6 @@ export const getLandingPageData = async () => {
   const cultures = await prisma.culture.findMany({
     where: {
       status: 'PUBLISHED',
-      provinsi: 'Jawa Timur' // Only get cultures from Jawa Timur province
     },
     include: {
       subcultures: {
