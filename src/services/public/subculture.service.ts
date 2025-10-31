@@ -49,7 +49,7 @@ export const getSubculturesGallery = async (searchQuery: string = '') => {
   }));
 };
 
-export const getSubcultureDetail = async (identifier: string) => {
+export const getSubcultureDetail = async (identifier: string, searchQuery?: string) => {
   // Try to find by slug first, then by ID if not found
   let subculture = await prisma.subculture.findUnique({
     where: { slug: identifier, status: 'PUBLISHED' },
@@ -132,25 +132,51 @@ export const getSubcultureDetail = async (identifier: string) => {
       tags: [],
     }));
 
-  const lexicon = subculture.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) =>
-    dk.leksikons.map(l => ({
+  const lexicon = subculture.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) => {
+    let filteredLeksikons = dk.leksikons;
+
+    // Filter lexicon if search query is provided
+    if (searchQuery && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredLeksikons = dk.leksikons.filter(l =>
+        (l.kataLeksikon && l.kataLeksikon.toLowerCase().includes(query)) ||
+        (l.maknaKultural && l.maknaKultural.toLowerCase().includes(query)) ||
+        (l.commonMeaning && l.commonMeaning.toLowerCase().includes(query)) ||
+        (l.translation && l.translation.toLowerCase().includes(query)) ||
+        (l.transliterasi && l.transliterasi.toLowerCase().includes(query))
+      );
+    }
+
+    return filteredLeksikons.map(l => ({
       term: l.kataLeksikon || 'Unknown Term',
-      ipa: l.ipa || '',
-      transliteration: l.transliterasi || '',
-      etymology: l.maknaEtimologi || '',
-      culturalMeaning: l.maknaKultural || '',
-      commonMeaning: l.commonMeaning || '',
-      translation: l.translation || '',
-      variants: l.varian || '',
-      translationVariants: l.translationVarians || '',
-      otherDescription: l.deskripsiLain || '',
-      domain: dk.namaDomain || 'Unknown Domain',
-      contributor: l.contributor?.namaContributor || 'Unknown Contributor',
-    }))
-  );
+      definition: l.maknaKultural || l.commonMeaning || l.translation || 'No definition available',
+      category: dk.namaDomain || 'Unknown Domain',
+      region: subculture.namaSubculture || 'Unknown Region',
+      slug: generateSlug(l.kataLeksikon || 'unknown-term'),
+    }));
+  });
 
   const heroImage = galleryImages.length > 0 ? galleryImages[0]!.url : null;
 
+  // If search query is provided, return search results format
+  if (searchQuery && searchQuery.trim()) {
+    return {
+      subcultureId: subculture.subcultureId || 0,
+      profile,
+      galleryImages,
+      model3dArray,
+      lexicon: [], // Don't return full lexicon when searching
+      heroImage,
+      culture: {
+        name: subculture.culture?.namaBudaya || 'Unknown Culture',
+        province: subculture.culture?.provinsi || 'Unknown Province',
+        region: subculture.culture?.kotaDaerah || 'Unknown Region',
+      },
+      searchResults: lexicon, // Return filtered results as searchResults
+    };
+  }
+
+  // Return full data when no search query
   return {
     subcultureId: subculture.subcultureId || 0,
     profile,
@@ -200,17 +226,10 @@ export const searchLexicon = async (identifier: string, query: string) => {
   return subcultureData.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) =>
     dk.leksikons.map(l => ({
       term: l.kataLeksikon || 'Unknown Term',
-      ipa: l.ipa || '',
-      transliteration: l.transliterasi || '',
-      etymology: l.maknaEtimologi || '',
-      culturalMeaning: l.maknaKultural || '',
-      commonMeaning: l.commonMeaning || '',
-      translation: l.translation || '',
-      variants: l.varian || '',
-      translationVariants: l.translationVarians || '',
-      otherDescription: l.deskripsiLain || '',
-      domain: dk.namaDomain || 'Unknown Domain',
-      contributor: l.contributor?.namaContributor || 'Unknown Contributor',
+      definition: l.maknaKultural || l.commonMeaning || l.translation || 'No definition available',
+      category: dk.namaDomain || 'Unknown Domain',
+      region: subcultureData.namaSubculture || 'Unknown Region',
+      slug: generateSlug(l.kataLeksikon || 'unknown-term'),
     }))
   );
 };

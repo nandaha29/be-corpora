@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as subcultureService from '../../services/public/subculture.service.js';
+import * as searchController from './search.controller.js';
 
 // GET /api/public/subcultures (gallery)
 export const getSubculturesGallery = async (req: Request, res: Response) => {
@@ -26,6 +27,7 @@ export const getSubculturesGallery = async (req: Request, res: Response) => {
 export const getSubcultureDetail = async (req: Request, res: Response) => {
   try {
     const identifier = req.params.identifier;
+    const searchQuery = req.query.search as string;
 
     if (!identifier) {
       return res.status(400).json({
@@ -34,7 +36,8 @@ export const getSubcultureDetail = async (req: Request, res: Response) => {
       });
     }
 
-    const data = await subcultureService.getSubcultureDetail(identifier);
+    const data = await subcultureService.getSubcultureDetail(identifier, searchQuery);
+
     if (!data) {
       return res.status(404).json({
         success: false,
@@ -91,3 +94,6 @@ export const searchLexicon = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Search leksikons within a specific subculture
+export const searchLeksikonsInSubculture = searchController.searchLeksikonsInSubculture;
