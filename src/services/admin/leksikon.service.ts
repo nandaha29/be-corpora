@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateLeksikonInput, UpdateLeksikonInput } from '../../lib/validators.js';
-import { Prisma } from '@prisma/client';
+import { Prisma, LeksikonAssetRole } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export const getAllLeksikons = async () => {
@@ -175,7 +175,7 @@ export const deleteLeksikon = async (id: number) => {
 //   });
 // };
 
-export const addAssetToLeksikon = async (leksikonId: number, assetId: number, assetRole: string) => {
+export const addAssetToLeksikon = async (leksikonId: number, assetId: number, assetRole: LeksikonAssetRole) => {
   // Pastikan leksikon dan asset ada
   const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
   if (!leksikon) throw { code: 'LEKSIKON_NOT_FOUND' };
@@ -287,7 +287,7 @@ export const getLeksikonReferences = async (id: number) => {
 export const updateAssetRole = async (
   leksikonId: number,
   assetId: number,
-  assetRole: string
+  assetRole: LeksikonAssetRole
 ) => {
   // Pastikan relasi ada
   const existing = await prisma.leksikonAsset.findUnique({
@@ -398,5 +398,21 @@ export const updateLeksikonStatus = async (id: number, status: string) => {
   return prisma.leksikon.update({
     where: { leksikonId: id },
     data: { status: normalized as any },
+  });
+};
+
+// GET assets by assetRole for a specific leksikon
+export const getAssetsByRole = async (leksikonId: number, assetRole: LeksikonAssetRole) => {
+  return prisma.leksikonAsset.findMany({
+    where: {
+      leksikonId,
+      assetRole,
+    },
+    include: {
+      asset: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
 };

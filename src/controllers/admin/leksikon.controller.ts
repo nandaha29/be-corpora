@@ -3,6 +3,7 @@ import * as leksikonService from '../../services/admin/leksikon.service.js';
 import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { LeksikonAssetRole } from '@prisma/client';
 
 // GET /api/leksikons
 // export const getLeksikons = async (req: Request, res: Response) => {
@@ -332,7 +333,7 @@ export const updateAssetRole = async (req: Request, res: Response) => {
     const result = await leksikonService.updateAssetRole(
       leksikonId,
       assetId,
-      assetRole
+      assetRole as LeksikonAssetRole
     );
 
     return res.status(200).json({
@@ -436,5 +437,83 @@ export const updateLeksikonStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Failed to update leksikon status", error });
     return;
+  }
+};
+
+// PUT /api/leksikons/:id/assets/:assetId/role
+export const updateAssetRoleInLeksikon = async (req: Request, res: Response) => {
+  try {
+    const leksikonId = Number(req.params.id);
+    const assetId = Number(req.params.assetId);
+    const { assetRole } = req.body;
+
+    if (Number.isNaN(leksikonId) || Number.isNaN(assetId)) {
+      return res.status(400).json({ message: 'Invalid IDs' });
+    }
+
+    if (!assetRole || typeof assetRole !== 'string') {
+      return res.status(400).json({ message: 'assetRole is required and must be a string' });
+    }
+
+    // Validate assetRole enum values
+    const validRoles = ['GALLERY', 'PRONUNCIATION', 'VIDEO_DEMO', 'MODEL_3D'];
+    if (!validRoles.includes(assetRole!)) {
+      return res.status(400).json({
+        message: 'Invalid assetRole',
+        validRoles
+      });
+    }
+
+    const updated = await leksikonService.updateAssetRole(leksikonId, assetId, assetRole as LeksikonAssetRole);
+    return res.status(200).json({
+      message: 'Asset role updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND') {
+      return res.status(404).json({ message: 'Asset association not found' });
+    }
+    console.error('Failed to update asset role:', error);
+    return res.status(500).json({
+      message: 'Failed to update asset role',
+      details: error
+    });
+  }
+};
+
+// GET /api/leksikons/:id/assets/role/:assetRole
+export const getAssetsByRole = async (req: Request, res: Response) => {
+  try {
+    const leksikonId = Number(req.params.id);
+    const assetRole = req.params.assetRole;
+
+    if (Number.isNaN(leksikonId)) {
+      return res.status(400).json({ message: 'Invalid leksikon ID' });
+    }
+
+    if (!assetRole || typeof assetRole !== 'string') {
+      return res.status(400).json({ message: 'assetRole is required and must be a string' });
+    }
+
+    // Validate assetRole enum values
+    const validRoles = ['GALLERY', 'PRONUNCIATION', 'VIDEO_DEMO', 'MODEL_3D'];
+    if (!validRoles.includes(assetRole)) {
+      return res.status(400).json({
+        message: 'Invalid assetRole',
+        validRoles
+      });
+    }
+
+    const assets = await leksikonService.getAssetsByRole(leksikonId, assetRole as LeksikonAssetRole);
+    return res.status(200).json({
+      message: 'Assets retrieved successfully',
+      data: assets
+    });
+  } catch (error) {
+    console.error('Failed to get assets by role:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve assets',
+      details: error
+    });
   }
 };

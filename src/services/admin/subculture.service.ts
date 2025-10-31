@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, SubcultureAssetRole } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
@@ -66,7 +66,7 @@ export const deleteSubculture = async (id: number) => {
   });
 };
 
-export const addAssetToSubculture = async (subcultureId: number, assetId: number, assetRole: string) => {
+export const addAssetToSubculture = async (subcultureId: number, assetId: number, assetRole: SubcultureAssetRole) => {
   // verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
   if (!subculture) {

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, ContributorAssetRole } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { prisma } from '../../lib/prisma.js';
 import { CreateContributorInput, UpdateContributorInput, CreateContributorAssetInput } from '../../lib/validators.js';
@@ -91,7 +91,7 @@ export const getContributorAssets = async (contributorId: number) => {
 };
 
 // Add asset to contributor
-export const addAssetToContributor = async (contributorId: number, assetId: number, assetNote: string) => {
+export const addAssetToContributor = async (contributorId: number, assetId: number, assetNote: ContributorAssetRole) => {
   // verify contributor exists
   const contributor = await prisma.contributor.findUnique({ where: { contributorId } });
   if (!contributor) {

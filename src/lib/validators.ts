@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole } from "@prisma/client";
 
 /* =======================
    🏛️ CULTURE
@@ -157,22 +158,25 @@ export type UpdateAssetInput = z.infer<typeof updateAssetSchema>;
 export const createLeksikonAssetSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.string().min(1, { message: "Asset role is required" }),
+  assetRole: z.nativeEnum(LeksikonAssetRole, { message: "Asset role must be one of: GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D" }),
+});
+export const updateAssetRoleSchema = z.object({
+  assetRole: z.nativeEnum(LeksikonAssetRole, { message: "Asset role must be one of: GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D" }),
 });
 export const createSubcultureAssetSchema = z.object({
   subcultureId: z.number().min(1, { message: "Subculture ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.string().min(1, { message: "Asset role is required" }),
+  assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO" }),
 });
 export const createLeksikonReferensiSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),
   referensiId: z.number().min(1, { message: "Referensi ID is required" }),
-  citationNote: z.string().optional(),
+  citationNote: z.string().min(1, { message: "Citation note is required" }),
 });
 export const createContributorAssetSchema = z.object({
   contributorId: z.number().min(1, { message: "Contributor ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetNote: z.string().optional(),
+  assetNote: z.nativeEnum(ContributorAssetRole, { message: "Asset role must be one of: LOGO, FOTO_DIRI, SIGNATURE, CERTIFICATE" }),
 });
 
 export type CreateLeksikonAssetInput = z.infer<typeof createLeksikonAssetSchema>;

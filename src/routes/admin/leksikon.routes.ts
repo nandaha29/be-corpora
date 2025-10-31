@@ -23,6 +23,10 @@ router
   .route('/:id/assets/:assetId')
   .delete(leksikonController.removeAssetFromLeksikon);
 
+  // Asset role management
+router.put('/:id/assets/:assetId/role', leksikonController.updateAssetRole);
+router.get('/:id/assets/role/:assetRole', leksikonController.getAssetsByRole);
+
 router
   .route('/:id/references')
   .get(leksikonController.getLeksikonReferences)

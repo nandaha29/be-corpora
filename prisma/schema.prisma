@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// MAIN ENTITIES
+// ============================================
+
 model Culture {
   cultureId        Int              @id @default(autoincrement()) @map("culture_id")
   namaBudaya       String           @map("nama_budaya")
@@ -14,7 +18,7 @@ model Culture {
   provinsi         String           @map("provinsi")
   kotaDaerah       String           @map("kota_daerah")
   klasifikasi      String?
-  karakteristik    String?
+  karakteristik    String?          @db.Text
   statusKonservasi StatusKonservasi @default(TREATENED) @map("status_konservasi")
   latitude         Float?
   longitude        Float?
@@ -22,6 +26,7 @@ model Culture {
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
   subcultures      Subculture[]
+  cultureAssets    CultureAsset[]   // NEW: Added relation
 
   @@map("CULTURE")
 }
@@ -30,7 +35,7 @@ model Subculture {
   subcultureId      Int                @id @default(autoincrement()) @map("subculture_id")
   namaSubculture    String             @map("nama_subkultur")
   slug              String             @unique @map("slug")
-  penjelasan        String
+  penjelasan        String             @db.Text
   cultureId         Int                @map("culture_id")
   status            StatusPublish      @default(DRAFT) @map("status")
   statusKonservasi  StatusKonservasi   @default(TREATENED) @map("status_konservasi")
@@ -69,7 +74,7 @@ model Leksikon {
   translation        String
   varian             String?
   translationVarians String?             @map("translation_varians")
-  deskripsiLain      String?             @map("deskripsi_lain")
+  deskripsiLain      String?             @db.Text @map("deskripsi_lain")
   domainKodifikasiId Int                 @map("dk_id")
   statusPreservasi   StatusKonservasi    @default(MAINTAINED) @map("status_preservasi")
   contributorId      Int                 @map("contributor_id")
@@ -85,33 +90,34 @@ model Leksikon {
 }
 
 model Contributor {
-  contributorId   Int        @id @default(autoincrement()) @map("contributor_id")
-  namaContributor String     @map("nama_contributor")
-  institusi       String
-  email           String
-  expertiseArea   String     @map("expertise_area")
-  contactInfo     String     @map("contact_info")
-  registeredAt    DateTime   @default(now()) @map("registered_at")
-  leksikons       Leksikon[]
+  contributorId     Int                 @id @default(autoincrement()) @map("contributor_id")
+  namaContributor   String              @map("nama_contributor")
+  institusi         String
+  email             String
+  expertiseArea     String              @map("expertise_area")
+  contactInfo       String              @map("contact_info")
+  registeredAt      DateTime            @default(now()) @map("registered_at")
+  leksikons         Leksikon[]
   contributorAssets ContributorAsset[]
 
   @@map("CONTRIBUTOR")
 }
 
 model Asset {
-  assetId          Int               @id @default(autoincrement()) @map("asset_id")
-  namaFile         String            @map("nama_file")
-  tipe             AssetType         @map("tipe")
-  penjelasan       String?           @map("penjelasan")
-  url              String            @map("url")
-  fileSize         String?           @map("file_size")
-  hashChecksum     String?           @map("hash_checksum")
-  metadataJson     String?           @map("metadata_json")
-  status           StatusFile        @default(ARCHIVED) @map("status")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
-  leksikonAssets   LeksikonAsset[]
-  subcultureAssets SubcultureAsset[]
+  assetId           Int                 @id @default(autoincrement()) @map("asset_id")
+  namaFile          String              @map("nama_file")
+  tipe              AssetType           @map("tipe")
+  penjelasan        String?             @db.Text @map("penjelasan")
+  url               String              @map("url")
+  fileSize          String?             @map("file_size")
+  hashChecksum      String?             @map("hash_checksum")
+  metadataJson      String?             @map("metadata_json")
+  status            StatusFile          @default(ARCHIVED) @map("status")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  leksikonAssets    LeksikonAsset[]
+  subcultureAssets  SubcultureAsset[]
+  cultureAssets     CultureAsset[]      // NEW: Added relation
   contributorAssets ContributorAsset[]
 
   @@map("ASSET")
@@ -121,7 +127,7 @@ model Referensi {
   referensiId       Int                 @id @default(autoincrement()) @map("referensi_id")
   judul             String
   tipeReferensi     TipeReferensi       @map("tipe_referensi")
-  penjelasan        String?
+  penjelasan        String?             @db.Text
   url               String?
   penulis           String?
   tahunTerbit       String?             @map("tahun_terbit")
@@ -133,37 +139,54 @@ model Referensi {
   @@map("REFERENSI")
 }
 
+// ============================================
+// JUNCTION TABLES (Many-to-Many Relations)
+// ============================================
+
 model LeksikonAsset {
-  leksikonId Int      @map("leksikon_id")
-  assetId    Int      @map("asset_id")
-  assetRole  String   @map("asset_role")
-  createdAt  DateTime @default(now()) @map("created_at")
-  asset      Asset    @relation(fields: [assetId], references: [assetId])
-  leksikon   Leksikon @relation(fields: [leksikonId], references: [leksikonId])
+  leksikonId Int             @map("leksikon_id")
+  assetId    Int             @map("asset_id")
+  assetRole  LeksikonAssetRole @map("asset_role") // UPDATED: ENUM
+  createdAt  DateTime        @default(now()) @map("created_at")
+  asset      Asset           @relation(fields: [assetId], references: [assetId])
+  leksikon   Leksikon        @relation(fields: [leksikonId], references: [leksikonId])
 
   @@id([leksikonId, assetId])
   @@map("LEKSIKON_ASSETS")
 }
 
 model SubcultureAsset {
-  subcultureId Int        @map("subculture_id")
-  assetId      Int        @map("asset_id")
-  assetRole    String     @map("asset_role")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  asset        Asset      @relation(fields: [assetId], references: [assetId])
-  subculture   Subculture @relation(fields: [subcultureId], references: [subcultureId])
+  subcultureId Int                   @map("subculture_id")
+  assetId      Int                   @map("asset_id")
+  assetRole    SubcultureAssetRole   @map("asset_role") // UPDATED: ENUM
+  createdAt    DateTime              @default(now()) @map("created_at")
+  asset        Asset                 @relation(fields: [assetId], references: [assetId])
+  subculture   Subculture            @relation(fields: [subcultureId], references: [subcultureId])
 
   @@id([subcultureId, assetId])
   @@map("SUBCULTURE_ASSETS")
 }
 
+// NEW: CultureAsset junction table
+model CultureAsset {
+  cultureId Int               @map("culture_id")
+  assetId   Int               @map("asset_id")
+  assetRole CultureAssetRole  @map("asset_role") // NEW: ENUM
+  createdAt DateTime          @default(now()) @map("created_at")
+  asset     Asset             @relation(fields: [assetId], references: [assetId])
+  culture   Culture           @relation(fields: [cultureId], references: [cultureId])
+
+  @@id([cultureId, assetId])
+  @@map("CULTURE_ASSETS")
+}
+
 model ContributorAsset {
-  contributorId Int        @map("contributor_id")
-  assetId       Int        @map("asset_id")
-  assetNote     String     @map("asset_note")
-  createdAt     DateTime   @default(now()) @map("created_at")
-  asset         Asset      @relation(fields: [assetId], references: [assetId])
-  contributor   Contributor @relation(fields: [contributorId], references: [contributorId])
+  contributorId Int                    @map("contributor_id")
+  assetId       Int                    @map("asset_id")
+  assetNote     ContributorAssetRole   @map("asset_note") // UPDATED: ENUM
+  createdAt     DateTime               @default(now()) @map("created_at")
+  asset         Asset                  @relation(fields: [assetId], references: [assetId])
+  contributor   Contributor            @relation(fields: [contributorId], references: [contributorId])
 
   @@id([contributorId, assetId])
   @@map("CONTRIBUTOR_ASSETS")
@@ -180,6 +203,10 @@ model LeksikonReferensi {
   @@id([leksikonId, referensiId])
   @@map("LEKSIKON_REFERENSI")
 }
+
+// ============================================
+// ENUMS
+// ============================================
 
 enum TipeReferensi {
   JURNAL
@@ -216,3 +243,38 @@ enum StatusKonservasi {
   ARCHIVED
 }
 
+// ============================================
+// NEW: ASSET ROLE ENUMS
+// ============================================
+
+// ENUM untuk CultureAsset.assetRole
+enum CultureAssetRole {
+  THUMBNAIL       // Foto utama untuk card/preview
+  GALLERY         // Foto untuk galeri/koleksi
+  BANNER          // Banner untuk detail page
+ VIDEO_DEMO      // Video demonstrasi
+}
+
+// ENUM untuk SubcultureAsset.assetRole
+enum SubcultureAssetRole {
+  THUMBNAIL       // Foto utama untuk card/preview
+  GALLERY         // Foto untuk galeri/koleksi
+  BANNER          // Banner untuk detail page
+ VIDEO_DEMO      // Video demonstrasi
+}
+
+// ENUM untuk LeksikonAsset.assetRole
+enum LeksikonAssetRole {
+  GALLERY         // Foto untuk galeri/koleksi
+  PRONUNCIATION   // Audio pengucapan
+  VIDEO_DEMO      // Video demonstrasi
+  MODEL_3D
+}
+
+// ENUM untuk ContributorAsset.assetNote
+enum ContributorAssetRole {
+  LOGO            // Logo institusi/organisasi
+  FOTO_DIRI       // Foto profil contributor
+  SIGNATURE       // Tanda tangan digital
+  CERTIFICATE     // Sertifikat/kredensial
+}
