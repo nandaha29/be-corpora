@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateLeksikonInput, UpdateLeksikonInput } from '../../lib/validators.js';
-import { Prisma, LeksikonAssetRole } from '@prisma/client';
+import { Prisma, LeksikonAssetRole, CitationNoteType } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export const getAllLeksikons = async () => {
@@ -243,7 +243,7 @@ export const getLeksikonAssets = async (id: number) => {
 //   });
 // };
 
-export const addReferenceToLeksikon = async  (leksikonId: number, referensiId: number, citationNote?: string) => {
+export const addReferenceToLeksikon = async  (leksikonId: number, referensiId: number, citationNote?: CitationNoteType) => {
   const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
   if (!leksikon) throw { code: 'LEKSIKON_NOT_FOUND' };
 
@@ -307,7 +307,7 @@ export const updateAssetRole = async (
 export const updateCitationNote = async (
   leksikonId: number,
   referensiId: number,
-  citationNote?: string
+  citationNote?: CitationNoteType
 ) => {
   const existing = await prisma.leksikonReferensi.findUnique({
     where: { leksikonId_referensiId: { leksikonId, referensiId } },

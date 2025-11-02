@@ -1,25 +1,26 @@
 import express from "express";
 import * as subcultureController from "../../controllers/admin/subculture.controller.js";
+import { authenticateAdmin } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.get("/", subcultureController.getAllSubculturesPaginated);
-router.get("/:id", subcultureController.getSubcultureById);
-router.post("/", subcultureController.createSubculture);
-router.put("/:id", subcultureController.updateSubculture);
-router.delete("/:id", subcultureController.deleteSubculture);
+router.get("/", authenticateAdmin, subcultureController.getAllSubculturesPaginated);
+router.get("/:id", authenticateAdmin, subcultureController.getSubcultureById);
+router.post("/", authenticateAdmin, subcultureController.createSubculture);
+router.put("/:id", authenticateAdmin, subcultureController.updateSubculture);
+router.delete("/:id", authenticateAdmin, subcultureController.deleteSubculture);
 
 router
   .route('/:id/assets')
-  .get(subcultureController.getSubcultureAssets)
-  .post(subcultureController.addAssetToSubculture);
+  .get(authenticateAdmin, subcultureController.getSubcultureAssets)
+  .post(authenticateAdmin, subcultureController.addAssetToSubculture);
 
 router
   .route('/:id/assets/:assetId')
-  .delete(subcultureController.removeAssetFromSubculture);
+  .delete(authenticateAdmin, subcultureController.removeAssetFromSubculture);
 
   // 🔹 Tambahkan route baru ini
 // router.get("/culture/:culture_id/subcultures", subcultureController.getSubculturesByCulture);
-router.get("/:cultureId/subcultures", subcultureController.getSubculturesByCulture);
+router.get("/:cultureId/subcultures", authenticateAdmin, subcultureController.getSubculturesByCulture);
 
 export default router;

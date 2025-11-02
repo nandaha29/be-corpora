@@ -1,14 +1,14 @@
 import { Router } from "express";
 import * as referenceController from "../../controllers/admin/reference.controller.js";
+import { authenticateAdmin } from "../../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", referenceController.getAllReferensiPaginated);
-router.get('/search', referenceController.searchReferensi);
-// router.get('/public', referenceController.getPublicReferensi);
-router.get("/:id", referenceController.getReferenceById);
-router.post("/", referenceController.createReference);
-router.put("/:id", referenceController.updateReference);
-router.delete("/:id", referenceController.deleteReference);
+router.get("/", authenticateAdmin, referenceController.getAllReferensiPaginated);
+router.get('/search', authenticateAdmin, referenceController.searchReferensi);
+router.get("/:id", authenticateAdmin, referenceController.getReferenceById);
+router.post("/", authenticateAdmin, referenceController.createReference);
+router.put("/:id", authenticateAdmin, referenceController.updateReference);
+router.delete("/:id", authenticateAdmin, referenceController.deleteReference);
 
 export default router;

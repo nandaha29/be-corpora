@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
-import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema } from '../../lib/validators.js';
+import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema, updateCitationNoteSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { LeksikonAssetRole } from '@prisma/client';
@@ -357,15 +357,15 @@ export const updateCitationNote = async (req: Request, res: Response) => {
   try {
     const leksikonId = Number(req.params.id);
     const referensiId = Number(req.params.referenceId);
-    const { citationNote } = req.body;
 
     if (Number.isNaN(leksikonId) || Number.isNaN(referensiId))
       return res.status(400).json({ message: 'Invalid IDs' });
 
+    const validated = updateCitationNoteSchema.parse(req.body);
     const result = await leksikonService.updateCitationNote(
       leksikonId,
       referensiId,
-      citationNote
+      validated.citationNote
     );
 
     return res.status(200).json({
@@ -374,6 +374,9 @@ export const updateCitationNote = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Validation failed', errors: error });
+    }
     if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND')
       return res.status(404).json({ message: 'Reference relation not found' });
 
