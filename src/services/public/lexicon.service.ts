@@ -51,9 +51,11 @@ export const getAllLexicons = async (regionFilter: string = 'all', searchQuery: 
             include: {
               culture: true
             }
-          }
+          },
         }
       },
+      leksikonAssets: { include: { asset: true } },
+      leksikonReferensis: { include: { referensi: true } },
     },
     orderBy: {
       kataLeksikon: 'asc'
@@ -80,6 +82,8 @@ export const getAllLexicons = async (regionFilter: string = 'all', searchQuery: 
       variants: lexicon.varian || '',
       translationVariants: lexicon.translationVarians || '',
       otherDescription: lexicon.deskripsiLain || '',
-    }
+    },
+    leksikonAssets: lexicon.leksikonAssets || [],
+    leksikonReferensis: lexicon.leksikonReferensis || [],
   }));
 };

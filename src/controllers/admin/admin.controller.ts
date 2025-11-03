@@ -180,3 +180,47 @@ export const changePassword = async (req: Request, res: Response) => {
     });
   }
 };
+
+// // POST /api/v1/admin/auth/verify
+// export const verifyToken = async (req: Request, res: Response) => {
+//   try {
+//     if (!req.admin) {
+//       return res.status(401).json({
+//         message: 'Authentication required',
+//         code: 'NO_AUTH'
+//       });
+//     }
+
+//     // Token is already verified by middleware, just return admin data
+//     const admin = await adminService.getAdminById(req.admin.adminId);
+
+//     return res.status(200).json({
+//       message: 'Token is valid',
+//       data: {
+//         admin: {
+//           adminId: admin.adminId,
+//           username: admin.username,
+//           email: admin.email,
+//           role: admin.role,
+//           isActive: admin.isActive,
+//         },
+//         tokenValid: true,
+//         // You can add token expiry info here if needed
+//       }
+//     });
+//   } catch (error) {
+//     const err = error as any;
+//     if (err.code === 'ADMIN_NOT_FOUND') {
+//       return res.status(401).json({
+//         message: 'Admin not found',
+//         code: 'ADMIN_NOT_FOUND'
+//       });
+//     }
+
+//     console.error('Token verification error:', error);
+//     return res.status(500).json({
+//       message: 'Token verification failed',
+//       details: error
+//     });
+//   }
+// };

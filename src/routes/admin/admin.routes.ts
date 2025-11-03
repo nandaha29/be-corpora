@@ -11,5 +11,6 @@ router.post('/login', adminController.login);
 // Protected routes (authentication required)
 router.get('/profile', authenticateAdmin, adminController.getProfile);
 router.put('/change-password', authenticateAdmin, adminController.changePassword);
+// router.post('/verify', authenticateAdmin, adminController.verifyToken);
 
 export default router;
