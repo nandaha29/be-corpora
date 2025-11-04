@@ -158,6 +158,8 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
 
   const heroImage = galleryImages.length > 0 ? galleryImages[0]!.url : null;
 
+  const videoUrl = subculture.subcultureAssets.find(sa => sa.assetRole === 'VIDEO_DEMO')?.asset.url || null;
+
   // If search query is provided, return search results format
   if (searchQuery && searchQuery.trim()) {
     return {
@@ -167,6 +169,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
       model3dArray,
       lexicon: [], // Don't return full lexicon when searching
       heroImage,
+      videoUrl,
       culture: {
         name: subculture.culture?.namaBudaya || 'Unknown Culture',
         province: subculture.culture?.provinsi || 'Unknown Province',
@@ -184,6 +187,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     model3dArray,
     lexicon,
     heroImage,
+    videoUrl,
     culture: {
       name: subculture.culture?.namaBudaya || 'Unknown Culture',
       province: subculture.culture?.provinsi || 'Unknown Province',

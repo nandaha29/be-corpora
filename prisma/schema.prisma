@@ -183,7 +183,7 @@ model SubcultureAsset {
   asset        Asset               @relation(fields: [assetId], references: [assetId])
   subculture   Subculture          @relation(fields: [subcultureId], references: [subcultureId])
 
-  @@id([subcultureId, assetId])
+  @@id([subcultureId, assetId, assetRole])
   @@map("SUBCULTURE_ASSETS")
 }
 

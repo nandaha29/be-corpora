@@ -110,9 +110,10 @@ export const removeAssetFromSubculture = async (req: Request, res: Response) => 
   try {
     const subcultureId = Number(req.params.id);
     const assetId = Number(req.params.assetId);
+    const assetRole = req.body.assetRole;
     if (Number.isNaN(subcultureId) || Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid IDs' });
 
-    await subcultureService.removeAssetFromSubculture(subcultureId, assetId);
+    await subcultureService.removeAssetFromSubculture(subcultureId, assetId, assetRole);
     return res.status(200).json({ message: 'Asset removed from subculture' });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {

@@ -93,7 +93,7 @@ export const addAssetToSubculture = async (subcultureId: number, assetId: number
   } else {
     return prisma.subcultureAsset.upsert({
       where: {
-        subcultureId_assetId: { subcultureId, assetId },
+        subcultureId_assetId_assetRole: { subcultureId, assetId, assetRole },
       },
       update: { assetRole },
       create: { subcultureId, assetId, assetRole },
@@ -103,10 +103,10 @@ export const addAssetToSubculture = async (subcultureId: number, assetId: number
 };
 
 
-export const removeAssetFromSubculture = async (subcultureId: number, assetId: number) => {
+export const removeAssetFromSubculture = async (subcultureId: number, assetId: number, assetRole: SubcultureAssetRole) => {
   try {
-    return await prisma.subcultureAsset.delete({
-      where: { subcultureId_assetId: { subcultureId, assetId } },
+    return await prisma.subcultureAsset.deleteMany({
+      where: { subcultureId, assetId, assetRole },
     });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
