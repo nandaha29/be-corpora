@@ -122,10 +122,21 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     .filter((sa: { asset: { tipe: string; }; }) => sa.asset.tipe === 'FOTO')
     .map((sa: { asset: { url: any; }; }) => ({ url: sa.asset.url }));
 
+  // Include galleries from lexicons
+  const lexiconGalleryImages = subculture.domainKodifikasis
+    .flatMap(dk => dk.leksikons)
+    .flatMap(l => l.leksikonAssets
+      .filter(la => la.assetRole === 'GALLERY' && la.asset.tipe === 'FOTO')
+      .map(la => ({ url: la.asset.url }))
+    );
+
+  // Combine subculture and lexicon galleries
+  const allGalleryImages = [...galleryImages, ...lexiconGalleryImages];
+
   const model3dArray = subculture.subcultureAssets
     .filter((sa: { asset: { tipe: string; }; }) => sa.asset.tipe === 'MODEL_3D')
     .map((sa: { asset: { url: string; namaFile: any; penjelasan: any; }; }) => ({
-      sketchfabId: sa.asset.url?.split('/').pop() || '',
+      sketchfabId: sa.asset.url?.split('/').pop()?.split('-').pop() || '',
       title: sa.asset.namaFile || 'Untitled Model',
       description: sa.asset.penjelasan || '',
       artifactType: 'Cultural Artifact',
@@ -156,7 +167,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     }));
   });
 
-  const heroImage = galleryImages.length > 0 ? galleryImages[0]!.url : null;
+  const heroImage = allGalleryImages.length > 0 ? allGalleryImages[0]!.url : null;
 
   const videoUrl = subculture.subcultureAssets.find(sa => sa.assetRole === 'VIDEO_DEMO')?.asset.url || null;
 
@@ -165,7 +176,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     return {
       subcultureId: subculture.subcultureId || 0,
       profile,
-      galleryImages,
+      galleryImages: allGalleryImages,
       model3dArray,
       lexicon: [], // Don't return full lexicon when searching
       heroImage,
@@ -183,7 +194,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   return {
     subcultureId: subculture.subcultureId || 0,
     profile,
-    galleryImages,
+    galleryImages: allGalleryImages,
     model3dArray,
     lexicon,
     heroImage,
