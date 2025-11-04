@@ -83,15 +83,23 @@ export const addAssetToSubculture = async (subcultureId: number, assetId: number
     throw err;
   }
 
-  // ✅ pakai upsert biar tidak error P2002
-  return prisma.subcultureAsset.upsert({
-    where: {
-      subcultureId_assetId: { subcultureId, assetId },
-    },
-    update: { assetRole },
-    create: { subcultureId, assetId, assetRole },
-    include: { asset: true },
-  });
+  // For GALLERY role, allow multiple photos by always creating new associations
+  // For other roles, use upsert to replace existing
+  if (assetRole === 'GALLERY') {
+    return prisma.subcultureAsset.create({
+      data: { subcultureId, assetId, assetRole },
+      include: { asset: true },
+    });
+  } else {
+    return prisma.subcultureAsset.upsert({
+      where: {
+        subcultureId_assetId: { subcultureId, assetId },
+      },
+      update: { assetRole },
+      create: { subcultureId, assetId, assetRole },
+      include: { asset: true },
+    });
+  }
 };
 
 

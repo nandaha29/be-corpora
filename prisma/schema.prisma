@@ -52,6 +52,7 @@ model Subculture {
   subcultureId     Int                 @id @default(autoincrement()) @map("subculture_id")
   namaSubculture   String              @map("nama_subkultur")
   slug             String              @unique @map("slug")
+  salam_khas       String              @db.Text
   penjelasan       String              @db.Text
   cultureId        Int                 @map("culture_id")
   status           StatusPublish       @default(DRAFT) @map("status")
@@ -274,12 +275,7 @@ enum StatusKonservasi {
 }
 
 enum CitationNoteType {
-  DIRECT_QUOTE
-  PARAPHRASE
-  INTERPRETATION
-  FIELD_OBSERVATION
-  ORAL_TRADITION
-  SECONDARY_SOURCE
+  RESOURCE
 }
 
 // ============================================
@@ -291,6 +287,7 @@ enum CultureAssetRole {
   GALLERY
   BANNER
   VIDEO_DEMO
+  MODEL_3D
 }
 
 enum SubcultureAssetRole {
@@ -298,6 +295,7 @@ enum SubcultureAssetRole {
   GALLERY
   BANNER
   VIDEO_DEMO
+  MODEL_3D
 }
 
 enum LeksikonAssetRole {
