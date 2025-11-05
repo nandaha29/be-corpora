@@ -12,17 +12,32 @@ const generateSlug = (name: string): string => {
     .replace(/(^-|-$)/g, ""); // Remove leading/trailing dashes
 };
 
-export const getSubculturesGallery = async (searchQuery: string = '') => {
+export const getSubculturesGallery = async (searchQuery: string = '', category: string = 'all', page: number = 1, limit: number = 10) => {
+  const whereClause: any = {
+    status: 'PUBLISHED',
+  };
+
+  // Add category filter (assuming category is culture name or province)
+  if (category !== 'all') {
+    whereClause.culture = {
+      OR: [
+        { namaBudaya: { contains: category, mode: 'insensitive' } },
+        { provinsi: { contains: category, mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  // Add search filter
+  if (searchQuery) {
+    whereClause.namaSubculture = {
+      contains: searchQuery,
+      mode: 'insensitive',
+    };
+  }
+
+  const total = await prisma.subculture.count({ where: whereClause });
   const subcultures = await prisma.subculture.findMany({
-    where: {
-      status: 'PUBLISHED',
-      ...(searchQuery && {
-        namaSubculture: {
-          contains: searchQuery,
-          mode: 'insensitive'
-        }
-      })
-    },
+    where: whereClause,
     include: {
       culture: true,
       subcultureAssets: {
@@ -31,11 +46,13 @@ export const getSubculturesGallery = async (searchQuery: string = '') => {
       },
     },
     orderBy: {
-      namaSubculture: 'asc'
-    }
+      namaSubculture: 'asc',
+    },
+    skip: (page - 1) * limit,
+    take: limit,
   });
 
-  return subcultures.map(subculture => ({
+  const data = subcultures.map(subculture => ({
     id: subculture.slug || (subculture.subcultureId ? subculture.subcultureId.toString() : `subculture-${Math.random()}`),
     name: subculture.namaSubculture || 'Unnamed Subculture',
     description: subculture.penjelasan || 'No description available',
@@ -47,6 +64,8 @@ export const getSubculturesGallery = async (searchQuery: string = '') => {
       province: subculture.culture?.provinsi || 'Unknown Province',
     }
   }));
+
+  return { subcultures: data, total, page, limit };
 };
 
 export const getSubcultureDetail = async (identifier: string, searchQuery?: string) => {
@@ -207,10 +226,10 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   };
 };
 
-export const searchLexicon = async (identifier: string, query: string) => {
+export const getSubcultureLexicons = async (identifier: string, searchQuery?: string, page: number = 1, limit: number = 10) => {
   // First get the subculture to find its ID
   const subculture = await getSubcultureDetail(identifier);
-  if (!subculture) return [];
+  if (!subculture) return { lexicons: [], total: 0, page, limit };
 
   const subcultureData = await prisma.subculture.findUnique({
     where: { subcultureId: subculture.subcultureId, status: 'PUBLISHED' },
@@ -218,15 +237,7 @@ export const searchLexicon = async (identifier: string, query: string) => {
       domainKodifikasis: {
         include: {
           leksikons: {
-            where: {
-              status: 'PUBLISHED',
-              OR: [
-                { kataLeksikon: { contains: query, mode: 'insensitive' } },
-                { maknaKultural: { contains: query, mode: 'insensitive' } },
-                { commonMeaning: { contains: query, mode: 'insensitive' } },
-                { translation: { contains: query, mode: 'insensitive' } },
-              ],
-            },
+            where: { status: 'PUBLISHED' },
             include: {
               contributor: true,
             },
@@ -236,15 +247,33 @@ export const searchLexicon = async (identifier: string, query: string) => {
     },
   });
 
-  if (!subcultureData) return [];
+  if (!subcultureData) return { lexicons: [], total: 0, page, limit };
 
-  return subcultureData.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) =>
-    dk.leksikons.map(l => ({
-      term: l.kataLeksikon || 'Unknown Term',
-      definition: l.maknaKultural || l.commonMeaning || l.translation || 'No definition available',
-      category: dk.namaDomain || 'Unknown Domain',
-      region: subcultureData.namaSubculture || 'Unknown Region',
-      slug: generateSlug(l.kataLeksikon || 'unknown-term'),
-    }))
-  );
+  let allLeksikons = subcultureData.domainKodifikasis.flatMap(dk => dk.leksikons);
+
+  // Filter by search query
+  if (searchQuery && searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    allLeksikons = allLeksikons.filter(l =>
+      (l.kataLeksikon && l.kataLeksikon.toLowerCase().includes(query)) ||
+      (l.maknaKultural && l.maknaKultural.toLowerCase().includes(query)) ||
+      (l.commonMeaning && l.commonMeaning.toLowerCase().includes(query)) ||
+      (l.translation && l.translation.toLowerCase().includes(query)) ||
+      (l.transliterasi && l.transliterasi.toLowerCase().includes(query))
+    );
+  }
+
+  const total = allLeksikons.length;
+  const startIndex = (page - 1) * limit;
+  const paginatedLeksikons = allLeksikons.slice(startIndex, startIndex + limit);
+
+  const lexicons = paginatedLeksikons.map(l => ({
+    term: l.kataLeksikon || 'Unknown Term',
+    definition: l.maknaKultural || l.commonMeaning || l.translation || 'No definition available',
+    category: subcultureData.domainKodifikasis.find(dk => dk.domainKodifikasiId === l.domainKodifikasiId)?.namaDomain || 'Unknown Domain',
+    region: subcultureData.namaSubculture || 'Unknown Region',
+    slug: generateSlug(l.kataLeksikon || 'unknown-term'),
+  }));
+
+  return { lexicons, total, page, limit };
 };

@@ -278,3 +278,35 @@ export const globalSearchFormatted = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Search lexicon with relevance scoring
+export const searchLexicon = async (req: Request, res: Response) => {
+  try {
+    const { query, fields, limit } = req.query;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Query parameter is required',
+      });
+    }
+
+    const fieldList = fields ? (fields as string).split(',') : ['term', 'definition', 'etymology'];
+    const limitNum = limit ? parseInt(limit as string) : 10;
+
+    const results = await searchService.searchLexiconWithScoring(query, fieldList, limitNum);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lexicon search with scoring completed successfully',
+      data: results,
+    });
+  } catch (error) {
+    console.error('Lexicon search error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lexicon search failed',
+      details: error instanceof Error ? error.message : error,
+    });
+  }
+};

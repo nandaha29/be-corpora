@@ -6,13 +6,22 @@ import * as searchController from './search.controller.js';
 export const getSubculturesGallery = async (req: Request, res: Response) => {
   try {
     const searchQuery = req.query.q as string || '';
+    const category = req.query.category as string || 'all';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
-    const data = await subcultureService.getSubculturesGallery(searchQuery);
+    const data = await subcultureService.getSubculturesGallery(searchQuery, category, page, limit);
 
     return res.status(200).json({
       success: true,
       message: 'Subcultures gallery retrieved successfully',
-      data,
+      data: data.subcultures,
+      pagination: {
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+        totalPages: Math.ceil(data.total / data.limit),
+      },
     });
   } catch (error) {
     console.error('Error retrieving subcultures gallery:', error);
@@ -59,11 +68,13 @@ export const getSubcultureDetail = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/public/subcultures/:identifier/search?query=...
-export const searchLexicon = async (req: Request, res: Response) => {
+// GET /api/public/subcultures/:identifier/lexicon?search=...&page=...&limit=...
+export const getSubcultureLexicons = async (req: Request, res: Response) => {
   try {
     const identifier = req.params.identifier;
-    const query = req.query.query as string;
+    const searchQuery = req.query.search as string;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
     if (!identifier) {
       return res.status(400).json({
@@ -72,25 +83,18 @@ export const searchLexicon = async (req: Request, res: Response) => {
       });
     }
 
-    if (!query || query.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: 'Query parameter is required',
-      });
-    }
-
-    const results = await subcultureService.searchLexicon(identifier, query.trim());
+    const results = await subcultureService.getSubcultureLexicons(identifier, searchQuery, page, limit);
 
     return res.status(200).json({
       success: true,
-      message: 'Search results retrieved successfully',
+      message: 'Subculture lexicons retrieved successfully',
       data: results,
     });
   } catch (error) {
-    console.error('Error searching lexicon:', error);
+    console.error('Error retrieving subculture lexicons:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to search lexicon',
+      message: 'Failed to retrieve subculture lexicons',
     });
   }
 };

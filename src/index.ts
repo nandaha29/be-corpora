@@ -17,6 +17,7 @@ import lexiconRoutes from "./routes/public/lexicon.routes.js";
 import searchRoutes from "./routes/public/search.routes.js";
 import domainRoutes from "./routes/public/domain.routes.js";
 import culturePublicRoutes from "./routes/public/culture.routes.js";
+// import culturalItemsRoutes from "./routes/public/culturalItems.routes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -53,6 +54,7 @@ app.use("/api/v1/public/lexicons", lexiconRoutes);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/domains", domainRoutes);
 app.use("/api/v1/public/cultures", culturePublicRoutes);
+// app.use("/api/v1/public/cultural-items", culturalItemsRoutes);
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

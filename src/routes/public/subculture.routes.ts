@@ -7,6 +7,6 @@ const router = Router();
 router.get('/', subcultureController.getSubculturesGallery);
 
 router.get('/:identifier', subcultureController.getSubcultureDetail);
-router.get('/:identifier/search', subcultureController.searchLexicon);
+router.get('/:identifier/lexicon', subcultureController.getSubcultureLexicons);
 
 export default router;

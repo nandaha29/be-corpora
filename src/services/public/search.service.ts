@@ -443,3 +443,68 @@ export const globalSearchFormatted = async (query: string, category: 'subculture
     total: results.length,
   };
 };
+
+// Search lexicon with relevance scoring
+export const searchLexiconWithScoring = async (query: string, fields: string[], limit: number) => {
+  const searchTerm = query.toLowerCase();
+
+  // Build where conditions based on fields
+  const orConditions: any[] = [];
+
+  if (fields.includes('term')) {
+    orConditions.push({ kataLeksikon: { contains: searchTerm, mode: 'insensitive' } });
+  }
+  if (fields.includes('definition')) {
+    orConditions.push({ maknaKultural: { contains: searchTerm, mode: 'insensitive' } });
+    orConditions.push({ commonMeaning: { contains: searchTerm, mode: 'insensitive' } });
+  }
+  if (fields.includes('etymology')) {
+    orConditions.push({ maknaEtimologi: { contains: searchTerm, mode: 'insensitive' } });
+  }
+
+  const lexicons = await prisma.leksikon.findMany({
+    where: {
+      status: 'PUBLISHED',
+      OR: orConditions,
+    },
+    include: {
+      domainKodifikasi: {
+        include: {
+          subculture: {
+            include: {
+              culture: true,
+            },
+          },
+        },
+      },
+      contributor: true,
+    },
+    take: limit,
+  });
+
+  // Calculate relevance score
+  const scoredResults = lexicons.map(lexicon => {
+    let score = 0;
+    const term = lexicon.kataLeksikon?.toLowerCase() || '';
+    const definition = (lexicon.maknaKultural || lexicon.commonMeaning || '')?.toLowerCase() || '';
+    const etymology = lexicon.maknaEtimologi?.toLowerCase() || '';
+
+    if (fields.includes('term') && term.includes(searchTerm)) score += 10;
+    if (fields.includes('definition') && definition.includes(searchTerm)) score += 5;
+    if (fields.includes('etymology') && etymology.includes(searchTerm)) score += 3;
+
+    // Exact matches get higher score
+    if (fields.includes('term') && term === searchTerm) score += 20;
+    if (fields.includes('definition') && definition.includes(searchTerm) && definition.split(' ').includes(searchTerm)) score += 10;
+
+    return {
+      ...lexicon,
+      relevanceScore: score,
+    };
+  });
+
+  // Sort by score descending
+  scoredResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+  return scoredResults.slice(0, limit);
+};
