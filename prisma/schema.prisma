@@ -282,6 +282,7 @@ enum CitationNoteType {
 // ASSET ROLE ENUMS
 // ============================================
 
+// CULTURE tidak pakai ASSETS ROLE -> jadi ambil fotonya dari HIGHLIGHT di SUBCULTURE (jadi bisa dihapus)
 enum CultureAssetRole {
   THUMBNAIL
   GALLERY
@@ -291,6 +292,7 @@ enum CultureAssetRole {
 }
 
 enum SubcultureAssetRole {
+  HIGHLIGHT
   THUMBNAIL
   GALLERY
   BANNER
