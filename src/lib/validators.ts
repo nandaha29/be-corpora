@@ -184,12 +184,12 @@ export const updateAssetRoleSchema = z.object({
 export const createSubcultureAssetSchema = z.object({
   subcultureId: z.number().min(1, { message: "Subculture ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO" }),
+  assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
 });
 export const createLeksikonReferensiSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),
   referensiId: z.number().min(1, { message: "Referensi ID is required" }),
-  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: DIRECT_QUOTE, PARAPHRASE, INTERPRETATION, FIELD_OBSERVATION, ORAL_TRADITION, SECONDARY_SOURCE" }),
+  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: RESOURCE" }),
 });
 export const createContributorAssetSchema = z.object({
   contributorId: z.number().min(1, { message: "Contributor ID is required" }),
@@ -197,7 +197,7 @@ export const createContributorAssetSchema = z.object({
   assetNote: z.nativeEnum(ContributorAssetRole, { message: "Asset role must be one of: LOGO, FOTO_DIRI, SIGNATURE, CERTIFICATE" }),
 });
 export const updateCitationNoteSchema = z.object({
-  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: DIRECT_QUOTE, PARAPHRASE, INTERPRETATION, FIELD_OBSERVATION, ORAL_TRADITION, SECONDARY_SOURCE" }),
+  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: RESOURCE" }),
 });
 
 export type CreateLeksikonAssetInput = z.infer<typeof createLeksikonAssetSchema>;
