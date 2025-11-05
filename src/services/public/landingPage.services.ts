@@ -59,7 +59,7 @@ export const getLandingPageData = async () => {
     heroImage: sub.subcultureAssets && sub.subcultureAssets.length > 0 ? sub.subcultureAssets[0]!.asset.url : null,
   }));
 
-  // COLLABORATIONASSET: Get photo assets with notes
+  // COLLABORATIONASSET: Get photo assets with notes from ACTIVE coordinators only
   const collaborationAssets = await prisma.contributorAsset.findMany({
     include: {
       asset: true,
@@ -67,6 +67,10 @@ export const getLandingPageData = async () => {
     },
     where: {
       asset: { tipe: 'FOTO' },
+      contributor: {
+        isCoordinator: true,
+        statusCoordinator: 'ACTIVE',
+      },
     },
   });
 
