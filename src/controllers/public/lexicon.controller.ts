@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as lexiconService from '../../services/public/lexicon.service.js';
+import { error } from 'console';
 
 // GET /api/v1/public/lexicons (all lexicons with filtering)
 export const getAllLexicons = async (req: Request, res: Response) => {
@@ -40,7 +41,7 @@ export const getLexiconDetail = async (req: Request, res: Response) => {
     if (!data) {
       return res.status(404).json({
         success: false,
-        message: 'Lexicon not found',
+        message: 'Lexicon not found', error,
       });
     }
 
@@ -53,7 +54,7 @@ export const getLexiconDetail = async (req: Request, res: Response) => {
     console.error('Error retrieving lexicon detail:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve lexicon detail',
+      message: 'Failed to retrieve lexicon detail', error,
     });
   }
 };

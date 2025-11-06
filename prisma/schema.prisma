@@ -83,6 +83,7 @@ model DomainKodifikasi {
 
 model Leksikon {
   leksikonId         Int                 @id @default(autoincrement()) @map("leksikon_id")
+  slug               String              @unique @map("slug")
   kataLeksikon       String              @map("kata_leksikon")
   ipa                String              @map("ipa_international_phonetic_alphabet")
   transliterasi      String

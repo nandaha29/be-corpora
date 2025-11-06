@@ -3,6 +3,19 @@ import { CreateLeksikonInput, UpdateLeksikonInput } from '../../lib/validators.j
 import { Prisma, LeksikonAssetRole, CitationNoteType } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
+// Helper function to generate slug
+const generateSlug = (name: string): string => {
+  if (!name || name.trim() === '') {
+    return 'unnamed-term'; // fallback for empty names
+  }
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with dash
+    .replace(/(^-|-$)/g, ""); // Remove leading/trailing dashes
+};
+
 export const getAllLeksikons = async () => {
   return prisma.leksikon.findMany({
     include: {
@@ -48,9 +61,11 @@ export const createLeksikon = async (data: CreateLeksikonInput) => {
   }
 
   try {
+    const slug = generateSlug(data.kataLeksikon);
     const created = await prisma.leksikon.create({
       data: {
         kataLeksikon: data.kataLeksikon,
+        slug,
         ipa: data.ipa ?? null,
         transliterasi: data.transliterasi ?? null,
         maknaEtimologi: data.maknaEtimologi ?? null,
@@ -64,7 +79,7 @@ export const createLeksikon = async (data: CreateLeksikonInput) => {
         statusPreservasi: data.statusPreservasi ?? undefined,
         contributorId: data.contributorId,
         status: data.status ?? undefined,
-      },
+      } as any,
       include: {
         domainKodifikasi: true,
         contributor: true,
@@ -105,24 +120,31 @@ export const updateLeksikon = async (id: number, data: UpdateLeksikonInput) => {
   }
 
   try {
+    const updateData: any = {
+      ...(data.kataLeksikon !== undefined && { kataLeksikon: data.kataLeksikon }),
+      ...(data.ipa !== undefined && { ipa: data.ipa }),
+      ...(data.transliterasi !== undefined && { transliterasi: data.transliterasi }),
+      ...(data.maknaEtimologi !== undefined && { maknaEtimologi: data.maknaEtimologi }),
+      ...(data.maknaKultural !== undefined && { maknaKultural: data.maknaKultural }),
+      ...(data.commonMeaning !== undefined && { commonMeaning: data.commonMeaning }),
+      ...(data.translation !== undefined && { translation: data.translation }),
+      ...(data.varian !== undefined && { varian: data.varian }),
+      ...(data.translationVarians !== undefined && { translationVarians: data.translationVarians }),
+      ...(data.deskripsiLain !== undefined && { deskripsiLain: data.deskripsiLain }),
+      ...(data.domainKodifikasiId !== undefined && { domainKodifikasiId: data.domainKodifikasiId }),
+      ...(data.statusPreservasi !== undefined && { statusPreservasi: data.statusPreservasi }),
+      ...(data.contributorId !== undefined && { contributorId: data.contributorId }),
+      ...(data.status !== undefined && { status: data.status }),
+    };
+
+    // Regenerate slug if kataLeksikon is being updated
+    if (data.kataLeksikon !== undefined) {
+      updateData.slug = generateSlug(data.kataLeksikon);
+    }
+
     const updated = await prisma.leksikon.update({
       where: { leksikonId: id },
-      data: {
-        ...(data.kataLeksikon !== undefined && { kataLeksikon: data.kataLeksikon }),
-        ...(data.ipa !== undefined && { ipa: data.ipa }),
-        ...(data.transliterasi !== undefined && { transliterasi: data.transliterasi }),
-        ...(data.maknaEtimologi !== undefined && { maknaEtimologi: data.maknaEtimologi }),
-        ...(data.maknaKultural !== undefined && { maknaKultural: data.maknaKultural }),
-        ...(data.commonMeaning !== undefined && { commonMeaning: data.commonMeaning }),
-        ...(data.translation !== undefined && { translation: data.translation }),
-        ...(data.varian !== undefined && { varian: data.varian }),
-        ...(data.translationVarians !== undefined && { translationVarians: data.translationVarians }),
-        ...(data.deskripsiLain !== undefined && { deskripsiLain: data.deskripsiLain }),
-        ...(data.domainKodifikasiId !== undefined && { domainKodifikasiId: data.domainKodifikasiId }),
-        ...(data.statusPreservasi !== undefined && { statusPreservasi: data.statusPreservasi }),
-        ...(data.contributorId !== undefined && { contributorId: data.contributorId }),
-        ...(data.status !== undefined && { status: data.status }),
-      },
+      data: updateData as any,
       include: {
         domainKodifikasi: true,
         contributor: true,
@@ -178,10 +200,18 @@ export const deleteLeksikon = async (id: number) => {
 export const addAssetToLeksikon = async (leksikonId: number, assetId: number, assetRole: LeksikonAssetRole) => {
   // Pastikan leksikon dan asset ada
   const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
-  if (!leksikon) throw { code: 'LEKSIKON_NOT_FOUND' };
+  if (!leksikon) {
+    const err = new Error('Leksikon not found');
+    (err as any).code = 'LEKSIKON_NOT_FOUND';
+    throw err;
+  }
 
   const asset = await prisma.asset.findUnique({ where: { assetId } });
-  if (!asset) throw { code: 'ASSET_NOT_FOUND' };
+  if (!asset) {
+    const err = new Error('Asset not found');
+    (err as any).code = 'ASSET_NOT_FOUND';
+    throw err;
+  }
 
   // Gunakan upsert agar tidak duplikat dan tidak menimbulkan rekursi
   return prisma.leksikonAsset.upsert({
@@ -245,10 +275,18 @@ export const getLeksikonAssets = async (id: number) => {
 
 export const addReferenceToLeksikon = async  (leksikonId: number, referensiId: number, citationNote?: CitationNoteType) => {
   const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
-  if (!leksikon) throw { code: 'LEKSIKON_NOT_FOUND' };
+  if (!leksikon) {
+    const err = new Error('Leksikon not found');
+    (err as any).code = 'LEKSIKON_NOT_FOUND';
+    throw err;
+  }
 
   const referensi = await prisma.referensi.findUnique({ where: { referensiId } });
-  if (!referensi) throw { code: 'REFERENSI_NOT_FOUND' };
+  if (!referensi) {
+    const err = new Error('Referensi not found');
+    (err as any).code = 'REFERENSI_NOT_FOUND';
+    throw err;
+  }
 
   // Gunakan upsert agar tidak duplikat
   return prisma.leksikonReferensi.upsert({
@@ -294,7 +332,11 @@ export const updateAssetRole = async (
     where: { leksikonId_assetId: { leksikonId, assetId } },
   });
 
-  if (!existing) throw { code: 'ASSOCIATION_NOT_FOUND' };
+  if (!existing) {
+    const err = new Error('Association not found');
+    (err as any).code = 'ASSOCIATION_NOT_FOUND';
+    throw err;
+  }
 
   return prisma.leksikonAsset.update({
     where: { leksikonId_assetId: { leksikonId, assetId } },
@@ -313,7 +355,11 @@ export const updateCitationNote = async (
     where: { leksikonId_referensiId: { leksikonId, referensiId } },
   });
 
-  if (!existing) throw { code: 'ASSOCIATION_NOT_FOUND' };
+  if (!existing) {
+    const err = new Error('Association not found');
+    (err as any).code = 'ASSOCIATION_NOT_FOUND';
+    throw err;
+  }
 
   return prisma.leksikonReferensi.update({
     where: { leksikonId_referensiId: { leksikonId, referensiId } },
