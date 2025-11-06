@@ -56,6 +56,7 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
     id: subculture.slug || (subculture.subcultureId ? subculture.subcultureId.toString() : `subculture-${Math.random()}`),
     name: subculture.namaSubculture || 'Unnamed Subculture',
     description: subculture.penjelasan || 'No description available',
+    salamKhas: subculture.salam_khas || null,
     image: subculture.subcultureAssets.length > 0
       ? subculture.subcultureAssets[0]!.asset.url
       : null,
@@ -134,6 +135,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   const profile = {
     displayName: subculture.namaSubculture || 'Unnamed Subculture',
     history: subculture.penjelasan || 'No description available',
+    salamKhas: subculture.salam_khas || null,
     highlights: [], // TODO: add if needed
   };
 
