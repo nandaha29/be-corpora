@@ -5,7 +5,7 @@ import * as searchController from './search.controller.js';
 // GET /api/public/subcultures (gallery)
 export const getSubculturesGallery = async (req: Request, res: Response) => {
   try {
-    const searchQuery = req.query.q as string || '';
+    const searchQuery = req.query.search as string || '';
     const category = req.query.category as string || 'all';
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;

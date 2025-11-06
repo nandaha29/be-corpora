@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CitationNoteType, AdminRole } from "@prisma/client";
+import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CitationNoteType, AdminRole, StatusPublish, StatusKonservasi } from "@prisma/client";
 
 /* =======================
    🔐 ADMIN AUTHENTICATION
@@ -49,16 +49,12 @@ export type UpdateCultureInput = z.infer<typeof updateCultureSchema>;
 ======================= */
 export const createSubcultureSchema = z.object({
   namaSubculture: z.string().min(1, { message: "Nama subkultur is required" }),
+  salam_khas: z.string().min(1, { message: "Salam khas is required" }).optional(),
   penjelasan: z.string().min(1, { message: "Penjelasan is required" }),
+  slug: z.string().optional(),
   cultureId: z.number().min(1, { message: "Culture ID is required" }),
-  status: z
-    .enum(["DRAFT", "PUBLISHED", "ARCHIVED"])
-    .default("DRAFT")
-    .optional(),
-  statusKonservasi: z
-    .enum(["MAINTAINED", "TREATED", "CRITICAL", "ARCHIVED"])
-    .default("TREATED")
-    .optional(),
+  status: z.nativeEnum(StatusPublish).default(StatusPublish.DRAFT).optional(),
+  statusKonservasi: z.nativeEnum(StatusKonservasi).default(StatusKonservasi.TREATED).optional(),
 });
 export const updateSubcultureSchema = createSubcultureSchema.partial();
 export type CreateSubcultureInput = z.infer<typeof createSubcultureSchema>;
@@ -184,7 +180,7 @@ export const updateAssetRoleSchema = z.object({
 export const createSubcultureAssetSchema = z.object({
   subcultureId: z.number().min(1, { message: "Subculture ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
+  assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: HIGHLIGHT, THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
 });
 export const createLeksikonReferensiSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),

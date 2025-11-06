@@ -36,7 +36,7 @@ export const createSubculture = async (req: Request, res: Response) => {
     const subculture = await subcultureService.createSubculture(parsed.data);
     return res.status(201).json(subculture);
   } catch (error) {
-    return res.status(500).json({ error: "Failed to create subculture" });
+    return res.status(500).json({ error: error });
   }
 };
 
