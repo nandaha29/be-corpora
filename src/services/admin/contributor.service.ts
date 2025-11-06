@@ -5,13 +5,24 @@ import { CreateContributorInput, UpdateContributorInput, CreateContributorAssetI
 
 // Get all contributors
 export const getAllContributors = async () => {
-  return prisma.contributor.findMany();
+  return prisma.contributor.findMany({
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
+  });
 };
 
 // Get contributor by ID
 export const getContributorById = async (id: number) => {
   return prisma.contributor.findUnique({
     where: { contributorId: id },
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
   });
 };
 
@@ -53,6 +64,11 @@ export const searchContributors = async (query: string) => {
         { email: { contains: query, mode: 'insensitive' } },
       ],
     },
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
   });
 };
 
@@ -66,6 +82,11 @@ export const getAllContributorsPaginated = async (page = 1, limit = 10) => {
       take: limit,
       orderBy: {
         contributorId: 'asc',
+      },
+      include: {
+        contributorAssets: {
+          include: { asset: true },
+        },
       },
     }),
     prisma.contributor.count(),
