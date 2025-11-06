@@ -28,6 +28,7 @@ export const getLandingPageData = async () => {
 
   const heroSection = {
     cultureName: heroCulture?.provinsi || 'Default Culture',
+    salamKhas: heroCulture?.karakteristik || null,
     assets: heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => sub.subcultureAssets.map(sa => sa.asset.url)) || [],
   };
 
@@ -49,13 +50,14 @@ export const getLandingPageData = async () => {
     },
   });
 
-  const subcultureSection = subcultures.map((sub: { subcultureId: any; slug: any; namaSubculture: any; penjelasan: any; culture: { namaBudaya: any; provinsi: any; }; subcultureAssets: string | any[]; }) => ({
+  const subcultureSection = subcultures.map((sub: { subcultureId: any; slug: any; namaSubculture: any; penjelasan: any; culture: { namaBudaya: any; provinsi: any; karakteristik: any; }; subcultureAssets: string | any[]; }) => ({
     id: sub.subcultureId,
     slug: sub.slug,
     name: sub.namaSubculture,
     description: sub.penjelasan,
     culture: sub.culture.namaBudaya,
     province: sub.culture.provinsi,
+    salamKhas: sub.culture.karakteristik,
     heroImage: sub.subcultureAssets && sub.subcultureAssets.length > 0 ? sub.subcultureAssets[0]!.asset.url : null,
   }));
 
