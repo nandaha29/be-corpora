@@ -30,6 +30,7 @@ model Admin {
 
 model Culture {
   cultureId        Int              @id @default(autoincrement()) @map("culture_id")
+  slug             String           @unique
   namaBudaya       String           @map("nama_budaya")
   pulauAsal        String           @map("pulau_asal")
   provinsi         String           @map("provinsi")
@@ -47,6 +48,7 @@ model Culture {
 
   @@map("CULTURE")
 }
+
 
 model Subculture {
   subcultureId     Int                 @id @default(autoincrement()) @map("subculture_id")
