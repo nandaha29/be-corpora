@@ -1,6 +1,19 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateCultureInput, UpdateCultureInput } from '../../lib/validators.js';
 
+// Helper function to generate slug
+const generateSlug = (name: string): string => {
+  if (!name || name.trim() === '') {
+    return 'unnamed-culture'; // fallback for empty names
+  }
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with dash
+    .replace(/(^-|-$)/g, ""); // Remove leading/trailing dashes
+};
+
 export const getAllCultures = async (page: number, limit: number) => {
   return prisma.culture.findMany();
 };
@@ -13,21 +26,30 @@ export const getCultureById = async (id: number) => {
 };
 
 export const createCulture = async (data: CreateCultureInput) => {
+  const slug = generateSlug(data.namaBudaya);
   return prisma.culture.create({
     data: {
       ...data,
+      slug,
       karakteristik: data.karakteristik ?? '', 
       klasifikasi: data.klasifikasi ?? '', 
       ...(data.statusKonservasi !== undefined ? { statusKonservasi: data.statusKonservasi } : {}),
-    },
+    } as any,
   });
 };
 
 // New function to update a culture
 export const updateCulture = async (id: number, data: UpdateCultureInput) => {
+  const updateData: any = { ...data };
+
+  // Regenerate slug if namaBudaya is being updated
+  if (data.namaBudaya !== undefined) {
+    updateData.slug = generateSlug(data.namaBudaya);
+  }
+
   return prisma.culture.update({
-  where: { cultureId: id },
-    data,
+    where: { cultureId: id },
+    data: updateData,
   });
 };
 
