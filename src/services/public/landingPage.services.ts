@@ -67,6 +67,7 @@ export const getLandingPageData = async () => {
     },
     where: {
       asset: { tipe: 'FOTO' },
+      assetNote: 'LOGO', // Only get LOGO assets
       contributor: {
         isCoordinator: true,
         statusCoordinator: 'ACTIVE',
