@@ -19,7 +19,7 @@ export const getLandingPageData = async () => {
                 tipe: 'FOTO',
                 status: 'ACTIVE'
               },
-              assetRole: 'HIGHLIGHT',
+              assetRole: 'THUMBNAIL',
             },
           },
         },
