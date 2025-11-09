@@ -136,12 +136,16 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   const salamKhas = (subculture as any).salamKhas || 
     (subculture.penjelasan && subculture.penjelasan.includes('Hong hulun Basuki Langgeng') ? 'Hong hulun Basuki Langgeng' : null);
 
+  const highlights = subculture.subcultureAssets
+    .filter(sa => sa.assetRole === 'THUMBNAIL' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
+    .map(sa => ({ url: sa.asset.url }));
+
   const profile = {
     displayName: subculture.namaSubculture || 'Unnamed Subculture',
     history: subculture.penjelasan || 'No description available',
     salamKhas: salamKhas,
     artiSalamKhas: (subculture as any).artiSalamKhas || null,
-    highlights: [], // TODO: add if needed
+    highlights,
   };
 
   const galleryImages = subculture.subcultureAssets
@@ -193,7 +197,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     }));
   });
 
-  const heroImage = allGalleryImages.length > 0 ? allGalleryImages[0]!.url : null;
+  const heroImage = highlights.length > 0 ? highlights[0]?.url : (allGalleryImages.length > 0 ? allGalleryImages[0]!.url : null);
 
   const videoUrl = subculture.subcultureAssets.find(sa => sa.assetRole === 'VIDEO_DEMO')?.asset.url || null;
 
