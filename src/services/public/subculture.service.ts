@@ -137,8 +137,11 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     (subculture.penjelasan && subculture.penjelasan.includes('Hong hulun Basuki Langgeng') ? 'Hong hulun Basuki Langgeng' : null);
 
   const highlights = subculture.subcultureAssets
-    .filter(sa => sa.assetRole === 'THUMBNAIL' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
+    .filter(sa => sa.assetRole === 'HIGHLIGHT' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
     .map(sa => ({ url: sa.asset.url }));
+
+  const heroImageAsset = subculture.subcultureAssets
+    .find(sa => sa.assetRole === 'THUMBNAIL' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE');
 
   const profile = {
     displayName: subculture.namaSubculture || 'Unnamed Subculture',
@@ -149,8 +152,8 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   };
 
   const galleryImages = subculture.subcultureAssets
-    .filter((sa: { asset: { tipe: string; }; }) => sa.asset.tipe === 'FOTO')
-    .map((sa: { asset: { url: any; }; }) => ({ url: sa.asset.url }));
+    .filter(sa => (sa.assetRole === 'GALLERY' || sa.assetRole === 'HIGHLIGHT') && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
+    .map(sa => ({ url: sa.asset.url }));
 
   // Include galleries from lexicons
   const lexiconGalleryImages = subculture.domainKodifikasis
@@ -197,7 +200,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     }));
   });
 
-  const heroImage = highlights.length > 0 ? highlights[0]?.url : (allGalleryImages.length > 0 ? allGalleryImages[0]!.url : null);
+  const heroImage = heroImageAsset ? heroImageAsset.asset.url : (allGalleryImages.length > 0 ? allGalleryImages[0]!.url : null);
 
   const videoUrl = subculture.subcultureAssets.find(sa => sa.assetRole === 'VIDEO_DEMO')?.asset.url || null;
 
