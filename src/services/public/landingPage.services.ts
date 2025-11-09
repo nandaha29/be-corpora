@@ -31,13 +31,16 @@ export const getLandingPageData = async () => {
     assets: heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => sub.subcultureAssets.map(sa => sa.asset.url)) || [],
   };
 
-  // SUBCULTURE SECTION: Get 4 published subcultures from the same province as hero culture
+  // SUBCULTURE SECTION: Get 4 published subcultures ordered by priority status (HIGH first)
   const subcultures = await prisma.subculture.findMany({
     where: {
       status: 'PUBLISHED',
-      cultureId: heroCulture?.cultureId // Only get subcultures from the same province as hero culture
     },
     take: 4,
+    orderBy: [
+      { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+      { createdAt: 'desc' } // Secondary order by newest first
+    ] as any,
     include: {
       culture: true,
       subcultureAssets: {
@@ -49,7 +52,7 @@ export const getLandingPageData = async () => {
     },
   });
 
-  const subcultureSection = subcultures.map((sub: { subcultureId: any; slug: any; namaSubculture: any; penjelasan: any; culture: { namaBudaya: any; provinsi: any; }; subcultureAssets: string | any[]; }) => ({
+  const subcultureSection = subcultures.map((sub: any) => ({
     id: sub.subcultureId,
     slug: sub.slug,
     name: sub.namaSubculture,
