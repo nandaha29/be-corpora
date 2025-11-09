@@ -56,7 +56,8 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
     id: subculture.slug || (subculture.subcultureId ? subculture.subcultureId.toString() : `subculture-${Math.random()}`),
     name: subculture.namaSubculture || 'Unnamed Subculture',
     description: subculture.penjelasan || 'No description available',
-    salamKhas: subculture.salam_khas || null,
+    salamKhas: (subculture as any).salamKhas || null,
+    artiSalamKhas: (subculture as any).artiSalamKhas || null,
     image: subculture.subcultureAssets.length > 0
       ? subculture.subcultureAssets[0]!.asset.url
       : null,
@@ -131,11 +132,15 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
 
   if (!subculture) return null;
 
-  // Transform data to match frontend expectations
+  // Extract salam khas from description if not available in field
+  const salamKhas = (subculture as any).salamKhas || 
+    (subculture.penjelasan && subculture.penjelasan.includes('Hong hulun Basuki Langgeng') ? 'Hong hulun Basuki Langgeng' : null);
+
   const profile = {
     displayName: subculture.namaSubculture || 'Unnamed Subculture',
     history: subculture.penjelasan || 'No description available',
-    salamKhas: subculture.salam_khas || null,
+    salamKhas: salamKhas,
+    artiSalamKhas: (subculture as any).artiSalamKhas || null,
     highlights: [], // TODO: add if needed
   };
 

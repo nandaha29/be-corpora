@@ -39,13 +39,19 @@ export const getSubcultureById = async (id: number) => {
   });
 };
 
-export const createSubculture = async (data: any) => {
+export const createSubculture = async (data: CreateSubcultureInput) => {
   const slug = generateSlug(data.namaSubculture);
   return prisma.subculture.create({ 
     data: {
-      ...data,
+      namaSubculture: data.namaSubculture,
+      salam_khas: data.salam_khas,
+      arti_salam_khas: (data as any).arti_salam_khas,
+      penjelasan: data.penjelasan,
+      cultureId: data.cultureId,
+      status: data.status,
+      statusKonservasi: data.statusKonservasi,
       slug,
-    }
+    } as any
   });
 };
 

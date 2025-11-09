@@ -49,9 +49,9 @@ export type UpdateCultureInput = z.infer<typeof updateCultureSchema>;
 ======================= */
 export const createSubcultureSchema = z.object({
   namaSubculture: z.string().min(1, { message: "Nama subkultur is required" }),
-  salam_khas: z.string().min(1, { message: "Salam khas is required" }).optional(),
+  salam_khas: z.string().min(1, { message: "Salam khas is required" }),
+  arti_salam_khas: z.string().optional(),
   penjelasan: z.string().min(1, { message: "Penjelasan is required" }),
-  slug: z.string().optional(),
   cultureId: z.number().min(1, { message: "Culture ID is required" }),
   status: z.nativeEnum(StatusPublish).default(StatusPublish.DRAFT).optional(),
   statusKonservasi: z.nativeEnum(StatusKonservasi).default(StatusKonservasi.TREATED).optional(),

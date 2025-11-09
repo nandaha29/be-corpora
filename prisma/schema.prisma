@@ -51,19 +51,21 @@ model Culture {
 
 
 model Subculture {
-  subcultureId     Int                 @id @default(autoincrement()) @map("subculture_id")
-  namaSubculture   String              @map("nama_subkultur")
-  slug             String              @unique @map("slug")
-  salam_khas       String              @db.Text
-  penjelasan       String              @db.Text
-  cultureId        Int                 @map("culture_id")
-  status           StatusPublish       @default(DRAFT) @map("status")
-  statusKonservasi StatusKonservasi    @default(TREATED) @map("status_konservasi")
-  createdAt        DateTime            @default(now()) @map("created_at")
-  updatedAt        DateTime            @updatedAt @map("updated_at")
-  domainKodifikasis DomainKodifikasi[]
-  culture          Culture             @relation(fields: [cultureId], references: [cultureId])
-  subcultureAssets SubcultureAsset[]
+  subcultureId          Int                 @id @default(autoincrement()) @map("subculture_id")
+  namaSubculture        String              @map("nama_subkultur")
+  slug                  String              @unique @map("slug")
+  salamKhas             String              @db.Text @map("salam_khas")
+  artiSalamKhas         String?             @map("arti_salam_khas")
+  penjelasan            String              @db.Text
+  cultureId             Int                 @map("culture_id")
+  status                StatusPublish       @default(DRAFT) @map("status")
+  statusPriorityDisplay StatusPriority?     @default(LOW) @map("status_priority_display")
+  statusKonservasi      StatusKonservasi    @default(TREATED) @map("status_konservasi")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  domainKodifikasis     DomainKodifikasi[]
+  culture               Culture             @relation(fields: [cultureId], references: [cultureId])
+  subcultureAssets      SubcultureAsset[]
 
   @@map("SUBCULTURE")
 }
@@ -279,6 +281,13 @@ enum StatusKonservasi {
 
 enum CitationNoteType {
   RESOURCE
+}
+
+enum StatusPriority {
+  HIGH       
+  MEDIUM     
+  LOW        
+  HIDDEN     
 }
 
 // ============================================
