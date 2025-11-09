@@ -1,7 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 
 export const getLandingPageData = async () => {
-  // HEROSECTION: Get a random published culture from Jawa Timur province and its photo assets
+    // HEROSECTION: Get a random published culture that has active highlight photo assets from its subcultures
   const cultures = await prisma.culture.findMany({
     where: {
       status: 'PUBLISHED',
@@ -15,7 +15,11 @@ export const getLandingPageData = async () => {
               asset: true,
             },
             where: {
-              asset: { tipe: 'FOTO' },
+              asset: { 
+                tipe: 'FOTO',
+                status: 'ACTIVE'
+              },
+              assetRole: 'HIGHLIGHT',
             },
           },
         },
@@ -26,9 +30,14 @@ export const getLandingPageData = async () => {
   const randomIndex = Math.floor(Math.random() * cultures.length);
   const heroCulture = cultures[randomIndex];
 
+  // Get up to 3 active highlight photo URLs from the hero culture's subcultures
+  const highlightAssets = heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => 
+    sub.subcultureAssets.map(sa => sa.asset.url)
+  ).slice(0, 3) || [];
+
   const heroSection = {
     cultureName: heroCulture?.provinsi || 'Default Culture',
-    assets: heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => sub.subcultureAssets.map(sa => sa.asset.url)) || [],
+    assets: highlightAssets,
   };
 
   // SUBCULTURE SECTION: Get 4 published subcultures ordered by priority status (HIGH first)
@@ -39,14 +48,18 @@ export const getLandingPageData = async () => {
     take: 4,
     orderBy: [
       { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
-      { createdAt: 'desc' } // Secondary order by newest first
+      // { createdAt: 'desc' } // Secondary order by newest first
     ] as any,
     include: {
       culture: true,
       subcultureAssets: {
         include: { asset: true },
         where: {
-          asset: { tipe: 'FOTO' },
+          asset: { 
+            tipe: 'FOTO',
+            status: 'ACTIVE'
+          },
+          assetRole: 'THUMBNAIL',
         },
       },
     },
