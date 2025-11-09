@@ -42,7 +42,13 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
       culture: true,
       subcultureAssets: {
         include: { asset: true },
-        where: { asset: { tipe: 'FOTO' } },
+        where: { 
+          asset: { 
+            tipe: 'FOTO',
+            status: 'ACTIVE'
+          },
+          assetRole: 'THUMBNAIL'
+        },
       },
     },
     orderBy: {
@@ -152,7 +158,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   };
 
   const galleryImages = subculture.subcultureAssets
-    .filter(sa => (sa.assetRole === 'GALLERY' || sa.assetRole === 'HIGHLIGHT') && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
+    .filter(sa => sa.assetRole === 'GALLERY' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
     .map(sa => ({ url: sa.asset.url }));
 
   // Include galleries from lexicons
@@ -200,7 +206,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     }));
   });
 
-  const heroImage = heroImageAsset ? heroImageAsset.asset.url : (allGalleryImages.length > 0 ? allGalleryImages[0]!.url : null);
+  const heroImage = heroImageAsset ? heroImageAsset.asset.url : null;
 
   const videoUrl = subculture.subcultureAssets.find(sa => sa.assetRole === 'VIDEO_DEMO')?.asset.url || null;
 
