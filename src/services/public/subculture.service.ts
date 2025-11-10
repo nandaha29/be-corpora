@@ -51,9 +51,10 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
         },
       },
     },
-    orderBy: {
-      namaSubculture: 'asc',
-    },
+    orderBy: [
+      { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+      { namaSubculture: 'asc' }, // Secondary order by name
+    ],
     skip: (page - 1) * limit,
     take: limit,
   });
