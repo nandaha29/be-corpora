@@ -114,6 +114,9 @@ export const getLandingPageData = async () => {
       isCoordinator: true,
       statusCoordinator: 'ACTIVE',
     },
+    orderBy: [
+      { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+    ],
     select: {
       namaContributor: true,
       expertiseArea: true,

@@ -113,17 +113,18 @@ model Leksikon {
 }
 
 model Contributor {
-  contributorId     Int                  @id @default(autoincrement()) @map("contributor_id")
-  namaContributor   String               @map("nama_contributor")
-  institusi         String
-  email             String
-  expertiseArea     String               @map("expertise_area")
-  contactInfo       String               @map("contact_info")
-  isCoordinator     Boolean              @default(false) @map("is_coordinator")
-  statusCoordinator StatusCoordinator    @default(INACTIVE) @map("status_coordinator")
-  registeredAt      DateTime             @default(now()) @map("registered_at")
-  leksikons         Leksikon[]
-  contributorAssets ContributorAsset[]
+  contributorId         Int                  @id @default(autoincrement()) @map("contributor_id")
+  namaContributor       String               @map("nama_contributor")
+  institusi             String
+  email                 String
+  expertiseArea         String               @map("expertise_area")
+  contactInfo           String               @map("contact_info")
+  statusPriorityDisplay StatusPriority?      @default(LOW) @map("status_priority_display")
+  isCoordinator         Boolean              @default(false) @map("is_coordinator")
+  statusCoordinator     StatusCoordinator    @default(INACTIVE) @map("status_coordinator")
+  registeredAt          DateTime             @default(now()) @map("registered_at")
+  leksikons             Leksikon[]
+  contributorAssets     ContributorAsset[]
 
   @@map("CONTRIBUTOR")
 }
