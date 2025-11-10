@@ -110,6 +110,10 @@ export const getLandingPageData = async () => {
 
   // TEAM SCIENTIS SECTION: Contributors
   const teamScientis = await prisma.contributor.findMany({
+    where: {
+      isCoordinator: true,
+      statusCoordinator: 'ACTIVE',
+    },
     select: {
       namaContributor: true,
       expertiseArea: true,
