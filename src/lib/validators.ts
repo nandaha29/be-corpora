@@ -1,4 +1,23 @@
 import { z } from "zod";
+import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CitationNoteType, AdminRole, StatusPublish, StatusKonservasi } from "@prisma/client";
+
+/* =======================
+   🔐 ADMIN AUTHENTICATION
+======================= */
+export const adminRegisterSchema = z.object({
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }).max(50),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  role: z.nativeEnum(AdminRole).default(AdminRole.EDITOR).optional(),
+});
+
+export const adminLoginSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+});
+
+export type AdminRegisterInput = z.infer<typeof adminRegisterSchema>;
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
 
 /* =======================
    🏛️ CULTURE
@@ -11,8 +30,8 @@ export const createCultureSchema = z.object({
   klasifikasi: z.string().optional(),
   karakteristik: z.string().optional(),
   statusKonservasi: z
-    .enum(["MAINTAINED", "TREATENED", "CRITICAL", "ARCHIVED"])
-    .default("ARCHIVED")
+    .enum(["MAINTAINED", "TREATED", "CRITICAL", "ARCHIVED"])
+    .default("TREATED")
     .optional(),
   latitude: z.coerce.number().optional(),
   longitude: z.coerce.number().optional(),
@@ -30,16 +49,12 @@ export type UpdateCultureInput = z.infer<typeof updateCultureSchema>;
 ======================= */
 export const createSubcultureSchema = z.object({
   namaSubculture: z.string().min(1, { message: "Nama subkultur is required" }),
+  salam_khas: z.string().min(1, { message: "Salam khas is required" }),
+  arti_salam_khas: z.string().optional(),
   penjelasan: z.string().min(1, { message: "Penjelasan is required" }),
   cultureId: z.number().min(1, { message: "Culture ID is required" }),
-  status: z
-    .enum(["DRAFT", "PUBLISHED", "ARCHIVED"])
-    .default("DRAFT")
-    .optional(),
-  statusKonservasi: z
-    .enum(["MAINTAINED", "TREATENED", "CRITICAL", "ARCHIVED"])
-    .default("TREATENED")
-    .optional(),
+  status: z.nativeEnum(StatusPublish).default(StatusPublish.DRAFT).optional(),
+  statusKonservasi: z.nativeEnum(StatusKonservasi).default(StatusKonservasi.TREATED).optional(),
 });
 export const updateSubcultureSchema = createSubcultureSchema.partial();
 export type CreateSubcultureInput = z.infer<typeof createSubcultureSchema>;
@@ -68,7 +83,7 @@ export type UpdateDomainKodifikasiInput = z.infer<typeof updateDomainKodifikasiS
 ======================= */
 export const createLeksikonSchema = z.object({
   kataLeksikon: z.string().min(1, { message: "Kata leksikon is required" }),
-  ipa: z.string().min(1, { message: "IPA is required" }),
+  ipa: z.string().min(1, { message: "IPA (international phonetic alphabet) is required" }),
   transliterasi: z.string().min(1, { message: "Transliterasi is required" }),
   maknaEtimologi: z.string().min(1, { message: "Makna etimologi is required" }),
   maknaKultural: z.string().min(1, { message: "Makna kultural is required" }),
@@ -80,8 +95,8 @@ export const createLeksikonSchema = z.object({
   domainKodifikasiId: z.number().min(1, { message: "Domain Kodifikasi ID is required" }),
   contributorId: z.number().min(1, { message: "Contributor ID is required" }),
   statusPreservasi: z
-    .enum(["MAINTAINED", "TREATENED", "CRITICAL", "ARCHIVED"])
-    .default("ARCHIVED")
+    .enum(["MAINTAINED", "TREATED", "CRITICAL", "ARCHIVED"])
+    .default("MAINTAINED")
     .optional(),
   status: z
     .enum(["DRAFT", "PUBLISHED", "ARCHIVED"])
@@ -157,21 +172,34 @@ export type UpdateAssetInput = z.infer<typeof updateAssetSchema>;
 export const createLeksikonAssetSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.string().min(1, { message: "Asset role is required" }),
+  assetRole: z.nativeEnum(LeksikonAssetRole, { message: "Asset role must be one of: GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D" }),
+});
+export const updateAssetRoleSchema = z.object({
+  assetRole: z.nativeEnum(LeksikonAssetRole, { message: "Asset role must be one of: GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D" }),
 });
 export const createSubcultureAssetSchema = z.object({
   subcultureId: z.number().min(1, { message: "Subculture ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.string().min(1, { message: "Asset role is required" }),
+  assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: HIGHLIGHT, THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
 });
 export const createLeksikonReferensiSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),
   referensiId: z.number().min(1, { message: "Referensi ID is required" }),
-  citationNote: z.string().optional(),
+  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: RESOURCE" }),
+});
+export const createContributorAssetSchema = z.object({
+  contributorId: z.number().min(1, { message: "Contributor ID is required" }),
+  assetId: z.number().min(1, { message: "Asset ID is required" }),
+  assetNote: z.nativeEnum(ContributorAssetRole, { message: "Asset role must be one of: LOGO, FOTO_DIRI, SIGNATURE, CERTIFICATE" }),
+});
+export const updateCitationNoteSchema = z.object({
+  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: RESOURCE" }),
 });
 
 export type CreateLeksikonAssetInput = z.infer<typeof createLeksikonAssetSchema>;
 export type CreateSubcultureAssetInput = z.infer<typeof createSubcultureAssetSchema>;
 export type CreateLeksikonReferensiInput = z.infer<typeof createLeksikonReferensiSchema>;
+export type CreateContributorAssetInput = z.infer<typeof createContributorAssetSchema>;
+export type UpdateCitationNoteInput = z.infer<typeof updateCitationNoteSchema>;
 
 

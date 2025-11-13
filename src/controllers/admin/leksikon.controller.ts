@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
-import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema } from '../../lib/validators.js';
+import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema, updateCitationNoteSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { LeksikonAssetRole } from '@prisma/client';
 
 // GET /api/leksikons
 // export const getLeksikons = async (req: Request, res: Response) => {
@@ -70,7 +71,7 @@ export const updateLeksikon = async (req: Request, res: Response) => {
     if ((error as any)?.code === 'CONTRIBUTOR_NOT_FOUND') {
       return res.status(400).json({ message: 'Referenced contributor does not exist' });
     }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Leksikon not found' });
     }
     console.error('Failed to update leksikon:', error);
@@ -91,7 +92,7 @@ export const deleteLeksikon = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Leksikon not found' });
     }
     console.error('Failed to delete leksikon:', error);
@@ -202,7 +203,7 @@ export const removeAssetFromLeksikon = async (req: Request, res: Response) => {
     await leksikonService.removeAssetFromLeksikon(leksikonId, assetId);
     return res.status(200).json({ message: 'Asset removed from leksikon' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from leksikon:', error);
@@ -308,7 +309,7 @@ export const removeReferenceFromLeksikon = async (req: Request, res: Response) =
     await leksikonService.removeReferenceFromLeksikon(leksikonId, referensiId);
     return res.status(200).json({ message: 'Reference removed from leksikon' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove reference from leksikon:', error);
@@ -332,7 +333,7 @@ export const updateAssetRole = async (req: Request, res: Response) => {
     const result = await leksikonService.updateAssetRole(
       leksikonId,
       assetId,
-      assetRole
+      assetRole as LeksikonAssetRole
     );
 
     return res.status(200).json({
@@ -356,15 +357,15 @@ export const updateCitationNote = async (req: Request, res: Response) => {
   try {
     const leksikonId = Number(req.params.id);
     const referensiId = Number(req.params.referenceId);
-    const { citationNote } = req.body;
 
     if (Number.isNaN(leksikonId) || Number.isNaN(referensiId))
       return res.status(400).json({ message: 'Invalid IDs' });
 
+    const validated = updateCitationNoteSchema.parse(req.body);
     const result = await leksikonService.updateCitationNote(
       leksikonId,
       referensiId,
-      citationNote
+      validated.citationNote
     );
 
     return res.status(200).json({
@@ -373,6 +374,9 @@ export const updateCitationNote = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Validation failed', errors: error });
+    }
     if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND')
       return res.status(404).json({ message: 'Reference relation not found' });
 
@@ -436,5 +440,83 @@ export const updateLeksikonStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Failed to update leksikon status", error });
     return;
+  }
+};
+
+// PUT /api/leksikons/:id/assets/:assetId/role
+export const updateAssetRoleInLeksikon = async (req: Request, res: Response) => {
+  try {
+    const leksikonId = Number(req.params.id);
+    const assetId = Number(req.params.assetId);
+    const { assetRole } = req.body;
+
+    if (Number.isNaN(leksikonId) || Number.isNaN(assetId)) {
+      return res.status(400).json({ message: 'Invalid IDs' });
+    }
+
+    if (!assetRole || typeof assetRole !== 'string') {
+      return res.status(400).json({ message: 'assetRole is required and must be a string' });
+    }
+
+    // Validate assetRole enum values
+    const validRoles = ['GALLERY', 'PRONUNCIATION', 'VIDEO_DEMO', 'MODEL_3D'];
+    if (!validRoles.includes(assetRole!)) {
+      return res.status(400).json({
+        message: 'Invalid assetRole',
+        validRoles
+      });
+    }
+
+    const updated = await leksikonService.updateAssetRole(leksikonId, assetId, assetRole as LeksikonAssetRole);
+    return res.status(200).json({
+      message: 'Asset role updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND') {
+      return res.status(404).json({ message: 'Asset association not found' });
+    }
+    console.error('Failed to update asset role:', error);
+    return res.status(500).json({
+      message: 'Failed to update asset role',
+      details: error
+    });
+  }
+};
+
+// GET /api/leksikons/:id/assets/role/:assetRole
+export const getAssetsByRole = async (req: Request, res: Response) => {
+  try {
+    const leksikonId = Number(req.params.id);
+    const assetRole = req.params.assetRole;
+
+    if (Number.isNaN(leksikonId)) {
+      return res.status(400).json({ message: 'Invalid leksikon ID' });
+    }
+
+    if (!assetRole || typeof assetRole !== 'string') {
+      return res.status(400).json({ message: 'assetRole is required and must be a string' });
+    }
+
+    // Validate assetRole enum values
+    const validRoles = ['GALLERY', 'PRONUNCIATION', 'VIDEO_DEMO', 'MODEL_3D'];
+    if (!validRoles.includes(assetRole)) {
+      return res.status(400).json({
+        message: 'Invalid assetRole',
+        validRoles
+      });
+    }
+
+    const assets = await leksikonService.getAssetsByRole(leksikonId, assetRole as LeksikonAssetRole);
+    return res.status(200).json({
+      message: 'Assets retrieved successfully',
+      data: assets
+    });
+  } catch (error) {
+    console.error('Failed to get assets by role:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve assets',
+      details: error
+    });
   }
 };

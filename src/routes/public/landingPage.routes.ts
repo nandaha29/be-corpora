@@ -1,9 +1,9 @@
-// import { Router } from "express";
-// import * as leksikonController from "@/controllers/leksikon.controller.js";
+import { Router } from 'express';
+import * as landingPageController from '../../controllers/public/landingPage.controller.js';
 
-// const router = Router();
+const router = Router();
 
-// router.get("/", leksikonController.getPublicLeksikon);
-// router.get("/:id", leksikonController.getPublicLeksikonById);
+router.get('/', landingPageController.getLandingPage);
+router.post('/contact', landingPageController.submitContactForm);
 
-// export default router;
+export default router;

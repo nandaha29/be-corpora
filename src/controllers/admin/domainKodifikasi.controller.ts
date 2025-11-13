@@ -9,11 +9,15 @@ import { ZodError } from 'zod';
 // GET /api/domains
 export const getDomains = async (req: Request, res: Response) => {
   try {
-    const items = await domainService.getAllDomainKodifikasi();
-    res.status(200).json(items);
+    const domainKodifikasi = await domainService.getAllDomainKodifikasi();
+
+    res.status(200).json({
+      message: "Success",
+      data: domainKodifikasi,
+    });
     return;
   } catch (error) {
-    res.status(500).json({ message: 'Failed to retrieve domains' });
+    res.status(500).json({ message: "Failed to retrieve domain kodifikasi" });
     return;
   }
 };

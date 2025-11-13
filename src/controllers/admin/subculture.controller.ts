@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import * as subcultureService from "../../services/admin/subculture.service.js";
 import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
-import { Prisma } from "@prisma/client";
-import { de } from "zod/locales";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 // export const getAllSubcultures = async (req: Request, res: Response) => {
 //   try {
@@ -37,7 +36,7 @@ export const createSubculture = async (req: Request, res: Response) => {
     const subculture = await subcultureService.createSubculture(parsed.data);
     return res.status(201).json(subculture);
   } catch (error) {
-    return res.status(500).json({ error: "Failed to create subculture" });
+    return res.status(500).json({ error: error });
   }
 };
 
@@ -111,12 +110,13 @@ export const removeAssetFromSubculture = async (req: Request, res: Response) => 
   try {
     const subcultureId = Number(req.params.id);
     const assetId = Number(req.params.assetId);
+    const assetRole = req.body.assetRole;
     if (Number.isNaN(subcultureId) || Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid IDs' });
 
-    await subcultureService.removeAssetFromSubculture(subcultureId, assetId);
+    await subcultureService.removeAssetFromSubculture(subcultureId, assetId, assetRole);
     return res.status(200).json({ message: 'Asset removed from subculture' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from subculture:', error);

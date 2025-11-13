@@ -1,15 +1,28 @@
+import { Prisma, ContributorAssetRole } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { prisma } from '../../lib/prisma.js';
-import { CreateContributorInput, UpdateContributorInput } from '../../lib/validators.js';
+import { CreateContributorInput, UpdateContributorInput, CreateContributorAssetInput } from '../../lib/validators.js';
 
 // Get all contributors
 export const getAllContributors = async () => {
-  return prisma.contributor.findMany();
+  return prisma.contributor.findMany({
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
+  });
 };
 
 // Get contributor by ID
 export const getContributorById = async (id: number) => {
   return prisma.contributor.findUnique({
     where: { contributorId: id },
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
   });
 };
 
@@ -51,6 +64,11 @@ export const searchContributors = async (query: string) => {
         { email: { contains: query, mode: 'insensitive' } },
       ],
     },
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
   });
 };
 
@@ -65,6 +83,11 @@ export const getAllContributorsPaginated = async (page = 1, limit = 10) => {
       orderBy: {
         contributorId: 'asc',
       },
+      include: {
+        contributorAssets: {
+          include: { asset: true },
+        },
+      },
     }),
     prisma.contributor.count(),
   ]);
@@ -76,4 +99,59 @@ export const getAllContributorsPaginated = async (page = 1, limit = 10) => {
     limit,
     totalPages: Math.ceil(totalCount / limit),
   };
+};
+
+// Get contributor assets
+export const getContributorAssets = async (contributorId: number) => {
+  return prisma.contributorAsset.findMany({
+    where: { contributorId },
+    include: {
+      asset: true,
+    },
+  });
+};
+
+// Add asset to contributor
+export const addAssetToContributor = async (contributorId: number, assetId: number, assetNote: ContributorAssetRole) => {
+  // verify contributor exists
+  const contributor = await prisma.contributor.findUnique({ where: { contributorId } });
+  if (!contributor) {
+    const err = new Error('Contributor not found');
+    (err as any).code = 'CONTRIBUTOR_NOT_FOUND';
+    throw err;
+  }
+
+  // verify asset exists
+  const asset = await prisma.asset.findUnique({ where: { assetId } });
+  if (!asset) {
+    const err = new Error('Asset not found');
+    (err as any).code = 'ASSET_NOT_FOUND';
+    throw err;
+  }
+
+  // ✅ pakai upsert biar tidak error P2002
+  return prisma.contributorAsset.upsert({
+    where: {
+      contributorId_assetId: { contributorId, assetId },
+    },
+    update: { assetNote },
+    create: { contributorId, assetId, assetNote },
+    include: { asset: true },
+  });
+};
+
+// Remove asset from contributor
+export const removeAssetFromContributor = async (contributorId: number, assetId: number) => {
+  try {
+    return await prisma.contributorAsset.delete({
+      where: { contributorId_assetId: { contributorId, assetId } },
+    });
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      const err = new Error('Association not found');
+      (err as any).code = 'ASSOCIATION_NOT_FOUND';
+      throw err;
+    }
+    throw error;
+  }
 };

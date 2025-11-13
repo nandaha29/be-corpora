@@ -1,7 +1,18 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, SubcultureAssetRole } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
 const prisma = new PrismaClient();
+
+// Helper function to generate slug
+const generateSlug = (name: string): string => {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with dash
+    .replace(/(^-|-$)/g, ""); // Remove leading/trailing dashes
+};
 
 export const getAllSubcultures = async () => {
   return prisma.subculture.findMany({
@@ -29,13 +40,29 @@ export const getSubcultureById = async (id: number) => {
 };
 
 export const createSubculture = async (data: CreateSubcultureInput) => {
-  return prisma.subculture.create({ data });
+  const slug = generateSlug(data.namaSubculture);
+  return prisma.subculture.create({ 
+    data: {
+      namaSubculture: data.namaSubculture,
+      salam_khas: data.salam_khas,
+      arti_salam_khas: (data as any).arti_salam_khas,
+      penjelasan: data.penjelasan,
+      cultureId: data.cultureId,
+      status: data.status,
+      statusKonservasi: data.statusKonservasi,
+      slug,
+    } as any
+  });
 };
 
-export const updateSubculture = async (id: number, data: UpdateSubcultureInput) => {
+export const updateSubculture = async (id: number, data: any) => {
+  let updateData = data;
+  if (data.namaSubculture) {
+    updateData.slug = generateSlug(data.namaSubculture);
+  }
   return prisma.subculture.update({
     where: { subcultureId: id },
-    data,
+    data: updateData,
   });
 };
 
@@ -45,7 +72,7 @@ export const deleteSubculture = async (id: number) => {
   });
 };
 
-export const addAssetToSubculture = async (subcultureId: number, assetId: number, assetRole: string) => {
+export const addAssetToSubculture = async (subcultureId: number, assetId: number, assetRole: SubcultureAssetRole) => {
   // verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
   if (!subculture) {
@@ -62,25 +89,33 @@ export const addAssetToSubculture = async (subcultureId: number, assetId: number
     throw err;
   }
 
-  // ✅ pakai upsert biar tidak error P2002
-  return prisma.subcultureAsset.upsert({
-    where: {
-      subcultureId_assetId: { subcultureId, assetId },
-    },
-    update: { assetRole },
-    create: { subcultureId, assetId, assetRole },
-    include: { asset: true },
-  });
+  // For GALLERY role, allow multiple photos by always creating new associations
+  // For other roles, use upsert to replace existing
+  if (assetRole === 'GALLERY') {
+    return prisma.subcultureAsset.create({
+      data: { subcultureId, assetId, assetRole },
+      include: { asset: true },
+    });
+  } else {
+    return prisma.subcultureAsset.upsert({
+      where: {
+        subcultureId_assetId_assetRole: { subcultureId, assetId, assetRole },
+      },
+      update: { assetRole },
+      create: { subcultureId, assetId, assetRole },
+      include: { asset: true },
+    });
+  }
 };
 
 
-export const removeAssetFromSubculture = async (subcultureId: number, assetId: number) => {
+export const removeAssetFromSubculture = async (subcultureId: number, assetId: number, assetRole: SubcultureAssetRole) => {
   try {
-    return await prisma.subcultureAsset.delete({
-      where: { subcultureId_assetId: { subcultureId, assetId } },
+    return await prisma.subcultureAsset.deleteMany({
+      where: { subcultureId, assetId, assetRole },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       const err = new Error('Association not found');
       (err as any).code = 'ASSOCIATION_NOT_FOUND';
       throw err;
