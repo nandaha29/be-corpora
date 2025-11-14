@@ -43,15 +43,38 @@ export const createSubculture = async (req: Request, res: Response) => {
 export const updateSubculture = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
+    console.log('UpdateSubculture controller called with id:', id);
+    console.log('Request body:', req.body);
+    
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: "Invalid subculture ID" });
+    }
+
     const parsed = updateSubcultureSchema.safeParse(req.body);
+    console.log('Validation result:', parsed);
+    
     if (!parsed.success) {
+      console.log('Validation errors:', parsed.error);
       return res.status(400).json({ error: parsed.error });
     }
 
+    console.log('Parsed data:', parsed.data);
     const subculture = await subcultureService.updateSubculture(id, parsed.data);
     return res.json(subculture);
   } catch (error) {
-    return res.status(500).json({ error: "Failed to update subculture" });
+    console.error('Error updating subculture:', error);
+
+    // Handle specific Prisma errors
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return res.status(404).json({ error: "Subculture not found" });
+      }
+      if (error.code === 'P2002') {
+        return res.status(409).json({ error: "Unique constraint violation" });
+      }
+    }
+
+    return res.status(500).json({ error: "Failed to update subculture", details: (error as Error).message });
   }
 };
 

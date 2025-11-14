@@ -44,26 +44,37 @@ export const createSubculture = async (data: CreateSubcultureInput) => {
   return prisma.subculture.create({ 
     data: {
       namaSubculture: data.namaSubculture,
-      salam_khas: data.salam_khas,
-      arti_salam_khas: (data as any).arti_salam_khas,
+      salamKhas: data.salamKhas,
+      artiSalamKhas: data.artiSalamKhas,
       penjelasan: data.penjelasan,
       cultureId: data.cultureId,
       status: data.status,
       statusKonservasi: data.statusKonservasi,
       slug,
-    } as any
+    }
   });
 };
 
-export const updateSubculture = async (id: number, data: any) => {
-  let updateData = data;
+export const updateSubculture = async (id: number, data: UpdateSubcultureInput) => {
+  console.log('UpdateSubculture called with id:', id);
+  console.log('Input data:', data);
+  
+  let updateData: any = { ...data };
+  
   if (data.namaSubculture) {
     updateData.slug = generateSlug(data.namaSubculture);
+    console.log('Generated slug:', updateData.slug);
   }
-  return prisma.subculture.update({
+  
+  console.log('Final updateData to send to Prisma:', updateData);
+  
+  const result = await prisma.subculture.update({
     where: { subcultureId: id },
     data: updateData,
   });
+  
+  console.log('Update result:', result);
+  return result;
 };
 
 export const deleteSubculture = async (id: number) => {
