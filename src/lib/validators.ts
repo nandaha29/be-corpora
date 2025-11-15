@@ -135,6 +135,9 @@ export const createContributorSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   expertiseArea: z.string().min(1, { message: "Expertise area is required" }),
   contactInfo: z.string().min(1, { message: "Contact info is required" }),
+  statusPriorityDisplay: z.nativeEnum(StatusPriority).default(StatusPriority.LOW).optional(),
+  isCoordinator: z.boolean().default(false).optional(),
+  statusCoordinator: z.enum(["ACTIVE", "INACTIVE", "ALUMNI"]).default("INACTIVE").optional(),
 });
 export const updateContributorSchema = createContributorSchema.partial();
 export type CreateContributorInput = z.infer<typeof createContributorSchema>;
@@ -183,6 +186,11 @@ export const createSubcultureAssetSchema = z.object({
   assetId: z.number().min(1, { message: "Asset ID is required" }),
   assetRole: z.nativeEnum(SubcultureAssetRole, { message: "Asset role must be one of: HIGHLIGHT, THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
 });
+export const createCultureAssetSchema = z.object({
+  cultureId: z.number().min(1, { message: "Culture ID is required" }),
+  assetId: z.number().min(1, { message: "Asset ID is required" }),
+  assetRole: z.nativeEnum(CultureAssetRole, { message: "Asset role must be one of: THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
+});
 export const createLeksikonReferensiSchema = z.object({
   leksikonId: z.number().min(1, { message: "Leksikon ID is required" }),
   referensiId: z.number().min(1, { message: "Referensi ID is required" }),
@@ -191,7 +199,7 @@ export const createLeksikonReferensiSchema = z.object({
 export const createContributorAssetSchema = z.object({
   contributorId: z.number().min(1, { message: "Contributor ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetNote: z.nativeEnum(ContributorAssetRole, { message: "Asset role must be one of: LOGO, FOTO_DIRI, SIGNATURE, CERTIFICATE" }),
+  assetNote: z.nativeEnum(ContributorAssetRole, { message: "Asset role must be one of: LOGO, FOTO_DIRI, SIGNATURE, CERTIFICATE, GALLERY" }),
 });
 export const updateCitationNoteSchema = z.object({
   citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: RESOURCE" }),
@@ -199,6 +207,7 @@ export const updateCitationNoteSchema = z.object({
 
 export type CreateLeksikonAssetInput = z.infer<typeof createLeksikonAssetSchema>;
 export type CreateSubcultureAssetInput = z.infer<typeof createSubcultureAssetSchema>;
+export type CreateCultureAssetInput = z.infer<typeof createCultureAssetSchema>;
 export type CreateLeksikonReferensiInput = z.infer<typeof createLeksikonReferensiSchema>;
 export type CreateContributorAssetInput = z.infer<typeof createContributorAssetSchema>;
 export type UpdateCitationNoteInput = z.infer<typeof updateCitationNoteSchema>;

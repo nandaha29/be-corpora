@@ -3,10 +3,25 @@ import * as referenceController from '../../controllers/public/reference.control
 
 const router = Router();
 
-// Get all published references
+// ============================================
+// PUBLIC REFERENCE ENDPOINTS
+// ============================================
+
+/**
+ * @route GET /api/public/references
+ * @desc Get all published references
+ * @access Public
+ * @returns {array} List of all published references (jurnal, buku, artikel, website, laporan)
+ */
 router.get('/', referenceController.getPublishedReferences);
 
-// Get published reference by ID
+/**
+ * @route GET /api/public/references/:referensi_id
+ * @desc Get detailed information about a specific published reference
+ * @access Public
+ * @param {number} referensi_id - Reference ID
+ * @returns {object} Reference details including title, author, type, and description
+ */
 router.get('/:referensi_id', referenceController.getPublishedReferenceById);
 
 export default router;
