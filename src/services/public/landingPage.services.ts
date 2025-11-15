@@ -1,12 +1,24 @@
 import { prisma } from '../../lib/prisma.js';
 
 export const getLandingPageData = async () => {
-    // HEROSECTION: Get a random published culture that has active highlight photo assets from its subcultures
+    // HEROSECTION: Get a random published culture that has active banner photo assets from culture or subcultures
   const cultures = await prisma.culture.findMany({
     where: {
       status: 'PUBLISHED',
     },
     include: {
+      cultureAssets: {
+        include: {
+          asset: true,
+        },
+        where: {
+          asset: { 
+            tipe: 'FOTO',
+            status: 'ACTIVE'
+          },
+          assetRole: 'BANNER',
+        },
+      },
       subcultures: {
         where: { status: 'PUBLISHED' },
         include: {
@@ -39,18 +51,21 @@ export const getLandingPageData = async () => {
       .map(sa => sa.asset.url)
   ).slice(0, 3) || []; // Take up to 3, but only use 2 for rotation
 
-  // Get hero image from THUMBNAIL role
-  const heroImageAsset = heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => 
+  // Get hero image from BANNER role (from culture assets or subculture assets)
+  const heroImageAsset = heroCulture?.cultureAssets?.find((ca: any) => 
+    ca.assetRole === 'BANNER' && ca.asset.tipe === 'FOTO' && ca.asset.status === 'ACTIVE'
+  )?.asset.url || 
+  heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => 
     sub.subcultureAssets
       .filter((sa: { assetRole: string; asset: { tipe: string; status: string; }; }) => 
-        sa.assetRole === 'THUMBNAIL' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE'
+        sa.assetRole === 'BANNER' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE'
       )
       .map(sa => sa.asset.url)
-  )[0] || null; // Take the first THUMBNAIL as hero image
+  )[0] || null; // Take the first BANNER as hero image (prefer culture banner, fallback to subculture banner)
 
   const heroSection = {
     cultureName: heroCulture?.provinsi || 'Default Culture',
-    heroImage: heroImageAsset, // 1 image for hero
+    heroImage: heroImageAsset, // 1 BANNER image for hero (from culture or subculture)
     highlightImages: highlightAssets.slice(0, 2), // 2 images for highlight rotation
   };
 
