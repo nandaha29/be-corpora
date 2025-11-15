@@ -520,3 +520,115 @@ export const getAssetsByRole = async (req: Request, res: Response) => {
     });
   }
 };
+
+// ============================================
+// 🔍 SEARCH & USAGE TRACKING CONTROLLERS
+// ============================================
+
+// GET /api/admin/leksikons/search/assets - Search assets used in lexicons
+export const searchAssetsInLeksikons = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string || '';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const result = await leksikonService.searchAssetsInLeksikons(query, page, limit);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to search assets in leksikons:', error);
+    return res.status(500).json({
+      message: 'Failed to search assets',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// GET /api/admin/leksikons/assets/assigned - Get all assets assigned to lexicons
+export const getAssignedAssets = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const result = await leksikonService.getAssignedAssets(page, limit);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to get assigned assets:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve assigned assets',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// GET /api/admin/leksikons/assets/:assetId/usages - Get which leksikons use this asset
+export const getAssetUsage = async (req: Request, res: Response) => {
+  try {
+    const assetId = parseInt(req.params.assetId || '0');
+    if (isNaN(assetId)) {
+      return res.status(400).json({ message: 'Invalid asset ID' });
+    }
+
+    const usages = await leksikonService.getAssetUsage(assetId);
+    return res.status(200).json(usages);
+  } catch (error) {
+    console.error('Failed to get asset usage:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve asset usage',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// GET /api/admin/leksikons/search/references - Search references used in lexicons
+export const searchReferencesInLeksikons = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string || '';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const result = await leksikonService.searchReferencesInLeksikons(query, page, limit);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to search references in leksikons:', error);
+    return res.status(500).json({
+      message: 'Failed to search references',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// GET /api/admin/leksikons/references/assigned - Get all references assigned to lexicons
+export const getAssignedReferences = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const result = await leksikonService.getAssignedReferences(page, limit);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to get assigned references:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve assigned references',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// GET /api/admin/leksikons/references/:referenceId/usages - Get which leksikons use this reference
+export const getReferenceUsage = async (req: Request, res: Response) => {
+  try {
+    const referenceId = parseInt(req.params.referenceId || '0');
+    if (isNaN(referenceId)) {
+      return res.status(400).json({ message: 'Invalid reference ID' });
+    }
+
+    const usages = await leksikonService.getReferenceUsage(referenceId);
+    return res.status(200).json(usages);
+  } catch (error) {
+    console.error('Failed to get reference usage:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve reference usage',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};

@@ -462,3 +462,225 @@ export const getAssetsByRole = async (leksikonId: number, assetRole: LeksikonAss
     },
   });
 };
+
+// ============================================
+// 🔍 SEARCH & USAGE TRACKING FUNCTIONS
+// ============================================
+
+// Search assets used in lexicons by query (namaFile, tipe, penjelasan)
+export const searchAssetsInLeksikons = async (query: string, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const whereCondition = {
+    leksikonAssets: {
+      some: {}, // Assets that are linked to at least one leksikon
+    },
+    OR: query ? [
+      { namaFile: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { penjelasan: { contains: query, mode: Prisma.QueryMode.insensitive } },
+    ] : undefined,
+  };
+
+  const [assets, total] = await Promise.all([
+    prisma.asset.findMany({
+      where: whereCondition,
+      include: {
+        leksikonAssets: {
+          include: {
+            leksikon: {
+              include: {
+                domainKodifikasi: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { namaFile: 'asc' },
+    }),
+    prisma.asset.count({ where: whereCondition }),
+  ]);
+
+  return {
+    data: assets,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+// Get all assets that are assigned to any leksikon
+export const getAssignedAssets = async (page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const [assets, total] = await Promise.all([
+    prisma.asset.findMany({
+      where: {
+        leksikonAssets: {
+          some: {}, // Only assets that have at least one leksikon association
+        },
+      },
+      include: {
+        leksikonAssets: {
+          include: {
+            leksikon: {
+              include: {
+                domainKodifikasi: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { namaFile: 'asc' },
+    }),
+    prisma.asset.count({
+      where: {
+        leksikonAssets: {
+          some: {},
+        },
+      },
+    }),
+  ]);
+
+  return {
+    data: assets,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+// Get which leksikons use a specific asset
+export const getAssetUsage = async (assetId: number) => {
+  return prisma.leksikonAsset.findMany({
+    where: { assetId },
+    include: {
+      leksikon: {
+        include: {
+          domainKodifikasi: true,
+          contributor: true,
+        },
+      },
+      asset: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+// Search references used in lexicons by query (judul, penulis, tipeReferensi)
+export const searchReferencesInLeksikons = async (query: string, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const whereCondition = {
+    leksikonReferensi: {
+      some: {}, // References that are linked to at least one leksikon
+    },
+    OR: query ? [
+      { judul: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { penulis: { contains: query, mode: Prisma.QueryMode.insensitive } },
+    ] : undefined,
+  };
+
+  const [references, total] = await Promise.all([
+    prisma.referensi.findMany({
+      where: whereCondition,
+      include: {
+        leksikonReferensi: {
+          include: {
+            leksikon: {
+              include: {
+                domainKodifikasi: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { judul: 'asc' },
+    }),
+    prisma.referensi.count({ where: whereCondition }),
+  ]);
+
+  return {
+    data: references,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+// Get all references that are assigned to any leksikon
+export const getAssignedReferences = async (page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const [references, total] = await Promise.all([
+    prisma.referensi.findMany({
+      where: {
+        leksikonReferensi: {
+          some: {}, // Only references that have at least one leksikon association
+        },
+      },
+      include: {
+        leksikonReferensi: {
+          include: {
+            leksikon: {
+              include: {
+                domainKodifikasi: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { judul: 'asc' },
+    }),
+    prisma.referensi.count({
+      where: {
+        leksikonReferensi: {
+          some: {},
+        },
+      },
+    }),
+  ]);
+
+  return {
+    data: references,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+// Get which leksikons use a specific reference
+export const getReferenceUsage = async (referenceId: number) => {
+  return prisma.leksikonReferensi.findMany({
+    where: { referensiId: referenceId },
+    include: {
+      leksikon: {
+        include: {
+          domainKodifikasi: true,
+          contributor: true,
+        },
+      },
+      referensi: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
