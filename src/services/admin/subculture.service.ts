@@ -50,6 +50,7 @@ export const createSubculture = async (data: CreateSubcultureInput) => {
       cultureId: data.cultureId,
       status: data.status,
       statusKonservasi: data.statusKonservasi,
+      statusPriorityDisplay: data.statusPriorityDisplay,
       slug,
     }
   });
@@ -168,6 +169,195 @@ export const getSubculturesByCulture = async (cultureId: number) => {
       culture: true,
       domainKodifikasis: true,
       subcultureAssets: { include: { asset: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const getFilteredSubcultures = async (filters: {
+  status?: string;
+  statusPriorityDisplay?: string;
+  statusKonservasi?: string;
+  cultureId?: number;
+  search?: string;
+}, pagination: { skip: number; limit: number }) => {
+  const where: any = {};
+
+  // Status filters
+  if (filters.status) {
+    where.status = filters.status;
+  }
+  if (filters.statusPriorityDisplay) {
+    where.statusPriorityDisplay = filters.statusPriorityDisplay;
+  }
+  if (filters.statusKonservasi) {
+    where.statusKonservasi = filters.statusKonservasi;
+  }
+  if (filters.cultureId) {
+    where.cultureId = filters.cultureId;
+  }
+
+  // Search filter
+  if (filters.search) {
+    where.OR = [
+      { namaSubculture: { contains: filters.search, mode: 'insensitive' } },
+      { salamKhas: { contains: filters.search, mode: 'insensitive' } },
+      { penjelasan: { contains: filters.search, mode: 'insensitive' } },
+      { culture: { namaBudaya: { contains: filters.search, mode: 'insensitive' } } },
+    ];
+  }
+
+  const [subcultures, total] = await Promise.all([
+    prisma.subculture.findMany({
+      where,
+      include: {
+        culture: true,
+        domainKodifikasis: true,
+        subcultureAssets: { include: { asset: true } },
+      },
+      orderBy: [
+        { statusPriorityDisplay: 'desc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+        { createdAt: 'desc' }
+      ],
+      skip: pagination.skip,
+      take: pagination.limit,
+    }),
+    prisma.subculture.count({ where }),
+  ]);
+
+  return { subcultures, total };
+};
+
+export const getAssignedAssets = async (subcultureId: number) => {
+  return prisma.subcultureAsset.findMany({
+    where: { subcultureId },
+    include: {
+      asset: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const getAssignedReferences = async (subcultureId: number) => {
+  // Get all leksikon that belong to this subculture's domainKodifikasis
+  const domainIds = await prisma.domainKodifikasi.findMany({
+    where: { subcultureId },
+    select: { domainKodifikasiId: true },
+  });
+
+  const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+
+  // Get all references used by leksikons in those domains
+  return prisma.leksikonReferensi.findMany({
+    where: {
+      leksikon: {
+        domainKodifikasiId: { in: domainIdList },
+      },
+    },
+    include: {
+      referensi: true,
+      leksikon: {
+        include: {
+          domainKodifikasi: {
+            include: {
+              subculture: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const searchAssetsInSubculture = async (subcultureId: number, searchQuery: string) => {
+  return prisma.subcultureAsset.findMany({
+    where: {
+      subcultureId,
+      asset: {
+        OR: [
+          { namaFile: { contains: searchQuery, mode: 'insensitive' } },
+          { penjelasan: { contains: searchQuery, mode: 'insensitive' } },
+        ],
+      },
+    },
+    include: {
+      asset: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const searchReferencesInSubculture = async (subcultureId: number, searchQuery: string) => {
+  // Get all leksikon that belong to this subculture's domainKodifikasis
+  const domainIds = await prisma.domainKodifikasi.findMany({
+    where: { subcultureId },
+    select: { domainKodifikasiId: true },
+  });
+
+  const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+
+  // Search references used by leksikons in those domains
+  return prisma.leksikonReferensi.findMany({
+    where: {
+      leksikon: {
+        domainKodifikasiId: { in: domainIdList },
+      },
+      referensi: {
+        OR: [
+          { judul: { contains: searchQuery, mode: 'insensitive' } },
+          { penjelasan: { contains: searchQuery, mode: 'insensitive' } },
+          { penulis: { contains: searchQuery, mode: 'insensitive' } },
+        ],
+      },
+    },
+    include: {
+      referensi: true,
+      leksikon: {
+        include: {
+          domainKodifikasi: {
+            include: {
+              subculture: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const getAssetUsage = async (assetId: number) => {
+  return prisma.subcultureAsset.findMany({
+    where: { assetId },
+    include: {
+      subculture: {
+        include: {
+          culture: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const getReferenceUsage = async (referensiId: number) => {
+  return prisma.leksikonReferensi.findMany({
+    where: { referensiId },
+    include: {
+      leksikon: {
+        include: {
+          domainKodifikasi: {
+            include: {
+              subculture: {
+                include: {
+                  culture: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
   });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CitationNoteType, AdminRole, StatusPublish, StatusKonservasi } from "@prisma/client";
+import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CitationNoteType, AdminRole, StatusPublish, StatusKonservasi, StatusPriority } from "@prisma/client";
 
 /* =======================
    🔐 ADMIN AUTHENTICATION
@@ -55,6 +55,7 @@ export const createSubcultureSchema = z.object({
   cultureId: z.number().min(1, { message: "Culture ID is required" }),
   status: z.nativeEnum(StatusPublish).default(StatusPublish.DRAFT).optional(),
   statusKonservasi: z.nativeEnum(StatusKonservasi).default(StatusKonservasi.TREATED).optional(),
+  statusPriorityDisplay: z.nativeEnum(StatusPriority).default(StatusPriority.LOW).optional(),
 });
 export const updateSubcultureSchema = createSubcultureSchema.partial();
 export type CreateSubcultureInput = z.infer<typeof createSubcultureSchema>;

@@ -192,3 +192,146 @@ export const getSubculturesByCulture = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Failed to fetch subcultures by culture" });
   }
 };
+
+// GET /api/v1/admin/subcultures/filter
+export const getFilteredSubcultures = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const filters = {
+      status: req.query.status as string,
+      statusPriorityDisplay: req.query.statusPriorityDisplay as string,
+      statusKonservasi: req.query.statusKonservasi as string,
+      cultureId: req.query.cultureId ? parseInt(req.query.cultureId as string) : undefined,
+      search: req.query.search as string,
+    };
+
+    const { subcultures, total } = await subcultureService.getFilteredSubcultures(filters, { skip, limit });
+
+    res.status(200).json({
+      status: "success",
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: subcultures,
+    });
+  } catch (error) {
+    console.error("Error fetching filtered subcultures:", error);
+    res.status(500).json({ error: "Failed to fetch filtered subcultures" });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/assigned-assets
+export const getAssignedAssets = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+
+    const assets = await subcultureService.getAssignedAssets(subcultureId);
+    return res.status(200).json({
+      status: "success",
+      data: assets,
+    });
+  } catch (error) {
+    console.error('Failed to get assigned assets:', error);
+    return res.status(500).json({ message: 'Failed to retrieve assigned assets' });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/assigned-references
+export const getAssignedReferences = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+
+    const references = await subcultureService.getAssignedReferences(subcultureId);
+    return res.status(200).json({
+      status: "success",
+      data: references,
+    });
+  } catch (error) {
+    console.error('Failed to get assigned references:', error);
+    return res.status(500).json({ message: 'Failed to retrieve assigned references' });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/search-assets
+export const searchAssetsInSubculture = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const searchQuery = req.query.q as string;
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const assets = await subcultureService.searchAssetsInSubculture(subcultureId, searchQuery.trim());
+    return res.status(200).json({
+      status: "success",
+      data: assets,
+    });
+  } catch (error) {
+    console.error('Failed to search assets in subculture:', error);
+    return res.status(500).json({ message: 'Failed to search assets' });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/search-references
+export const searchReferencesInSubculture = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const searchQuery = req.query.q as string;
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const references = await subcultureService.searchReferencesInSubculture(subcultureId, searchQuery.trim());
+    return res.status(200).json({
+      status: "success",
+      data: references,
+    });
+  } catch (error) {
+    console.error('Failed to search references in subculture:', error);
+    return res.status(500).json({ message: 'Failed to search references' });
+  }
+};
+
+// GET /api/v1/admin/assets/:assetId/usage
+export const getAssetUsage = async (req: Request, res: Response) => {
+  try {
+    const assetId = Number(req.params.assetId);
+    if (Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid asset ID' });
+
+    const usage = await subcultureService.getAssetUsage(assetId);
+    return res.status(200).json({
+      status: "success",
+      data: usage,
+    });
+  } catch (error) {
+    console.error('Failed to get asset usage:', error);
+    return res.status(500).json({ message: 'Failed to retrieve asset usage' });
+  }
+};
+
+// GET /api/v1/admin/references/:referensiId/usage
+export const getReferenceUsage = async (req: Request, res: Response) => {
+  try {
+    const referensiId = Number(req.params.referensiId);
+    if (Number.isNaN(referensiId)) return res.status(400).json({ message: 'Invalid reference ID' });
+
+    const usage = await subcultureService.getReferenceUsage(referensiId);
+    return res.status(200).json({
+      status: "success",
+      data: usage,
+    });
+  } catch (error) {
+    console.error('Failed to get reference usage:', error);
+    return res.status(500).json({ message: 'Failed to retrieve reference usage' });
+  }
+};
