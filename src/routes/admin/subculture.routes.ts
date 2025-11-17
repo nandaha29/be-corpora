@@ -18,6 +18,8 @@ router.get("/", authenticateAdmin, subcultureController.getAllSubculturesPaginat
 // Filter dan pencarian subculture berdasarkan berbagai kriteria
 // Query params: status, statusPriorityDisplay, statusKonservasi, cultureId, search, page, limit
 // Digunakan untuk: Advanced filtering dan searching subculture (status, priority, konservasi, dll)
+// SUPPORTS COMBINATION FILTERS: Can filter by multiple criteria at once
+// Example: /api/v1/admin/subcultures/filter?status=PUBLISHED&cultureId=5&statusPriorityDisplay=HIGH&page=1&limit=20
 router.get("/filter", authenticateAdmin, subcultureController.getFilteredSubcultures);
 
 // GET /api/v1/admin/subcultures/:id

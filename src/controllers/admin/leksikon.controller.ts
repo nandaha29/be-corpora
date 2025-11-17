@@ -425,6 +425,29 @@ export const getLeksikonsByStatus = async (req: Request, res: Response) => {
   }
 };
 
+// GET /api/admin/leksikons/filter - Filter by status and/or domain with pagination
+export const filterLeksikons = async (req: Request, res: Response) => {
+  try {
+    const status = req.query.status as string | undefined;
+    const domainId = req.query.domainId ? parseInt(req.query.domainId as string) : undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    const result = await leksikonService.filterLeksikons({
+      status,
+      domainId,
+      page,
+      limit,
+    });
+
+    res.status(200).json(result);
+    return;
+  } catch (error) {
+    res.status(500).json({ message: "Failed to filter leksikons", error });
+    return;
+  }
+};
+
 export const updateLeksikonStatus = async (req: Request, res: Response) => {
   const id = parseInt(req.params.id || '0');
   const { status } = req.body;

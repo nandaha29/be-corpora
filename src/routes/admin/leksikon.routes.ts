@@ -25,6 +25,17 @@ router.get("/status", authenticateAdmin, leksikonController.getLeksikonsByStatus
 router.get("/domain-kodifikasi/:dk_id/leksikons", authenticateAdmin, leksikonController.getLeksikonsByDomain);
 
 /**
+ * @route GET /api/admin/leksikons/filter
+ * @desc Filter leksikons by status and/or domain kodifikasi with pagination
+ * @access Admin only
+ * @query {string} status - Status filter (DRAFT, PUBLISHED, ARCHIVED) - optional
+ * @query {number} domainId - Domain Kodifikasi ID - optional
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/filter', authenticateAdmin, leksikonController.filterLeksikons);
+
+/**
  * @route GET /api/admin/leksikons/search/assets
  * @desc Search assets that are used in any leksikon
  * @access Admin only

@@ -180,7 +180,13 @@ export const getFilteredSubcultures = async (filters: {
   statusKonservasi?: string;
   cultureId?: number;
   search?: string;
-}, pagination: { skip: number; limit: number }) => {
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
   const where: any = {};
 
   // Status filters
@@ -207,7 +213,7 @@ export const getFilteredSubcultures = async (filters: {
     ];
   }
 
-  const [subcultures, total] = await Promise.all([
+  const [data, total] = await Promise.all([
     prisma.subculture.findMany({
       where,
       include: {
@@ -219,13 +225,28 @@ export const getFilteredSubcultures = async (filters: {
         { statusPriorityDisplay: 'desc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
         { createdAt: 'desc' }
       ],
-      skip: pagination.skip,
-      take: pagination.limit,
+      skip,
+      take: limit,
     }),
     prisma.subculture.count({ where }),
   ]);
 
-  return { subcultures, total };
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        status: filters.status || null,
+        statusPriorityDisplay: filters.statusPriorityDisplay || null,
+        statusKonservasi: filters.statusKonservasi || null,
+        cultureId: filters.cultureId || null,
+        search: filters.search || null,
+      },
+    },
+  };
 };
 
 export const getAssignedAssets = async (subcultureId: number) => {

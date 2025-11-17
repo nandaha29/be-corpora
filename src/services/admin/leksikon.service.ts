@@ -434,6 +434,63 @@ export const getLeksikonsByStatus = async (status?: string) => {
   });
 };
 
+// Filter leksikons by status and/or domain with pagination
+export const filterLeksikons = async (filters: {
+  status?: string;
+  domainId?: number;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  // Build where condition dynamically
+  const whereCondition: any = {};
+
+  // Add status filter if provided
+  if (filters.status) {
+    const normalized = String(filters.status).toUpperCase();
+    const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+    if (allowed.includes(normalized)) {
+      whereCondition.status = normalized as any;
+    }
+  }
+
+  // Add domain filter if provided
+  if (filters.domainId) {
+    whereCondition.domainKodifikasiId = filters.domainId;
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.leksikon.findMany({
+      where: whereCondition,
+      include: {
+        domainKodifikasi: true,
+        contributor: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.leksikon.count({ where: whereCondition }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        status: filters.status || null,
+        domainId: filters.domainId || null,
+      },
+    },
+  };
+};
+
 export const updateLeksikonStatus = async (id: number, status: string) => {
   const normalized = String(status).toUpperCase();
   const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
