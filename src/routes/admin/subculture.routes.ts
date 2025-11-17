@@ -14,6 +14,12 @@ const router = express.Router();
 // Digunakan untuk: Menampilkan daftar subculture di admin panel dengan pagination
 router.get("/", authenticateAdmin, subcultureController.getAllSubculturesPaginated);
 
+// POST /api/v1/admin/subcultures
+// Membuat subculture baru
+// Body: namaSubculture, salamKhas, artiSalamKhas, penjelasan, cultureId, status, statusKonservasi, statusPriorityDisplay
+// Digunakan untuk: Menambahkan subculture baru ke database
+router.post("/", authenticateAdmin, subcultureController.createSubculture);
+
 // GET /api/v1/admin/subcultures/filter
 // Filter dan pencarian subculture berdasarkan berbagai kriteria
 // Query params: status, statusPriorityDisplay, statusKonservasi, cultureId, search, page, limit
