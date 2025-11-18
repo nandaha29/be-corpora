@@ -35,6 +35,34 @@ export const getAllAssetsPaginated = async (req: Request, res: Response) => {
   }
 };
 
+// ✅ Filter assets by type and/or status with pagination and sorting
+export const filterAssets = async (req: Request, res: Response) => {
+  try {
+    const tipe = req.query.tipe as string | undefined;
+    const status = req.query.status as string | undefined;
+    const sortBy = req.query.sortBy as string | undefined;
+    const order = req.query.order as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    const result = await assetService.filterAssets({
+      tipe,
+      status,
+      sortBy,
+      order,
+      page,
+      limit,
+    });
+
+    res.status(200).json(result);
+    return;
+  } catch (error) {
+    console.error('Filter error:', error);
+    res.status(500).json({ message: 'Failed to filter assets', error: (error as Error).message });
+    return;
+  }
+};
+
 // ✅ Get Asset by ID
 export const getAssetById = async (req: Request, res: Response) => {
   try {
@@ -194,6 +222,9 @@ export const bulkUploadAssets = async (req: Request, res: Response) => {
 export const searchAssets = async (req: Request, res: Response) => {
   try {
     const q = req.query.q as string;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
     if (!q || q.trim() === '') {
       return res.status(400).json({
         success: false,
@@ -201,18 +232,15 @@ export const searchAssets = async (req: Request, res: Response) => {
       });
     }
 
-    const results = await assetService.searchAssets(q);
-    res.status(200).json({
-      success: true,
-      message: `Found ${results.length} assets matching "${q}"`,
-      data: results,
-    });
+    const result = await assetService.searchAssets(q.trim(), page, limit);
+    res.status(200).json(result);
     return;
   } catch (error) {
     console.error('Error searching assets:', error);
     res.status(500).json({
       success: false,
-      message: error,
+      message: 'Failed to search assets',
+      error: (error as Error).message,
     });
     return;
   }

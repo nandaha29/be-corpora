@@ -114,6 +114,77 @@ export const getAllAssetsPaginated = async (page = 1, limit = 10) => {
 };
 
 
+// ✅ Filter assets by type and/or status with pagination and sorting
+export const filterAssets = async (filters: {
+  tipe?: string;
+  status?: string;
+  sortBy?: string;
+  order?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  // Build where condition dynamically
+  const whereCondition: any = {};
+
+  // Add tipe filter if provided
+  if (filters.tipe) {
+    const normalized = filters.tipe.toUpperCase();
+    const allowed = ["FOTO", "AUDIO", "VIDEO", "MODEL_3D"];
+    if (allowed.includes(normalized)) {
+      whereCondition.tipe = normalized as any;
+    }
+  }
+
+  // Add status filter if provided
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ["ACTIVE", "PROCESSING", "ARCHIVED", "CORRUPTED"];
+    if (allowed.includes(normalized)) {
+      whereCondition.status = normalized as any;
+    }
+  }
+
+  // Build orderBy
+  let orderBy: any = { createdAt: 'desc' }; // default
+  if (filters.sortBy) {
+    const allowedSortFields = ['createdAt', 'namaFile', 'tipe', 'status'];
+    if (allowedSortFields.includes(filters.sortBy)) {
+      const order = filters.order === 'asc' ? 'asc' : 'desc';
+      orderBy = { [filters.sortBy]: order };
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.asset.findMany({
+      where: whereCondition,
+      skip,
+      take: limit,
+      orderBy,
+    }),
+    prisma.asset.count({ where: whereCondition }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        tipe: filters.tipe || null,
+        status: filters.status || null,
+        sortBy: filters.sortBy || 'createdAt',
+        order: filters.order || 'desc',
+      },
+    },
+  };
+};
+
 // ✅ Get asset by ID
 export const getAssetById = async (id: number) => {
   return prisma.asset.findUnique({ where: { assetId: id } });
@@ -142,8 +213,10 @@ export const deleteAsset = async (id: number) => {
 //   });
 // };
 
-// Search assets by keyword
-export const searchAssets = async (query: string) => {
+// Search assets by keyword with pagination
+export const searchAssets = async (query: string, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
   const validTypes: AssetType[] = ['FOTO', 'AUDIO', 'VIDEO', 'MODEL_3D'];
   const validStatuses: StatusFile[] = ['ACTIVE', 'PROCESSING', 'ARCHIVED', 'CORRUPTED'];
 
@@ -160,10 +233,31 @@ export const searchAssets = async (query: string) => {
     whereConditions.push({ status: { equals: query as StatusFile } });
   }
 
-  return prisma.asset.findMany({
-    where: {
-      OR: whereConditions,
+  const [data, total] = await Promise.all([
+    prisma.asset.findMany({
+      where: {
+        OR: whereConditions,
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.asset.count({
+      where: {
+        OR: whereConditions,
+      },
+    }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      query,
     },
-  });
+  };
 };
 

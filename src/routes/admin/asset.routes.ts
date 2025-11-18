@@ -23,11 +23,24 @@ router.get('/', authenticateAdmin, assetController.getAllAssetsPaginated);
  * @route GET /api/admin/assets/search
  * @desc Search assets by name or description
  * @access Admin only
- * @query {string} q - Search query
+ * @query {string} q - Search query (required)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
 router.get('/search', authenticateAdmin, assetController.searchAssets);
+
+/**
+ * @route GET /api/admin/assets/filter
+ * @desc Filter assets by type and/or status with pagination
+ * @access Admin only
+ * @query {string} tipe - Filter by type (FOTO, AUDIO, VIDEO, MODEL_3D)
+ * @query {string} status - Filter by status (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED)
+ * @query {string} sortBy - Sort by field (createdAt, namaFile, etc.) (default: createdAt)
+ * @query {string} order - Sort order (asc, desc) (default: desc)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/filter', authenticateAdmin, assetController.filterAssets);
 
 /**
  * @route GET /api/admin/assets/:id
