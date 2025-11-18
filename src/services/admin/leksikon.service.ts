@@ -741,3 +741,166 @@ export const getReferenceUsage = async (referenceId: number) => {
     orderBy: { createdAt: 'desc' },
   });
 };
+
+// Filter assets assigned to leksikons by Type, Status, Created At (kombinasi)
+export const filterLeksikonAssets = async (filters: {
+  tipe?: string;
+  status?: string;
+  createdAt?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  const where: any = {};
+
+  // Add tipe filter
+  if (filters.tipe) {
+    const normalized = filters.tipe.toUpperCase();
+    const allowed = ['FOTO', 'AUDIO', 'VIDEO', 'MODEL_3D'];
+    if (allowed.includes(normalized)) {
+      where.asset = { ...where.asset, tipe: normalized as any };
+    }
+  }
+
+  // Add status filter
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ['ACTIVE', 'PROCESSING', 'ARCHIVED', 'CORRUPTED'];
+    if (allowed.includes(normalized)) {
+      where.asset = { ...where.asset, status: normalized as any };
+    }
+  }
+
+  // Add createdAt filter (assuming date range or exact date)
+  if (filters.createdAt) {
+    // Assuming filters.createdAt is a date string, filter by exact date or range
+    // For simplicity, filter by date greater than or equal
+    const date = new Date(filters.createdAt);
+    if (!isNaN(date.getTime())) {
+      where.asset = { ...where.asset, createdAt: { gte: date } };
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.leksikonAsset.findMany({
+      where,
+      include: {
+        asset: true,
+        leksikon: {
+          include: {
+            domainKodifikasi: {
+              include: {
+                subculture: {
+                  include: {
+                    culture: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.leksikonAsset.count({ where }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        tipe: filters.tipe || null,
+        status: filters.status || null,
+        createdAt: filters.createdAt || null,
+      },
+    },
+  };
+};
+
+// Filter references assigned to leksikons by Type, Year, Status (kombinasi)
+export const filterLeksikonReferences = async (filters: {
+  tipeReferensi?: string;
+  tahunTerbit?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  const where: any = {};
+
+  // Add tipeReferensi filter
+  if (filters.tipeReferensi) {
+    const normalized = filters.tipeReferensi.toUpperCase();
+    const allowed = ['JURNAL', 'BUKU', 'ARTIKEL', 'WEBSITE', 'LAPORAN'];
+    if (allowed.includes(normalized)) {
+      where.referensi = { ...where.referensi, tipeReferensi: normalized as any };
+    }
+  }
+
+  // Add tahunTerbit filter
+  if (filters.tahunTerbit) {
+    where.referensi = { ...where.referensi, tahunTerbit: { contains: filters.tahunTerbit, mode: 'insensitive' } };
+  }
+
+  // Add status filter
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
+    if (allowed.includes(normalized)) {
+      where.referensi = { ...where.referensi, status: normalized as any };
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.leksikonReferensi.findMany({
+      where,
+      include: {
+        referensi: true,
+        leksikon: {
+          include: {
+            domainKodifikasi: {
+              include: {
+                subculture: {
+                  include: {
+                    culture: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.leksikonReferensi.count({ where }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        tipeReferensi: filters.tipeReferensi || null,
+        tahunTerbit: filters.tahunTerbit || null,
+        status: filters.status || null,
+      },
+    },
+  };
+};

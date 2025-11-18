@@ -261,6 +261,30 @@ router.get('/references/assigned', authenticateAdmin, leksikonController.getAssi
  */
 router.get('/references/:referenceId/usages', authenticateAdmin, leksikonController.getReferenceUsage);
 
+/**
+ * @route GET /api/admin/leksikons/filter/assets
+ * @desc Filter assets assigned to lexicons by Type, Status, Created At
+ * @access Admin only
+ * @query {string} tipe - Asset type filter (FOTO, AUDIO, VIDEO, MODEL_3D) - optional
+ * @query {string} status - Asset status filter (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED) - optional
+ * @query {string} createdAt - Created date filter (ISO date string) - optional
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/filter/assets', authenticateAdmin, leksikonController.filterLeksikonAssets);
+
+/**
+ * @route GET /api/admin/leksikons/filter/references
+ * @desc Filter references assigned to lexicons by Type, Year, Status
+ * @access Admin only
+ * @query {string} tipeReferensi - Reference type filter (JURNAL, BUKU, ARTIKEL, WEBSITE, LAPORAN) - optional
+ * @query {string} tahunTerbit - Publication year filter - optional
+ * @query {string} status - Reference status filter (DRAFT, PUBLISHED, ARCHIVED) - optional
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/filter/references', authenticateAdmin, leksikonController.filterLeksikonReferences);
+
 // ============================================
 // ⚙️ ADMIN MANAGEMENT
 // ============================================

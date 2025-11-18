@@ -655,3 +655,47 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
     });
   }
 };
+
+// GET /api/admin/leksikons/filter/assets - Filter assets assigned to lexicons by Type, Status, Created At
+export const filterLeksikonAssets = async (req: Request, res: Response) => {
+  try {
+    const filters = {
+      tipe: req.query.tipe as string,
+      status: req.query.status as string,
+      createdAt: req.query.createdAt as string,
+      page: parseInt(req.query.page as string) || 1,
+      limit: parseInt(req.query.limit as string) || 20,
+    };
+
+    const result = await leksikonService.filterLeksikonAssets(filters);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to filter leksikon assets:', error);
+    return res.status(500).json({
+      message: 'Failed to filter leksikon assets',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// GET /api/admin/leksikons/filter/references - Filter references assigned to lexicons by Type, Year, Status
+export const filterLeksikonReferences = async (req: Request, res: Response) => {
+  try {
+    const filters = {
+      tipeReferensi: req.query.tipeReferensi as string,
+      tahunTerbit: req.query.tahunTerbit as string,
+      status: req.query.status as string,
+      page: parseInt(req.query.page as string) || 1,
+      limit: parseInt(req.query.limit as string) || 20,
+    };
+
+    const result = await leksikonService.filterLeksikonReferences(filters);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to filter leksikon references:', error);
+    return res.status(500).json({
+      message: 'Failed to filter leksikon references',
+      details: error instanceof Error ? error.message : error
+    });
+  }
+};
