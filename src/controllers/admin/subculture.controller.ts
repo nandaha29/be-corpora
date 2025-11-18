@@ -327,3 +327,79 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Failed to retrieve reference usage' });
   }
 };
+
+// POST /api/v1/admin/subcultures/:id/references
+export const addReferenceToSubculture = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const { referensiId, leksikonId } = req.body;
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (!referensiId) return res.status(400).json({ message: 'referensiId is required' });
+
+    const result = await subcultureService.addReferenceToSubculture(subcultureId, referensiId, leksikonId);
+    return res.status(201).json({
+      status: "success",
+      data: result,
+    });
+  } catch (error) {
+    console.error('Failed to add reference to subculture:', error);
+    return res.status(500).json({ message: 'Failed to add reference' });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/filter-assets
+export const filterSubcultureAssets = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const tipe = req.query.tipe as string | undefined;
+    const assetRole = req.query.assetRole as string | undefined;
+    const status = req.query.status as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+
+    const result = await subcultureService.filterSubcultureAssets(subcultureId, {
+      tipe,
+      assetRole,
+      status,
+      page,
+      limit,
+    });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to filter subculture assets:', error);
+    return res.status(500).json({ message: 'Failed to filter assets' });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/filter-references
+export const filterSubcultureReferences = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const tipeReferensi = req.query.tipeReferensi as string | undefined;
+    const tahunTerbit = req.query.tahunTerbit as string | undefined;
+    const status = req.query.status as string | undefined;
+    const citationNote = req.query.citationNote as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+
+    const result = await subcultureService.filterSubcultureReferences(subcultureId, {
+      tipeReferensi,
+      tahunTerbit,
+      status,
+      citationNote,
+      page,
+      limit,
+    });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Failed to filter subculture references:', error);
+    return res.status(500).json({ message: 'Failed to filter references' });
+  }
+};

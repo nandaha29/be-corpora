@@ -58,6 +58,24 @@ router.get("/:id/assigned-assets", authenticateAdmin, subcultureController.getAs
 // Digunakan untuk: Menampilkan daftar referensi yang terkait dengan subculture
 router.get("/:id/assigned-references", authenticateAdmin, subcultureController.getAssignedReferences);
 
+// POST /api/v1/admin/subcultures/:id/references
+// Menambahkan referensi ke subculture (assign ke leksikon dalam subculture)
+// Body: referensiId, leksikonId (opsional, jika tidak ada akan assign ke semua leksikon)
+// Digunakan untuk: Menambahkan referensi ke subculture
+router.post("/:id/references", authenticateAdmin, subcultureController.addReferenceToSubculture);
+
+// GET /api/v1/admin/subcultures/:id/filter-assets
+// Filter asset subculture by Type, Role, Status (kombinasi)
+// Query params: tipe, assetRole, status, page, limit
+// Digunakan untuk: Advanced filtering assets dalam subculture
+router.get("/:id/filter-assets", authenticateAdmin, subcultureController.filterSubcultureAssets);
+
+// GET /api/v1/admin/subcultures/:id/filter-references
+// Filter referensi subculture by Type, Year, Status, Citation (kombinasi)
+// Query params: tipeReferensi, tahunTerbit, status, citationNote, page, limit
+// Digunakan untuk: Advanced filtering referensi dalam subculture
+router.get("/:id/filter-references", authenticateAdmin, subcultureController.filterSubcultureReferences);
+
 // GET /api/v1/admin/subcultures/:id/search-assets
 // Mencari asset yang sudah di-assign ke subculture berdasarkan nama file atau deskripsi
 // Query params: q (search query)

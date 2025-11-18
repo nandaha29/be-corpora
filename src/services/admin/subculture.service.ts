@@ -384,3 +384,232 @@ export const getReferenceUsage = async (referensiId: number) => {
   });
 };
 
+export const addReferenceToSubculture = async (subcultureId: number, referensiId: number, leksikonId?: number) => {
+  // Verify subculture exists
+  const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
+  if (!subculture) {
+    const err = new Error('Subculture not found');
+    (err as any).code = 'SUBCULTURE_NOT_FOUND';
+    throw err;
+  }
+
+  // Verify referensi exists
+  const referensi = await prisma.referensi.findUnique({ where: { referensiId } });
+  if (!referensi) {
+    const err = new Error('Referensi not found');
+    (err as any).code = 'REFERENSI_NOT_FOUND';
+    throw err;
+  }
+
+  if (leksikonId) {
+    // Assign to specific leksikon
+    const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
+    if (!leksikon) {
+      const err = new Error('Leksikon not found');
+      (err as any).code = 'LEKSIKON_NOT_FOUND';
+      throw err;
+    }
+
+    // Check if leksikon belongs to subculture
+    const domainIds = await prisma.domainKodifikasi.findMany({
+      where: { subcultureId },
+      select: { domainKodifikasiId: true },
+    });
+    const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+    if (!domainIdList.includes(leksikon.domainKodifikasiId)) {
+      const err = new Error('Leksikon does not belong to this subculture');
+      (err as any).code = 'LEKSIKON_NOT_IN_SUBCULTURE';
+      throw err;
+    }
+
+    return prisma.leksikonReferensi.create({
+      data: { leksikonId, referensiId },
+      include: { referensi: true, leksikon: true },
+    });
+  } else {
+    // Assign to all leksikon in subculture
+    const domainIds = await prisma.domainKodifikasi.findMany({
+      where: { subcultureId },
+      select: { domainKodifikasiId: true },
+    });
+    const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+
+    const leksikons = await prisma.leksikon.findMany({
+      where: { domainKodifikasiId: { in: domainIdList } },
+      select: { leksikonId: true },
+    });
+
+    const assignments = leksikons.map(leksikon => ({
+      leksikonId: leksikon.leksikonId,
+      referensiId,
+    }));
+
+    return prisma.leksikonReferensi.createMany({
+      data: assignments,
+      skipDuplicates: true,
+    });
+  }
+};
+
+export const filterSubcultureAssets = async (subcultureId: number, filters: {
+  tipe?: string;
+  assetRole?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  const where: any = { subcultureId };
+
+  // Add tipe filter
+  if (filters.tipe) {
+    const normalized = filters.tipe.toUpperCase();
+    const allowed = ["FOTO", "AUDIO", "VIDEO", "MODEL_3D"];
+    if (allowed.includes(normalized)) {
+      where.asset = { tipe: normalized as any };
+    }
+  }
+
+  // Add assetRole filter
+  if (filters.assetRole) {
+    const normalized = filters.assetRole.toUpperCase();
+    const allowed = ["HIGHLIGHT", "THUMBNAIL", "GALLERY", "BANNER", "VIDEO_DEMO", "MODEL_3D"];
+    if (allowed.includes(normalized)) {
+      where.assetRole = normalized as any;
+    }
+  }
+
+  // Add status filter
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ["ACTIVE", "PROCESSING", "ARCHIVED", "CORRUPTED"];
+    if (allowed.includes(normalized)) {
+      where.asset = { status: normalized as any };
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.subcultureAsset.findMany({
+      where,
+      include: { asset: true },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.subcultureAsset.count({ where }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        tipe: filters.tipe || null,
+        assetRole: filters.assetRole || null,
+        status: filters.status || null,
+      },
+    },
+  };
+};
+
+export const filterSubcultureReferences = async (subcultureId: number, filters: {
+  tipeReferensi?: string;
+  tahunTerbit?: string;
+  status?: string;
+  citationNote?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  // Get domain IDs for subculture
+  const domainIds = await prisma.domainKodifikasi.findMany({
+    where: { subcultureId },
+    select: { domainKodifikasiId: true },
+  });
+  const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+
+  const where: any = {
+    leksikon: {
+      domainKodifikasiId: { in: domainIdList },
+    },
+  };
+
+  // Add tipeReferensi filter
+  if (filters.tipeReferensi) {
+    const normalized = filters.tipeReferensi.toUpperCase();
+    const allowed = ["JURNAL", "BUKU", "ARTIKEL", "WEBSITE", "LAPORAN"];
+    if (allowed.includes(normalized)) {
+      where.referensi = { tipeReferensi: normalized as any };
+    }
+  }
+
+  // Add tahunTerbit filter
+  if (filters.tahunTerbit) {
+    where.referensi = { ...where.referensi, tahunTerbit: { contains: filters.tahunTerbit, mode: 'insensitive' } };
+  }
+
+  // Add status filter
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+    if (allowed.includes(normalized)) {
+      where.referensi = { ...where.referensi, status: normalized as any };
+    }
+  }
+
+  // Add citationNote filter
+  if (filters.citationNote) {
+    const normalized = filters.citationNote.toUpperCase();
+    if (normalized === "RESOURCE") {
+      where.citationNote = "RESOURCE" as any;
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.leksikonReferensi.findMany({
+      where,
+      include: {
+        referensi: true,
+        leksikon: {
+          include: {
+            domainKodifikasi: {
+              include: {
+                subculture: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.leksikonReferensi.count({ where }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        tipeReferensi: filters.tipeReferensi || null,
+        tahunTerbit: filters.tahunTerbit || null,
+        status: filters.status || null,
+        citationNote: filters.citationNote || null,
+      },
+    },
+  };
+};
+
