@@ -246,11 +246,11 @@ enum StatusCoordinator {
 }
 
 enum TipeReferensi {
-  JURNAL
-  BUKU
-  ARTIKEL
-  WEBSITE
-  LAPORAN
+  JOURNAL
+  BOOK
+  ARTICLE
+  WEBSITES
+  REPORT
 }
 
 enum AssetType {
