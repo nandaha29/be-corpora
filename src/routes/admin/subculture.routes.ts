@@ -116,7 +116,7 @@ router
 
 // DELETE /api/v1/admin/subcultures/:id/assets/:assetId
 // Menghapus asset dari subculture
-// Body: assetRole
+// Query params: assetRole
 // Digunakan untuk: Menghapus hubungan antara asset dan subculture
 router
   .route('/:id/assets/:assetId')
