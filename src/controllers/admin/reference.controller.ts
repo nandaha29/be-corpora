@@ -142,17 +142,48 @@ export const getAllReferensiPaginated = async (req: Request, res: Response) => {
 export const searchReferensi = async (req: Request, res: Response) => {
   try {
     const keyword = String(req.query.q || '');
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
     if (!keyword) return res.status(400).json({ message: 'Query parameter "q" is required' });
 
-    const results = await referenceService.searchReferensi(keyword);
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'No references found matching the keyword' });
-    }
-    res.status(200).json({ success: true, data: results });
+    const result = await referenceService.searchReferensi(keyword, page, limit);
+
+    res.status(200).json(result);
     return;
 
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: 'Failed to search references', error: (error as Error).message });
+    return;
+  }
+};
+
+// ✅ FILTER references by type, year, status, createdAt
+export const filterReferences = async (req: Request, res: Response) => {
+  try {
+    const tipeReferensi = req.query.tipeReferensi as string | undefined;
+    const tahunTerbit = req.query.tahunTerbit as string | undefined;
+    const status = req.query.status as string | undefined;
+    const createdAtFrom = req.query.createdAtFrom as string | undefined;
+    const createdAtTo = req.query.createdAtTo as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    const result = await referenceService.filterReferences({
+      tipeReferensi,
+      tahunTerbit,
+      status,
+      createdAtFrom,
+      createdAtTo,
+      page,
+      limit,
+    });
+
+    res.status(200).json(result);
+    return;
+  } catch (error) {
+    console.error('Filter error:', error);
+    res.status(500).json({ message: 'Failed to filter references', error: (error as Error).message });
     return;
   }
 };

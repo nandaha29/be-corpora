@@ -42,7 +42,7 @@ app.use('/api/v1/admin/auth', adminRoutes);
 // Admin routes (protected - require authentication)
 app.use('/api/v1/admin/cultures', authenticateAdmin, cultureRoutes);
 app.use('/api/v1/admin/contributors', authenticateAdmin, contributorRoutes);
-app.use('/api/v1/admin/referensi', authenticateAdmin, referensiRoutes);
+app.use('/api/v1/admin/references', authenticateAdmin, referensiRoutes);
 app.use('/api/v1/admin/assets', authenticateAdmin, assetRoutes);
 app.use("/api/v1/admin/subcultures", authenticateAdmin, subcultureRoutes);
 app.use("/api/v1/admin/domain-kodifikasi", authenticateAdmin, domainKodifikasiRoutes);

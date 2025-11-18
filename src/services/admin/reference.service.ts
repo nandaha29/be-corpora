@@ -71,7 +71,9 @@ export const getAllReferensiPaginated = async (page = 1, limit = 10, type?: stri
 // };
 
 // ✅ Search references
-export const searchReferensi = async (keyword: string) => {
+export const searchReferensi = async (keyword: string, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
   const enumValues = ['JURNAL', 'BUKU', 'ARTIKEL', 'WEBSITE', 'LAPORAN'];
   const isEnumMatch = enumValues.includes(keyword.toUpperCase());
 
@@ -88,8 +90,108 @@ export const searchReferensi = async (keyword: string) => {
     whereClause.OR.push({ tipeReferensi: { equals: keyword.toUpperCase() as any } });
   }
 
-  return prisma.referensi.findMany({
-    where: whereClause,
-    orderBy: { createdAt: 'desc' },
-  });
+  const [data, total] = await Promise.all([
+    prisma.referensi.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.referensi.count({
+      where: whereClause,
+    }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      query: keyword,
+    },
+  };
+};
+
+// ✅ Filter references by type, year, status, createdAt with pagination
+export const filterReferences = async (filters: {
+  tipeReferensi?: string;
+  tahunTerbit?: string;
+  status?: string;
+  createdAtFrom?: string;
+  createdAtTo?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  // Build where condition dynamically
+  const whereCondition: any = {};
+
+  // Add tipeReferensi filter if provided
+  if (filters.tipeReferensi) {
+    const normalized = filters.tipeReferensi.toUpperCase();
+    const allowed = ["JURNAL", "BUKU", "ARTIKEL", "WEBSITE", "LAPORAN"];
+    if (allowed.includes(normalized)) {
+      whereCondition.tipeReferensi = normalized as any;
+    }
+  }
+
+  // Add tahunTerbit filter if provided
+  if (filters.tahunTerbit) {
+    whereCondition.tahunTerbit = {
+      contains: filters.tahunTerbit,
+      mode: 'insensitive'
+    };
+  }
+
+  // Add status filter if provided
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+    if (allowed.includes(normalized)) {
+      whereCondition.status = normalized as any;
+    }
+  }
+
+  // Add createdAt range filter if provided
+  if (filters.createdAtFrom || filters.createdAtTo) {
+    whereCondition.createdAt = {};
+    if (filters.createdAtFrom) {
+      whereCondition.createdAt.gte = new Date(filters.createdAtFrom);
+    }
+    if (filters.createdAtTo) {
+      whereCondition.createdAt.lte = new Date(filters.createdAtTo);
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.referensi.findMany({
+      where: whereCondition,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.referensi.count({ where: whereCondition }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        tipeReferensi: filters.tipeReferensi || null,
+        tahunTerbit: filters.tahunTerbit || null,
+        status: filters.status || null,
+        createdAtFrom: filters.createdAtFrom || null,
+        createdAtTo: filters.createdAtTo || null,
+      },
+    },
+  };
 };

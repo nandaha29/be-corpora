@@ -9,7 +9,7 @@ const router = Router();
 // ============================================
 
 /**
- * @route GET /api/admin/references
+ * @route GET /api/v1/admin/references
  * @desc Get all references with pagination
  * @access Admin only
  * @query {number} page - Page number (default: 1)
@@ -18,17 +18,31 @@ const router = Router();
 router.get("/", authenticateAdmin, referenceController.getAllReferensiPaginated);
 
 /**
- * @route GET /api/admin/references/search
+ * @route GET /api/v1/admin/references/search
  * @desc Search references by title, author, or description
  * @access Admin only
- * @query {string} q - Search query
+ * @query {string} q - Search query (required)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
 router.get('/search', authenticateAdmin, referenceController.searchReferensi);
 
 /**
- * @route GET /api/admin/references/:id
+ * @route GET /api/v1/admin/references/filter
+ * @desc Filter references by type, year, status, createdAt (combination)
+ * @access Admin only
+ * @query {string} tipeReferensi - Filter by type (JURNAL, BUKU, ARTIKEL, WEBSITE, LAPORAN)
+ * @query {string} tahunTerbit - Filter by publication year
+ * @query {string} status - Filter by status (DRAFT, PUBLISHED, ARCHIVED)
+ * @query {string} createdAtFrom - Filter by createdAt from date (ISO string)
+ * @query {string} createdAtTo - Filter by createdAt to date (ISO string)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/filter', authenticateAdmin, referenceController.filterReferences);
+
+/**
+ * @route GET /api/v1/admin/references/:id
  * @desc Get reference by ID
  * @access Admin only
  * @param {number} id - Reference ID
@@ -36,7 +50,7 @@ router.get('/search', authenticateAdmin, referenceController.searchReferensi);
 router.get("/:id", authenticateAdmin, referenceController.getReferenceById);
 
 /**
- * @route POST /api/admin/references
+ * @route POST /api/v1/admin/references
  * @desc Create new reference
  * @access Admin only
  * @body {string} judul - Reference title
@@ -50,7 +64,7 @@ router.get("/:id", authenticateAdmin, referenceController.getReferenceById);
 router.post("/", authenticateAdmin, referenceController.createReference);
 
 /**
- * @route PUT /api/admin/references/:id
+ * @route PUT /api/v1/admin/references/:id
  * @desc Update reference by ID
  * @access Admin only
  * @param {number} id - Reference ID
@@ -65,7 +79,7 @@ router.post("/", authenticateAdmin, referenceController.createReference);
 router.put("/:id", authenticateAdmin, referenceController.updateReference);
 
 /**
- * @route DELETE /api/admin/references/:id
+ * @route DELETE /api/v1/admin/references/:id
  * @desc Delete reference by ID
  * @access Admin only
  * @param {number} id - Reference ID
