@@ -31,17 +31,38 @@ router
  * @body {string} status - Status (DRAFT, PUBLISHED, ARCHIVED)
  */
 
+router.get('/filter', authenticateAdmin, domainController.filterDomainKodifikasis);
+
+/**
+ * @route GET /api/admin/domain-kodifikasi/filter
+ * @desc Filter domain kodifikasi by kode and/or status with pagination
+ * @access Admin only
+ * @query {string} kode - Kode filter (partial match, case insensitive) - optional
+ * @query {string} status - Status filter (DRAFT, PUBLISHED, ARCHIVED) - optional
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+
+router.get('/search', authenticateAdmin, domainController.searchDomainKodifikasis);
+
+/**
+ * @route GET /api/admin/domain-kodifikasi/search
+ * @desc Search domain kodifikasi by query across kode, namaDomain, and penjelasan
+ * @access Admin only
+ * @query {string} q - Search query (required)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+
 /**
  * @route GET /api/admin/domain-kodifikasi/:id
  * @desc Get domain kodifikasi by ID
  * @access Admin only
  * @param {number} id - Domain Kodifikasi ID
  */
-router
-  .route('/:id')
-  .get(authenticateAdmin, domainController.getDomainById)
-  .put(authenticateAdmin, domainController.updateDomain)
-  .delete(authenticateAdmin, domainController.deleteDomain);
+router.get('/:id', authenticateAdmin, domainController.getDomainById);
+router.put('/:id', authenticateAdmin, domainController.updateDomain);
+router.delete('/:id', authenticateAdmin, domainController.deleteDomain);
 
 /**
  * @route PUT /api/admin/domain-kodifikasi/:id

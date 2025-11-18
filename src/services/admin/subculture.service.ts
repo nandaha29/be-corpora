@@ -123,8 +123,8 @@ export const addAssetToSubculture = async (subcultureId: number, assetId: number
 
 export const removeAssetFromSubculture = async (subcultureId: number, assetId: number, assetRole: SubcultureAssetRole) => {
   try {
-    return await prisma.subcultureAsset.deleteMany({
-      where: { subcultureId, assetId, assetRole },
+    return await prisma.subcultureAsset.delete({
+      where: { subcultureId_assetId_assetRole: { subcultureId, assetId, assetRole } },
     });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {

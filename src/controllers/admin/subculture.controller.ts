@@ -135,11 +135,12 @@ export const removeAssetFromSubculture = async (req: Request, res: Response) => 
     const assetId = Number(req.params.assetId);
     const assetRole = req.body.assetRole;
     if (Number.isNaN(subcultureId) || Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid IDs' });
+    if (!assetRole) return res.status(400).json({ message: 'Asset role is required' });
 
     await subcultureService.removeAssetFromSubculture(subcultureId, assetId, assetRole);
     return res.status(200).json({ message: 'Asset removed from subculture' });
   } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+    if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from subculture:', error);

@@ -1,5 +1,3 @@
-
-
 import { prisma } from '../../lib/prisma.js';
 import {
   CreateDomainKodifikasiInput,
@@ -84,4 +82,106 @@ export const deleteDomainKodifikasi = async (id: number) => {
   return prisma.domainKodifikasi.delete({
     where: { domainKodifikasiId: id },
   });
+};
+
+// Filter domain kodifikasi by kode and/or status with pagination
+export const filterDomainKodifikasis = async (filters: {
+  kode?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  // Build where condition dynamically
+  const whereCondition: any = {};
+
+  // Add kode filter if provided
+  if (filters.kode) {
+    whereCondition.kode = {
+      contains: filters.kode,
+      mode: 'insensitive'
+    };
+  }
+
+  // Add status filter if provided
+  if (filters.status) {
+    const normalized = String(filters.status).toUpperCase();
+    const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+    if (allowed.includes(normalized)) {
+      whereCondition.status = normalized as any;
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.domainKodifikasi.findMany({
+      where: whereCondition,
+      include: {
+        subculture: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.domainKodifikasi.count({ where: whereCondition }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        kode: filters.kode || null,
+        status: filters.status || null,
+      },
+    },
+  };
+};
+
+// Search domain kodifikasi by query across kode, namaDomain, and penjelasan
+export const searchDomainKodifikasis = async (query: string, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    prisma.domainKodifikasi.findMany({
+      where: {
+        OR: [
+          { kode: { contains: query, mode: 'insensitive' } },
+          { namaDomain: { contains: query, mode: 'insensitive' } },
+          { penjelasan: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      include: {
+        subculture: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.domainKodifikasi.count({
+      where: {
+        OR: [
+          { kode: { contains: query, mode: 'insensitive' } },
+          { namaDomain: { contains: query, mode: 'insensitive' } },
+          { penjelasan: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+    }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      query,
+    },
+  };
 };

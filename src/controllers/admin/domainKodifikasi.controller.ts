@@ -24,6 +24,7 @@ export const getDomains = async (req: Request, res: Response) => {
 
 // GET /api/domains/:id
 export const getDomainById = async (req: Request, res: Response) => {
+  console.log('📋 GET DOMAIN BY ID CONTROLLER CALLED with params:', req.params);
   try {
     const { id } = req.params;
     const item = await domainService.getDomainKodifikasiById(Number(id));
@@ -31,6 +32,7 @@ export const getDomainById = async (req: Request, res: Response) => {
     res.status(200).json(item);
     return;
   } catch (error) {
+    console.error('❌ GET DOMAIN BY ID ERROR:', error);
     res.status(500).json({ message: 'Failed to retrieve domain' });
     return;
   }
@@ -93,6 +95,52 @@ export const deleteDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Domain not found' });
     }
     res.status(500).json({ message: 'Failed to delete domain' });
+    return;
+  }
+};
+
+// GET /api/admin/domain-kodifikasi/filter - Filter by kode and/or status with pagination
+export const filterDomainKodifikasis = async (req: Request, res: Response) => {
+  try {
+    const kode = req.query.kode as string | undefined;
+    const status = req.query.status as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    const result = await domainService.filterDomainKodifikasis({
+      kode,
+      status,
+      page,
+      limit,
+    });
+
+    res.status(200).json(result);
+    return;
+  } catch (error) {
+    res.status(500).json({ message: "Failed to filter domain kodifikasi", error });
+    return;
+  }
+};
+
+// GET /api/admin/domain-kodifikasi/search - Search by query across kode, namaDomain, and penjelasan
+export const searchDomainKodifikasis = async (req: Request, res: Response) => {
+  console.log('🔍 SEARCH CONTROLLER CALLED with query:', req.query);
+  try {
+    const query = req.query.q as string;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const result = await domainService.searchDomainKodifikasis(query.trim(), page, limit);
+
+    res.status(200).json(result);
+    return;
+  } catch (error) {
+    console.error('❌ SEARCH CONTROLLER ERROR:', error);
+    res.status(500).json({ message: "Failed to search domain kodifikasi", error });
     return;
   }
 };
