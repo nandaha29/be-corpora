@@ -102,7 +102,7 @@ export const filterDomainKodifikasis = async (filters: {
   if (filters.kode) {
     whereCondition.kode = {
       contains: filters.kode,
-      mode: 'insensitive'
+      // mode: 'insensitive'
     };
   }
 
@@ -118,9 +118,9 @@ export const filterDomainKodifikasis = async (filters: {
   const [data, total] = await Promise.all([
     prisma.domainKodifikasi.findMany({
       where: whereCondition,
-      include: {
-        subculture: true,
-      },
+      // include: {
+      //   subculture: true,
+      // },
       skip,
       take: limit,
       orderBy: { updatedAt: "desc" },
@@ -151,14 +151,14 @@ export const searchDomainKodifikasis = async (query: string, page = 1, limit = 2
     prisma.domainKodifikasi.findMany({
       where: {
         OR: [
-          { kode: { contains: query, mode: 'insensitive' } },
-          { namaDomain: { contains: query, mode: 'insensitive' } },
-          { penjelasan: { contains: query, mode: 'insensitive' } },
+          { kode: { contains: query } },
+          { namaDomain: { contains: query } },
+          { penjelasan: { contains: query } },
         ],
       },
-      include: {
-        subculture: true,
-      },
+      // include: {
+      //   subculture: true,
+      // },
       skip,
       take: limit,
       orderBy: { updatedAt: "desc" },
@@ -166,9 +166,9 @@ export const searchDomainKodifikasis = async (query: string, page = 1, limit = 2
     prisma.domainKodifikasi.count({
       where: {
         OR: [
-          { kode: { contains: query, mode: 'insensitive' } },
-          { namaDomain: { contains: query, mode: 'insensitive' } },
-          { penjelasan: { contains: query, mode: 'insensitive' } },
+          { kode: { contains: query } },
+          { namaDomain: { contains: query } },
+          { penjelasan: { contains: query } },
         ],
       },
     }),
