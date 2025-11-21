@@ -1,0 +1,4 @@
+adminId,username,email,password,role,isActive,createdAt,updatedAt
+"1","admin_user","admin@example.com","$2b$12$mGfI2Hen48oy1kix/HqEyOs4YVWYoOPB4LuNLDWhJ9rR4QATskdh6","EDITOR","true","""2025-11-06T05:27:01.417Z""","""2025-11-06T05:27:01.417Z"""
+"2","aas","test@example.com","$2b$12$bHhe.aGMYQkai9VT77EAouXysqKtYS/yJgCP7ZY.cdlCph8GsDM7S","EDITOR","true","""2025-11-06T05:51:46.473Z""","""2025-11-06T05:51:46.473Z"""
+"3","Brian","brian@example.com","$2b$12$oV02CLQM2ffjuo3FStdAfOrEHrdT5eCyd0KPMhTV/IJHJNlOQz/4G","EDITOR","true","""2025-11-13T11:08:26.514Z""","""2025-11-13T11:08:26.514Z"""
