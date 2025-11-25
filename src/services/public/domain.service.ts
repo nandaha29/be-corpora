@@ -4,24 +4,24 @@ import { prisma } from '../../lib/prisma.js';
 export const searchLeksikonsInDomain = async (domainId: number, query: string) => {
   const searchTerm = query.toLowerCase();
 
-  return prisma.leksikon.findMany({
+  return prisma.lexicon.findMany({
     where: {
-      domainKodifikasiId: domainId,
+      domainId: domainId,
       OR: [
-        { kataLeksikon: { contains: searchTerm, mode: 'insensitive' } },
-        { ipa: { contains: searchTerm, mode: 'insensitive' } },
-        { transliterasi: { contains: searchTerm, mode: 'insensitive' } },
-        { maknaEtimologi: { contains: searchTerm, mode: 'insensitive' } },
-        { maknaKultural: { contains: searchTerm, mode: 'insensitive' } },
+        { lexiconWord: { contains: searchTerm, mode: 'insensitive' } },
+        { ipaInternationalPhoneticAlphabet: { contains: searchTerm, mode: 'insensitive' } },
+        { transliteration: { contains: searchTerm, mode: 'insensitive' } },
+        { etymologicalMeaning: { contains: searchTerm, mode: 'insensitive' } },
+        { culturalMeaning: { contains: searchTerm, mode: 'insensitive' } },
         { commonMeaning: { contains: searchTerm, mode: 'insensitive' } },
         { translation: { contains: searchTerm, mode: 'insensitive' } },
-        { varian: { contains: searchTerm, mode: 'insensitive' } },
-        { translationVarians: { contains: searchTerm, mode: 'insensitive' } },
-        { deskripsiLain: { contains: searchTerm, mode: 'insensitive' } },
+        { variant: { contains: searchTerm, mode: 'insensitive' } },
+        { variantTranslations: { contains: searchTerm, mode: 'insensitive' } },
+        { otherDescription: { contains: searchTerm, mode: 'insensitive' } },
       ],
     },
     include: {
-      domainKodifikasi: {
+      codificationDomain: {
         include: {
           subculture: {
             include: {
@@ -31,7 +31,7 @@ export const searchLeksikonsInDomain = async (domainId: number, query: string) =
         },
       },
       contributor: true,
-      leksikonAssets: { include: { asset: true } },
+      lexiconAssets: { include: { asset: true } },
     },
     take: 50,
   });
@@ -39,19 +39,19 @@ export const searchLeksikonsInDomain = async (domainId: number, query: string) =
 
 // Get domain details
 export const getDomainDetail = async (domainId: number) => {
-  return prisma.domainKodifikasi.findUnique({
-    where: { domainKodifikasiId: domainId, status: 'PUBLISHED' },
+  return prisma.codificationDomain.findUnique({
+    where: { domainId: domainId, status: 'PUBLISHED' },
     include: {
       subculture: {
         include: {
           culture: true,
         },
       },
-      leksikons: {
+      lexicons: {
         where: { status: 'PUBLISHED' },
         include: {
           contributor: true,
-          leksikonAssets: { include: { asset: true } },
+          lexiconAssets: { include: { asset: true } },
         },
       },
     },

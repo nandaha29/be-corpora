@@ -16,12 +16,12 @@ const router = Router();
 router.get('/', referenceController.getPublishedReferences);
 
 /**
- * @route GET /api/public/references/:referensi_id
+ * @route GET /api/public/references/:reference_id
  * @desc Get detailed information about a specific published reference
  * @access Public
- * @param {number} referensi_id - Reference ID
+ * @param {number} reference_id - Reference ID
  * @returns {object} Reference details including title, author, type, and description
  */
-router.get('/:referensi_id', referenceController.getPublishedReferenceById);
+router.get('/:reference_id', referenceController.getPublishedReferenceById);
 
 export default router;

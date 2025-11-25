@@ -31,8 +31,8 @@ router.get('/search', authenticateAdmin, referenceController.searchReferensi);
  * @route GET /api/v1/admin/references/filter
  * @desc Filter references by type, year, status, createdAt (combination)
  * @access Admin only
- * @query {string} tipeReferensi - Filter by type (JURNAL, BUKU, ARTIKEL, WEBSITE, LAPORAN)
- * @query {string} tahunTerbit - Filter by publication year
+ * @query {string} referenceType - Filter by type (JOURNAL, BOOK, ARTICLE, WEBSITE, REPORT, THESIS, DISSERTATION, FIELD_NOTE)
+ * @query {string} publicationYear - Filter by publication year
  * @query {string} status - Filter by status (DRAFT, PUBLISHED, ARCHIVED)
  * @query {string} createdAtFrom - Filter by createdAt from date (ISO string)
  * @query {string} createdAtTo - Filter by createdAt to date (ISO string)
@@ -53,12 +53,12 @@ router.get("/:id", authenticateAdmin, referenceController.getReferenceById);
  * @route POST /api/v1/admin/references
  * @desc Create new reference
  * @access Admin only
- * @body {string} judul - Reference title
- * @body {string} tipeReferensi - Reference type (JURNAL, BUKU, ARTIKEL, WEBSITE, LAPORAN)
- * @body {string} penjelasan - Description
+ * @body {string} title - Reference title
+ * @body {string} referenceType - Reference type (JOURNAL, BOOK, ARTICLE, WEBSITE, REPORT, THESIS, DISSERTATION, FIELD_NOTE)
+ * @body {string} description - Description
  * @body {string} url - URL (optional)
- * @body {string} penulis - Author (optional)
- * @body {string} tahunTerbit - Publication year (optional)
+ * @body {string} authors - Author (optional)
+ * @body {string} publicationYear - Publication year (optional)
  * @body {string} status - Status (DRAFT, PUBLISHED, ARCHIVED)
  */
 router.post("/", authenticateAdmin, referenceController.createReference);
@@ -68,12 +68,12 @@ router.post("/", authenticateAdmin, referenceController.createReference);
  * @desc Update reference by ID
  * @access Admin only
  * @param {number} id - Reference ID
- * @body {string} judul - Reference title
- * @body {string} tipeReferensi - Reference type
- * @body {string} penjelasan - Description
+ * @body {string} title - Reference title
+ * @body {string} referenceType - Reference type
+ * @body {string} description - Description
  * @body {string} url - URL (optional)
- * @body {string} penulis - Author (optional)
- * @body {string} tahunTerbit - Publication year (optional)
+ * @body {string} authors - Author (optional)
+ * @body {string} publicationYear - Publication year (optional)
  * @body {string} status - Status
  */
 router.put("/:id", authenticateAdmin, referenceController.updateReference);

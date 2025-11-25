@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateCultureInput, UpdateCultureInput } from '../../lib/validators.js';
+import { StatusKonservasi, StatusPublish } from '@prisma/client';
 
 // Helper function to generate slug
 const generateSlug = (name: string): string => {
@@ -26,14 +27,14 @@ export const getCultureById = async (id: number) => {
 };
 
 export const createCulture = async (data: CreateCultureInput) => {
-  const slug = generateSlug(data.namaBudaya);
+  const slug = generateSlug(data.cultureName);
   return prisma.culture.create({
     data: {
       ...data,
       slug,
-      karakteristik: data.karakteristik ?? '', 
-      klasifikasi: data.klasifikasi ?? '', 
-      ...(data.statusKonservasi !== undefined ? { statusKonservasi: data.statusKonservasi } : {}),
+      characteristics: data.characteristics ?? '', 
+      classification: data.classification ?? '', 
+      ...(data.conservationStatus !== undefined ? { conservationStatus: data.conservationStatus } : {}),
     } as any,
   });
 };
@@ -42,9 +43,9 @@ export const createCulture = async (data: CreateCultureInput) => {
 export const updateCulture = async (id: number, data: UpdateCultureInput) => {
   const updateData: any = { ...data };
 
-  // Regenerate slug if namaBudaya is being updated
-  if (data.namaBudaya !== undefined) {
-    updateData.slug = generateSlug(data.namaBudaya);
+  // Regenerate slug if cultureName is being updated
+  if (data.cultureName !== undefined) {
+    updateData.slug = generateSlug(data.cultureName);
   }
 
   return prisma.culture.update({
@@ -89,7 +90,7 @@ export const getAllCulturesPaginated = async (page = 1, limit = 10) => {
     where: { cultureId },
     select: {
       cultureId: true,
-      namaBudaya: true,
+      cultureName: true,
       subcultures: {
         select: {
           subcultureAssets: {
@@ -98,7 +99,7 @@ export const getAllCulturesPaginated = async (page = 1, limit = 10) => {
                 select: {
                   assetId: true,
                   url: true,
-                  namaFile: true,
+                  fileName: true,
                 },
               },
             },
@@ -108,3 +109,103 @@ export const getAllCulturesPaginated = async (page = 1, limit = 10) => {
     },
   });
 }
+
+// Search cultures with pagination
+export const searchCultures = async (
+  page: number = 1,
+  limit: number = 20,
+  searchQuery?: string
+) => {
+  const skip = (page - 1) * limit;
+
+  // Build where clause for search
+  const where: any = {};
+
+  if (searchQuery && searchQuery.trim()) {
+    const searchTerm = searchQuery.trim();
+    where.OR = [
+      { cultureName: { contains: searchTerm, mode: 'insensitive' } },
+      { originIsland: { contains: searchTerm, mode: 'insensitive' } },
+      { province: { contains: searchTerm, mode: 'insensitive' } },
+      { cityRegion: { contains: searchTerm, mode: 'insensitive' } },
+      { classification: { contains: searchTerm, mode: 'insensitive' } },
+      { characteristics: { contains: searchTerm, mode: 'insensitive' } },
+    ];
+  }
+
+  const [cultures, totalCount] = await Promise.all([
+    prisma.culture.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        cultureId: 'asc',
+      },
+    }),
+    prisma.culture.count({ where }),
+  ]);
+
+  return {
+    data: cultures,
+    total: totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
+};
+
+// Filter cultures with pagination (separate from search)
+export const filterCultures = async (
+  page: number = 1,
+  limit: number = 20,
+  conservationStatus?: StatusKonservasi,
+  status?: StatusPublish,
+  originIsland?: string,
+  province?: string,
+  cityRegion?: string
+) => {
+  const skip = (page - 1) * limit;
+
+  // Build where clause for filters only
+  const where: any = {};
+
+  if (conservationStatus) {
+    where.conservationStatus = conservationStatus;
+  }
+
+  if (status) {
+    where.status = status;
+  }
+
+  if (originIsland) {
+    where.originIsland = { contains: originIsland, mode: 'insensitive' };
+  }
+
+  if (province) {
+    where.province = { contains: province, mode: 'insensitive' };
+  }
+
+  if (cityRegion) {
+    where.cityRegion = { contains: cityRegion, mode: 'insensitive' };
+  }
+
+  const [cultures, totalCount] = await Promise.all([
+    prisma.culture.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        cultureId: 'asc',
+      },
+    }),
+    prisma.culture.count({ where }),
+  ]);
+
+  return {
+    data: cultures,
+    total: totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
+};

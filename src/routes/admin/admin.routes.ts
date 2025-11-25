@@ -50,9 +50,25 @@ router.get('/profile', authenticateAdmin, adminController.getProfile);
  */
 router.put('/change-password', authenticateAdmin, adminController.changePassword);
 
-// ============================================
-// TODO: Additional Admin Management Features
-// ============================================
+/**
+ * @route PUT /api/admin/update-profile
+ * @desc Update current admin profile
+ * @access Admin only (requires valid JWT token)
+ * @body {string} username - New username (optional)
+ * @body {string} email - New email (optional)
+ * @body {string} role - New role (optional)
+ * @body {boolean} isActive - New active status (optional)
+ */
+router.put('/update-profile', authenticateAdmin, adminController.updateProfile);
+
+/**
+ * @route PUT /api/admin/admins/:id/status
+ * @desc Update admin status (activate/deactivate)
+ * @access Admin only (requires valid JWT token)
+ * @param {number} id - Admin ID
+ * @body {boolean} isActive - Active status
+ */
+router.put('/admins/:id/status', authenticateAdmin, adminController.updateAdminStatus);
 
 // TODO: Implement token verification endpoint
 // router.post('/verify', authenticateAdmin, adminController.verifyToken);

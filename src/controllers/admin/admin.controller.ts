@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as adminService from '../../services/admin/admin.service.js';
-import { adminRegisterSchema, adminLoginSchema } from '../../lib/validators.js';
+import { adminRegisterSchema, adminLoginSchema, updateAdminSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 
 // POST /api/v1/admin/auth/register
@@ -10,6 +10,7 @@ export const register = async (req: Request, res: Response) => {
     const admin = await adminService.registerAdmin(validated);
 
     return res.status(201).json({
+      success: true,
       message: 'Admin registered successfully',
       data: admin
     });
@@ -58,6 +59,7 @@ export const login = async (req: Request, res: Response) => {
     const result = await adminService.loginAdmin(validated);
 
     return res.status(200).json({
+      success: true,
       message: 'Login successful',
       data: result
     });
@@ -105,6 +107,7 @@ export const getProfile = async (req: Request, res: Response) => {
     const admin = await adminService.getAdminById(req.admin.adminId);
 
     return res.status(200).json({
+      success: true,
       message: 'Profile retrieved successfully',
       data: admin
     });
@@ -161,6 +164,7 @@ export const changePassword = async (req: Request, res: Response) => {
     const result = await adminService.changeAdminPassword(req.admin.adminId, newPassword);
 
     return res.status(200).json({
+      success: true,
       message: 'Password changed successfully',
       data: result
     });
@@ -176,6 +180,98 @@ export const changePassword = async (req: Request, res: Response) => {
     console.error('Change password error:', error);
     return res.status(500).json({
       message: 'Failed to change password',
+      details: error
+    });
+  }
+};
+
+// PUT /api/v1/admin/auth/update-profile
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    if (!req.admin) {
+      return res.status(401).json({
+        message: 'Authentication required',
+        code: 'NO_AUTH'
+      });
+    }
+
+    const validated = updateAdminSchema.parse(req.body);
+    const admin = await adminService.updateAdmin(req.admin.adminId, validated);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: admin
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: error.issues
+      });
+    }
+
+    const err = error as any;
+    if (err.code === 'EMAIL_EXISTS') {
+      return res.status(409).json({
+        message: 'Email already registered',
+        code: 'EMAIL_EXISTS'
+      });
+    }
+
+    if (err.code === 'USERNAME_EXISTS') {
+      return res.status(409).json({
+        message: 'Username already taken',
+        code: 'USERNAME_EXISTS'
+      });
+    }
+
+    if (err.code === 'DUPLICATE_ENTRY') {
+      return res.status(409).json({
+        message: 'Email or username already exists',
+        code: 'DUPLICATE_ENTRY'
+      });
+    }
+
+    console.error('Update profile error:', error);
+    return res.status(500).json({
+      message: 'Failed to update profile',
+      details: error
+    });
+  }
+};
+
+// PUT /api/v1/admin/admins/:id/status
+export const updateAdminStatus = async (req: Request, res: Response) => {
+  try {
+    if (!req.admin) {
+      return res.status(401).json({
+        message: 'Authentication required',
+        code: 'NO_AUTH'
+      });
+    }
+
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        message: 'isActive must be a boolean',
+        code: 'INVALID_INPUT'
+      });
+    }
+
+    const admin = await adminService.updateAdminStatus(Number(id), isActive);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Admin status updated successfully',
+      data: admin
+    });
+  } catch (error) {
+    console.error('Update admin status error:', error);
+    return res.status(500).json({
+      message: 'Failed to update admin status',
       details: error
     });
   }

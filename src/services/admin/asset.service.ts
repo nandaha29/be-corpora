@@ -22,7 +22,7 @@ export const createAsset = async (data: Omit<CreateAssetInput, 'url' | 'fileSize
     url: blob.url,
     fileSize,
     hashChecksum,
-    penjelasan: data.penjelasan ?? "",
+    description: data.description ?? "",
     metadataJson: data.metadataJson ?? "",
     status: (data.status as StatusFile) ?? undefined,
   };
@@ -35,7 +35,7 @@ export const createAssetFromUrl = async (data: CreateAssetInput & { url: string 
   // Ensure required fields are always strings (not undefined)
   const cleanedData = {
     ...data,
-    penjelasan: data.penjelasan ?? "",
+    description: data.description ?? "",
     fileSize: data.fileSize ?? "",
     hashChecksum: data.hashChecksum ?? "",
     metadataJson: data.metadataJson ?? "",
@@ -65,7 +65,7 @@ export const bulkUploadAssets = async (assets: Omit<CreateAssetInput, 'url' | 'f
       url: blob.url,
       fileSize,
       hashChecksum,
-      penjelasan: asset.penjelasan ?? "",
+      description: asset.description ?? "",
       metadataJson: asset.metadataJson ?? "",
       status: (asset.status as StatusFile) ?? undefined,
     };
@@ -116,7 +116,7 @@ export const getAllAssetsPaginated = async (page = 1, limit = 10) => {
 
 // ✅ Filter assets by type and/or status with pagination and sorting
 export const filterAssets = async (filters: {
-  tipe?: string;
+  fileType?: string;
   status?: string;
   sortBy?: string;
   order?: string;
@@ -130,28 +130,28 @@ export const filterAssets = async (filters: {
   // Build where condition dynamically
   const whereCondition: any = {};
 
-  // Add tipe filter if provided
-  if (filters.tipe) {
-    const normalized = filters.tipe.toUpperCase();
-    const allowed = ["FOTO", "AUDIO", "VIDEO", "MODEL_3D"];
+  // Add fileType filter if provided
+  if (filters.fileType) {
+    const normalized = filters.fileType.toUpperCase();
+    const allowed = ["PHOTO", "AUDIO", "VIDEO", "MODEL_3D"];
     if (allowed.includes(normalized)) {
-      whereCondition.tipe = normalized as any;
+      whereCondition.fileType = normalized as any;
     }
   }
 
   // Add status filter if provided
   if (filters.status) {
     const normalized = filters.status.toUpperCase();
-    const allowed = ["ACTIVE", "PROCESSING", "ARCHIVED", "CORRUPTED"];
+    const allowed = ["ACTIVE", "PROCESSING", "ARCHIVED", "CORRUPTED", "PUBLISHED"];
     if (allowed.includes(normalized)) {
-      whereCondition.status = normalized as any;
+      whereCondition.status = normalized as StatusFile;
     }
   }
 
   // Build orderBy
   let orderBy: any = { createdAt: 'desc' }; // default
   if (filters.sortBy) {
-    const allowedSortFields = ['createdAt', 'namaFile', 'tipe', 'status'];
+    const allowedSortFields = ['createdAt', 'fileName', 'fileType', 'status'];
     if (allowedSortFields.includes(filters.sortBy)) {
       const order = filters.order === 'asc' ? 'asc' : 'desc';
       orderBy = { [filters.sortBy]: order };
@@ -176,7 +176,7 @@ export const filterAssets = async (filters: {
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        tipe: filters.tipe || null,
+        fileType: filters.fileType || null,
         status: filters.status || null,
         sortBy: filters.sortBy || 'createdAt',
         order: filters.order || 'desc',
@@ -203,30 +203,31 @@ export const deleteAsset = async (id: number) => {
   return prisma.asset.delete({ where: { assetId: id } });
 };
 
-// // ✅ Get public asset file (only if status = 'published') SCHEMA BELUM ADA STATUS PUBLIC APA BELUM
-// export const getPublicAssetFile = async (id: number) => {
-//   return prisma.asset.findFirst({
-//     where: {
-//       assetId: id,
-//       status: 'published',
-//     },
-//   });
-// };
+// ✅ Get public asset file (only if status = 'published')
+export const getPublicAssetFile = async (id: number) => {
+  return prisma.asset.findFirst({
+    where: {
+      assetId: id,
+      status: 'PUBLISHED' as StatusFile,
+    },
+  });
+};
+
 
 // Search assets by keyword with pagination
 export const searchAssets = async (query: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
-  const validTypes: AssetType[] = ['FOTO', 'AUDIO', 'VIDEO', 'MODEL_3D'];
-  const validStatuses: StatusFile[] = ['ACTIVE', 'PROCESSING', 'ARCHIVED', 'CORRUPTED'];
+  const validTypes: AssetType[] = ['PHOTO', 'AUDIO', 'VIDEO', 'MODEL_3D'];
+  const validStatuses: StatusFile[] = ['ACTIVE', 'PROCESSING', 'ARCHIVED', 'CORRUPTED', 'PUBLISHED' as StatusFile];
 
   const whereConditions: any[] = [
-    { namaFile: { contains: query, mode: 'insensitive' } },
-    { penjelasan: { contains: query, mode: 'insensitive' } },
+    { fileName: { contains: query, mode: 'insensitive' } },
+    { description: { contains: query, mode: 'insensitive' } },
   ];
 
   if (validTypes.includes(query as AssetType)) {
-    whereConditions.push({ tipe: { equals: query as AssetType } });
+    whereConditions.push({ fileType: { equals: query as AssetType } });
   }
 
   if (validStatuses.includes(query as StatusFile)) {

@@ -21,15 +21,15 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
   if (category !== 'all') {
     whereClause.culture = {
       OR: [
-        { namaBudaya: { contains: category, mode: 'insensitive' } },
-        { provinsi: { contains: category, mode: 'insensitive' } },
+        { cultureName: { contains: category, mode: 'insensitive' } },
+        { province: { contains: category, mode: 'insensitive' } },
       ],
     };
   }
 
   // Add search filter
   if (searchQuery) {
-    whereClause.namaSubculture = {
+    whereClause.subcultureName = {
       contains: searchQuery,
       mode: 'insensitive',
     };
@@ -44,7 +44,7 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
         include: { asset: true },
         where: { 
           asset: { 
-            tipe: 'FOTO',
+            fileType: 'PHOTO',
             status: 'ACTIVE'
           },
           assetRole: 'THUMBNAIL'
@@ -52,8 +52,8 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
       },
     },
     orderBy: [
-      { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
-      { namaSubculture: 'asc' }, // Secondary order by name
+      { displayPriorityStatus: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+      { subcultureName: 'asc' }, // Secondary order by name
     ],
     skip: (page - 1) * limit,
     take: limit,
@@ -61,16 +61,16 @@ export const getSubculturesGallery = async (searchQuery: string = '', category: 
 
   const data = subcultures.map(subculture => ({
     id: subculture.slug || (subculture.subcultureId ? subculture.subcultureId.toString() : `subculture-${Math.random()}`),
-    name: subculture.namaSubculture || 'Unnamed Subculture',
-    description: subculture.penjelasan || 'No description available',
-    salamKhas: (subculture as any).salamKhas || null,
-    artiSalamKhas: (subculture as any).artiSalamKhas || null,
+    name: subculture.subcultureName || 'Unnamed Subculture',
+    description: subculture.explanation || 'No description available',
+    salamKhas: (subculture as any).traditionalGreeting || null,
+    artiSalamKhas: (subculture as any).greetingMeaning || null,
     image: subculture.subcultureAssets.length > 0
       ? subculture.subcultureAssets[0]!.asset.url
       : null,
     culture: {
-      name: subculture.culture?.namaBudaya || 'Unknown Culture',
-      province: subculture.culture?.provinsi || 'Unknown Province',
+      name: subculture.culture?.cultureName || 'Unknown Culture',
+      province: subculture.culture?.province || 'Unknown Province',
     }
   }));
 
@@ -83,17 +83,17 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     where: { slug: identifier, status: 'PUBLISHED' },
     include: {
       culture: true,
-      domainKodifikasis: {
+      codificationDomains: {
         include: {
-          leksikons: {
+          lexicons: {
             where: { status: 'PUBLISHED' },
             include: {
               contributor: true,
-              leksikonAssets: {
+              lexiconAssets: {
                 include: { asset: true },
               },
-              leksikonReferensis: {
-                include: { referensi: true },
+              lexiconReferences: {
+                include: { reference: true },
               },
             },
           },
@@ -113,17 +113,17 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
         where: { subcultureId: id, status: 'PUBLISHED' },
         include: {
           culture: true,
-          domainKodifikasis: {
+          codificationDomains: {
             include: {
-              leksikons: {
+              lexicons: {
                 where: { status: 'PUBLISHED' },
                 include: {
                   contributor: true,
-                  leksikonAssets: {
+                  lexiconAssets: {
                     include: { asset: true },
                   },
-                  leksikonReferensis: {
-                    include: { referensi: true },
+                  lexiconReferences: {
+                    include: { reference: true },
                   },
                 },
               },
@@ -140,70 +140,78 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   if (!subculture) return null;
 
   // Extract salam khas from description if not available in field
-  const salamKhas = (subculture as any).salamKhas || 
-    (subculture.penjelasan && subculture.penjelasan.includes('Hong hulun Basuki Langgeng') ? 'Hong hulun Basuki Langgeng' : null);
+  const salamKhas = (subculture as any).traditionalGreeting || subculture.explanation;
+    // (subculture.explanation && subculture.explanation.includes('Hong hulun Basuki Langgeng') ? 'Hong hulun Basuki Langgeng' : null);
 
   const highlights = subculture.subcultureAssets
-    .filter(sa => sa.assetRole === 'HIGHLIGHT' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
+    .filter(sa => sa.assetRole === 'HIGHLIGHT' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE')
     .map(sa => ({ url: sa.asset.url }));
 
   const heroImageAsset = subculture.subcultureAssets
-    .find(sa => sa.assetRole === 'THUMBNAIL' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE');
+    .find(sa => sa.assetRole === 'THUMBNAIL' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE');
 
   const profile = {
-    displayName: subculture.namaSubculture || 'Unnamed Subculture',
-    history: subculture.penjelasan || 'No description available',
+    displayName: subculture.subcultureName || 'Unnamed Subculture',
+    history: subculture.explanation || 'No description available',
     salamKhas: salamKhas,
-    artiSalamKhas: (subculture as any).artiSalamKhas || null,
+    artiSalamKhas: (subculture as any).greetingMeaning || null,
     highlights,
   };
 
   const galleryImages = subculture.subcultureAssets
-    .filter(sa => sa.assetRole === 'GALLERY' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE')
-    .map(sa => ({ url: sa.asset.url }));
+    .filter(sa => sa.assetRole === 'GALLERY' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE')
+    .map(sa => ({
+      url: sa.asset.url,
+      description: sa.asset.description || `${subculture.subcultureName} Gallery Image`,
+      caption: sa.asset.fileName || 'Cultural heritage image'
+    }));
 
   // Include galleries from lexicons
-  const lexiconGalleryImages = subculture.domainKodifikasis
-    .flatMap(dk => dk.leksikons)
-    .flatMap(l => l.leksikonAssets
-      .filter(la => la.assetRole === 'GALLERY' && la.asset.tipe === 'FOTO')
-      .map(la => ({ url: la.asset.url }))
+  const lexiconGalleryImages = subculture.codificationDomains
+    .flatMap(dk => dk.lexicons)
+    .flatMap(l => l.lexiconAssets
+      .filter(la => la.assetRole === 'GALLERY' && la.asset.fileType === 'PHOTO')
+      .map(la => ({
+        url: la.asset.url,
+        description: la.asset.description || `${l.lexiconWord} Gallery Image`,
+        caption: la.asset.fileName || 'Cultural heritage image'
+      }))
     );
 
   // Combine subculture and lexicon galleries
   const allGalleryImages = [...galleryImages, ...lexiconGalleryImages];
 
   const model3dArray = subculture.subcultureAssets
-    .filter((sa: { asset: { tipe: string; }; }) => sa.asset.tipe === 'MODEL_3D')
-    .map((sa: { asset: { url: string; namaFile: any; penjelasan: any; }; }) => ({
+    .filter((sa: { asset: { fileType: string; }; }) => sa.asset.fileType === 'MODEL_3D')
+    .map((sa: { asset: { url: string; fileName: any; description: any; }; }) => ({
       sketchfabId: sa.asset.url?.split('/').pop()?.split('-').pop() || '',
-      title: sa.asset.namaFile || 'Untitled Model',
-      description: sa.asset.penjelasan || '',
+      title: sa.asset.fileName || 'Untitled Model',
+      description: sa.asset.description || '',
       artifactType: 'Cultural Artifact',
       tags: [],
     }));
 
-  const lexicon = subculture.domainKodifikasis.flatMap((dk: { leksikons: any[]; namaDomain: any; }) => {
-    let filteredLeksikons = dk.leksikons;
+  const lexicon = subculture.codificationDomains.flatMap((dk: { lexicons: any[]; domainName: any; }) => {
+    let filteredLeksikons = dk.lexicons;
 
     // Filter lexicon if search query is provided
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filteredLeksikons = dk.leksikons.filter(l =>
-        (l.kataLeksikon && l.kataLeksikon.toLowerCase().includes(query)) ||
-        (l.maknaKultural && l.maknaKultural.toLowerCase().includes(query)) ||
+      filteredLeksikons = dk.lexicons.filter(l =>
+        (l.lexiconWord && l.lexiconWord.toLowerCase().includes(query)) ||
+        (l.culturalMeaning && l.culturalMeaning.toLowerCase().includes(query)) ||
         (l.commonMeaning && l.commonMeaning.toLowerCase().includes(query)) ||
         (l.translation && l.translation.toLowerCase().includes(query)) ||
-        (l.transliterasi && l.transliterasi.toLowerCase().includes(query))
+        (l.transliteration && l.transliteration.toLowerCase().includes(query))
       );
     }
 
     return filteredLeksikons.map(l => ({
-      term: l.kataLeksikon || 'Unknown Term',
-      definition: l.maknaKultural || l.commonMeaning || l.translation || 'No definition available',
-      category: dk.namaDomain || 'Unknown Domain',
-      region: subculture.namaSubculture || 'Unknown Region',
-      slug: generateSlug(l.kataLeksikon || 'unknown-term'),
+      term: l.lexiconWord || 'Unknown Term',
+      definition: l.culturalMeaning || l.commonMeaning || l.translation || 'No definition available',
+      category: dk.domainName || 'Unknown Domain',
+      region: subculture.subcultureName || 'Unknown Region',
+      slug: generateSlug(l.lexiconWord || 'unknown-term'),
     }));
   });
 
@@ -222,10 +230,11 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
       heroImage,
       videoUrl,
       culture: {
-        name: subculture.culture?.namaBudaya || 'Unknown Culture',
-        province: subculture.culture?.provinsi || 'Unknown Province',
-        region: subculture.culture?.kotaDaerah || 'Unknown Region',
+        name: subculture.culture?.cultureName || 'Unknown Culture',
+        province: subculture.culture?.province || 'Unknown Province',
+        region: subculture.culture?.cityRegion || 'Unknown Region',
       },
+      subcultureAssets: subculture.subcultureAssets, // Add subcultureAssets for frontend gallery handling
       searchResults: lexicon, // Return filtered results as searchResults
     };
   }
@@ -240,10 +249,11 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     heroImage,
     videoUrl,
     culture: {
-      name: subculture.culture?.namaBudaya || 'Unknown Culture',
-      province: subculture.culture?.provinsi || 'Unknown Province',
-      region: subculture.culture?.kotaDaerah || 'Unknown Region',
+      name: subculture.culture?.cultureName || 'Unknown Culture',
+      province: subculture.culture?.province || 'Unknown Province',
+      region: subculture.culture?.cityRegion || 'Unknown Region',
     },
+    subcultureAssets: subculture.subcultureAssets, // Add subcultureAssets for frontend gallery handling
   };
 };
 
@@ -255,9 +265,9 @@ export const getSubcultureLexicons = async (identifier: string, searchQuery?: st
   const subcultureData = await prisma.subculture.findUnique({
     where: { subcultureId: subculture.subcultureId, status: 'PUBLISHED' },
     include: {
-      domainKodifikasis: {
+      codificationDomains: {
         include: {
-          leksikons: {
+          lexicons: {
             where: { status: 'PUBLISHED' },
             include: {
               contributor: true,
@@ -270,17 +280,17 @@ export const getSubcultureLexicons = async (identifier: string, searchQuery?: st
 
   if (!subcultureData) return { lexicons: [], total: 0, page, limit };
 
-  let allLeksikons = subcultureData.domainKodifikasis.flatMap(dk => dk.leksikons);
+  let allLeksikons = subcultureData.codificationDomains.flatMap(dk => dk.lexicons);
 
   // Filter by search query
   if (searchQuery && searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
     allLeksikons = allLeksikons.filter(l =>
-      (l.kataLeksikon && l.kataLeksikon.toLowerCase().includes(query)) ||
-      (l.maknaKultural && l.maknaKultural.toLowerCase().includes(query)) ||
+      (l.lexiconWord && l.lexiconWord.toLowerCase().includes(query)) ||
+      (l.culturalMeaning && l.culturalMeaning.toLowerCase().includes(query)) ||
       (l.commonMeaning && l.commonMeaning.toLowerCase().includes(query)) ||
       (l.translation && l.translation.toLowerCase().includes(query)) ||
-      (l.transliterasi && l.transliterasi.toLowerCase().includes(query))
+      (l.transliteration && l.transliteration.toLowerCase().includes(query))
     );
   }
 
@@ -289,11 +299,11 @@ export const getSubcultureLexicons = async (identifier: string, searchQuery?: st
   const paginatedLeksikons = allLeksikons.slice(startIndex, startIndex + limit);
 
   const lexicons = paginatedLeksikons.map(l => ({
-    term: l.kataLeksikon || 'Unknown Term',
-    definition: l.maknaKultural || l.commonMeaning || l.translation || 'No definition available',
-    category: subcultureData.domainKodifikasis.find(dk => dk.domainKodifikasiId === l.domainKodifikasiId)?.namaDomain || 'Unknown Domain',
-    region: subcultureData.namaSubculture || 'Unknown Region',
-    slug: generateSlug(l.kataLeksikon || 'unknown-term'),
+    term: l.lexiconWord || 'Unknown Term',
+    definition: l.culturalMeaning || l.commonMeaning || l.translation || 'No definition available',
+    category: subcultureData.codificationDomains.find(dk => dk.domainId === l.domainId)?.domainName || 'Unknown Domain',
+    region: subcultureData.subcultureName || 'Unknown Region',
+    slug: generateSlug(l.lexiconWord || 'unknown-term'),
   }));
 
   return { lexicons, total, page, limit };

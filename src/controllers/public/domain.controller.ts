@@ -4,7 +4,7 @@ import * as domainService from '../../services/public/domain.service.js';
 // Search leksikons within a specific domain
 export const searchLeksikonsInDomain = async (req: Request, res: Response) => {
   try {
-    const domainIdParam = req.params.dk_id;
+    const domainIdParam = req.params.domain_id;
     const { q: query } = req.query;
 
     if (!domainIdParam) {
@@ -50,7 +50,7 @@ export const searchLeksikonsInDomain = async (req: Request, res: Response) => {
 // Get domain details
 export const getDomainDetail = async (req: Request, res: Response) => {
   try {
-    const domainIdParam = req.params.dk_id;
+    const domainIdParam = req.params.domain_id;
 
     if (!domainIdParam) {
       return res.status(400).json({

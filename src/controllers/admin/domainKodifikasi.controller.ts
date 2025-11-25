@@ -1,19 +1,24 @@
 import { Request, Response } from 'express';
 import * as domainService from '../../services/admin/domainKodifikasi.service.js';
 import {
-  createDomainKodifikasiSchema,
-  updateDomainKodifikasiSchema,
+  createCodificationDomainSchema,
+  updateCodificationDomainSchema,
 } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 
 // GET /api/domains
 export const getDomains = async (req: Request, res: Response) => {
   try {
-    const domainKodifikasi = await domainService.getAllDomainKodifikasi();
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    const result = await domainService.getAllDomainKodifikasi(page, limit);
 
     res.status(200).json({
-      message: "Success",
-      data: domainKodifikasi,
+      success: true,
+      message: 'Domains retrieved successfully',
+      data: result.data,
+      pagination: result.meta,
     });
     return;
   } catch (error) {
@@ -29,7 +34,11 @@ export const getDomainById = async (req: Request, res: Response) => {
     const { id } = req.params;
     const item = await domainService.getDomainKodifikasiById(Number(id));
     if (!item) return res.status(404).json({ message: 'Domain not found' });
-    res.status(200).json(item);
+    res.status(200).json({
+      success: true,
+      message: 'Domain retrieved successfully',
+      data: item,
+    });
     return;
   } catch (error) {
     // console.error('❌ GET DOMAIN BY ID ERROR:', error);
@@ -41,9 +50,13 @@ export const getDomainById = async (req: Request, res: Response) => {
 // POST /api/domains
 export const createDomain = async (req: Request, res: Response) => {
   try {
-    const validated = createDomainKodifikasiSchema.parse(req.body);
+    const validated = createCodificationDomainSchema.parse(req.body);
     const created = await domainService.createDomainKodifikasi(validated);
-    res.status(201).json(created);
+    res.status(201).json({
+      success: true,
+      message: 'Domain created successfully',
+      data: created,
+    });
     return;
   } catch (error) {
     if (error instanceof ZodError) {
@@ -61,9 +74,13 @@ export const createDomain = async (req: Request, res: Response) => {
 export const updateDomain = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const validated = updateDomainKodifikasiSchema.parse(req.body);
+    const validated = updateCodificationDomainSchema.parse(req.body);
     const updated = await domainService.updateDomainKodifikasi(Number(id), validated);
-    res.status(200).json(updated);
+    res.status(200).json({
+      success: true,
+      message: 'Domain updated successfully',
+      data: updated,
+    });
     return;
   } catch (error) {
     if (error instanceof ZodError) {
@@ -99,19 +116,19 @@ export const deleteDomain = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/admin/domain-kodifikasi/filter - Filter by kode and/or status with pagination
+// GET /api/admin/domain-kodifikasi/filter - Filter by code and/or status with pagination
 export const filterDomainKodifikasis = async (req: Request, res: Response) => {
   // console.log('🔍 FILTER CONTROLLER CALLED with query:', req.query);
   try {
-    const kode = req.query.kode as string | undefined;
+    const code = req.query.code as string | undefined;
     const status = req.query.status as string | undefined;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
-    // console.log('Parsed filters:', { kode, status, page, limit });
+    // console.log('Parsed filters:', { code, status, page, limit });
 
     const result = await domainService.filterDomainKodifikasis({
-      kode,
+      code,
       status,
       page,
       limit,
@@ -127,7 +144,7 @@ export const filterDomainKodifikasis = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/admin/domain-kodifikasi/search - Search by query across kode, namaDomain, and penjelasan
+// GET /api/admin/domain-kodifikasi/search - Search by query across code, domainName, and explanation
 export const searchDomainKodifikasis = async (req: Request, res: Response) => {
   // console.log('🔍 SEARCH CONTROLLER CALLED with query:', req.query);
   try {

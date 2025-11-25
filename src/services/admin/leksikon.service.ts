@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import { CreateLeksikonInput, UpdateLeksikonInput } from '../../lib/validators.js';
+import { CreateLexiconInput, UpdateLexiconInput } from '../../lib/validators.js';
 import { Prisma, LeksikonAssetRole, CitationNoteType } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
@@ -17,32 +17,32 @@ const generateSlug = (name: string): string => {
 };
 
 export const getAllLeksikons = async () => {
-  return prisma.leksikon.findMany({
+  return prisma.lexicon.findMany({
     include: {
-      domainKodifikasi: true,
+      codificationDomain: true,
       contributor: true,
-      leksikonAssets: { include: { asset: true } },
-      leksikonReferensis: { include: { referensi: true } },
+      lexiconAssets: { include: { asset: true } },
+      lexiconReferences: { include: { reference: true } },
     },
   });
 };
 
 export const getLeksikonById = async (id: number) => {
-  return prisma.leksikon.findUnique({
-    where: { leksikonId: id },
+  return prisma.lexicon.findUnique({
+    where: { lexiconId: id },
     include: {
-      domainKodifikasi: true,
+      codificationDomain: true,
       contributor: true,
-      leksikonAssets: { include: { asset: true } },
-      leksikonReferensis: { include: { referensi: true } },
+      lexiconAssets: { include: { asset: true } },
+      lexiconReferences: { include: { reference: true } },
     },
   });
 };
 
-export const createLeksikon = async (data: CreateLeksikonInput) => {
+export const createLeksikon = async (data: CreateLexiconInput) => {
   // verify domain exists
-  const domain = await prisma.domainKodifikasi.findUnique({
-    where: { domainKodifikasiId: data.domainKodifikasiId },
+  const domain = await prisma.codificationDomain.findUnique({
+    where: { domainId: data.domainId },
   });
   if (!domain) {
     const err = new Error('Domain not found');
@@ -61,30 +61,30 @@ export const createLeksikon = async (data: CreateLeksikonInput) => {
   }
 
   try {
-    const slug = generateSlug(data.kataLeksikon);
-    const created = await prisma.leksikon.create({
+    const slug = generateSlug(data.lexiconWord);
+    const created = await prisma.lexicon.create({
       data: {
-        kataLeksikon: data.kataLeksikon,
+        lexiconWord: data.lexiconWord,
         slug,
-        ipa: data.ipa ?? null,
-        transliterasi: data.transliterasi ?? null,
-        maknaEtimologi: data.maknaEtimologi ?? null,
-        maknaKultural: data.maknaKultural ?? null,
-        commonMeaning: data.commonMeaning ?? null,
-        translation: data.translation ?? null,
-        varian: data.varian ?? null,
-        translationVarians: data.translationVarians ?? null,
-        deskripsiLain: data.deskripsiLain ?? null,
-        domainKodifikasiId: data.domainKodifikasiId,
-        statusPreservasi: data.statusPreservasi ?? undefined,
+        ipaInternationalPhoneticAlphabet: data.ipaInternationalPhoneticAlphabet,
+        transliteration: data.transliteration,
+        etymologicalMeaning: data.etymologicalMeaning,
+        culturalMeaning: data.culturalMeaning,
+        commonMeaning: data.commonMeaning,
+        translation: data.translation,
+        variant: data.variant ?? null,
+        variantTranslations: data.variantTranslations ?? null,
+        otherDescription: data.otherDescription ?? null,
+        domainId: data.domainId,
+        preservationStatus: data.preservationStatus ?? undefined,
         contributorId: data.contributorId,
         status: data.status ?? undefined,
       } as any,
       include: {
-        domainKodifikasi: true,
+        codificationDomain: true,
         contributor: true,
-        leksikonAssets: { include: { asset: true } },
-        leksikonReferensis: { include: { referensi: true } },
+        lexiconAssets: { include: { asset: true } },
+        lexiconReferences: { include: { reference: true } },
       },
     });
     return created;
@@ -96,11 +96,11 @@ export const createLeksikon = async (data: CreateLeksikonInput) => {
   }
 };
 
-export const updateLeksikon = async (id: number, data: UpdateLeksikonInput) => {
+export const updateLeksikon = async (id: number, data: UpdateLexiconInput) => {
   // check relation updates
-  if (data.domainKodifikasiId !== undefined) {
-    const domain = await prisma.domainKodifikasi.findUnique({
-      where: { domainKodifikasiId: data.domainKodifikasiId },
+  if (data.domainId !== undefined) {
+    const domain = await prisma.codificationDomain.findUnique({
+      where: { domainId: data.domainId },
     });
     if (!domain) {
       const err = new Error('Domain not found');
@@ -121,35 +121,35 @@ export const updateLeksikon = async (id: number, data: UpdateLeksikonInput) => {
 
   try {
     const updateData: any = {
-      ...(data.kataLeksikon !== undefined && { kataLeksikon: data.kataLeksikon }),
-      ...(data.ipa !== undefined && { ipa: data.ipa }),
-      ...(data.transliterasi !== undefined && { transliterasi: data.transliterasi }),
-      ...(data.maknaEtimologi !== undefined && { maknaEtimologi: data.maknaEtimologi }),
-      ...(data.maknaKultural !== undefined && { maknaKultural: data.maknaKultural }),
+      ...(data.lexiconWord !== undefined && { lexiconWord: data.lexiconWord }),
+      ...(data.ipaInternationalPhoneticAlphabet !== undefined && { ipaInternationalPhoneticAlphabet: data.ipaInternationalPhoneticAlphabet }),
+      ...(data.transliteration !== undefined && { transliteration: data.transliteration }),
+      ...(data.etymologicalMeaning !== undefined && { etymologicalMeaning: data.etymologicalMeaning }),
+      ...(data.culturalMeaning !== undefined && { culturalMeaning: data.culturalMeaning }),
       ...(data.commonMeaning !== undefined && { commonMeaning: data.commonMeaning }),
       ...(data.translation !== undefined && { translation: data.translation }),
-      ...(data.varian !== undefined && { varian: data.varian }),
-      ...(data.translationVarians !== undefined && { translationVarians: data.translationVarians }),
-      ...(data.deskripsiLain !== undefined && { deskripsiLain: data.deskripsiLain }),
-      ...(data.domainKodifikasiId !== undefined && { domainKodifikasiId: data.domainKodifikasiId }),
-      ...(data.statusPreservasi !== undefined && { statusPreservasi: data.statusPreservasi }),
+      ...(data.variant !== undefined && { variant: data.variant }),
+      ...(data.variantTranslations !== undefined && { variantTranslations: data.variantTranslations }),
+      ...(data.otherDescription !== undefined && { otherDescription: data.otherDescription }),
+      ...(data.domainId !== undefined && { domainId: data.domainId }),
+      ...(data.preservationStatus !== undefined && { preservationStatus: data.preservationStatus }),
       ...(data.contributorId !== undefined && { contributorId: data.contributorId }),
       ...(data.status !== undefined && { status: data.status }),
     };
 
-    // Regenerate slug if kataLeksikon is being updated
-    if (data.kataLeksikon !== undefined) {
-      updateData.slug = generateSlug(data.kataLeksikon);
+    // Regenerate slug if lexiconWord is being updated
+    if (data.lexiconWord !== undefined) {
+      updateData.slug = generateSlug(data.lexiconWord);
     }
 
-    const updated = await prisma.leksikon.update({
-      where: { leksikonId: id },
+    const updated = await prisma.lexicon.update({
+      where: { lexiconId: id },
       data: updateData as any,
       include: {
-        domainKodifikasi: true,
+        codificationDomain: true,
         contributor: true,
-        leksikonAssets: { include: { asset: true } },
-        leksikonReferensis: { include: { referensi: true } },
+        lexiconAssets: { include: { asset: true } },
+        lexiconReferences: { include: { reference: true } },
       },
     });
     return updated;
@@ -165,8 +165,8 @@ export const updateLeksikon = async (id: number, data: UpdateLeksikonInput) => {
 };
 
 export const deleteLeksikon = async (id: number) => {
-  return prisma.leksikon.delete({
-    where: { leksikonId: id },
+  return prisma.lexicon.delete({
+    where: { lexiconId: id },
   });
 };
 
@@ -199,7 +199,7 @@ export const deleteLeksikon = async (id: number) => {
 
 export const addAssetToLeksikon = async (leksikonId: number, assetId: number, assetRole: LeksikonAssetRole) => {
   // Pastikan leksikon dan asset ada
-  const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
+  const leksikon = await prisma.lexicon.findUnique({ where: { lexiconId: leksikonId } });
   if (!leksikon) {
     const err = new Error('Leksikon not found');
     (err as any).code = 'LEKSIKON_NOT_FOUND';
@@ -214,10 +214,10 @@ export const addAssetToLeksikon = async (leksikonId: number, assetId: number, as
   }
 
   // Gunakan upsert agar tidak duplikat dan tidak menimbulkan rekursi
-  return prisma.leksikonAsset.upsert({
+  return prisma.lexiconAsset.upsert({
     where: {
-      leksikonId_assetId: {
-        leksikonId,
+      lexiconId_assetId: {
+        lexiconId: leksikonId,
         assetId,
       },
     },
@@ -225,7 +225,7 @@ export const addAssetToLeksikon = async (leksikonId: number, assetId: number, as
       assetRole,
     },
     create: {
-      leksikonId,
+      lexiconId: leksikonId,
       assetId,
       assetRole,
     },
@@ -234,14 +234,14 @@ export const addAssetToLeksikon = async (leksikonId: number, assetId: number, as
 
 
 export const removeAssetFromLeksikon = async (leksikonId: number, assetId: number) => {
-  return prisma.leksikonAsset.delete({
-    where: { leksikonId_assetId: { leksikonId, assetId } },
+  return prisma.lexiconAsset.delete({
+    where: { lexiconId_assetId: { lexiconId: leksikonId, assetId } },
   });
 };
 
 export const getLeksikonAssets = async (id: number) => {
-  return prisma.leksikonAsset.findMany({
-    where: { leksikonId: id },
+  return prisma.lexiconAsset.findMany({
+    where: { lexiconId: id },
     include: { asset: true },
   });
 };
@@ -273,15 +273,15 @@ export const getLeksikonAssets = async (id: number) => {
 //   });
 // };
 
-export const addReferenceToLeksikon = async  (leksikonId: number, referensiId: number, citationNote?: CitationNoteType) => {
-  const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
+export const addReferenceToLeksikon = async  (leksikonId: number, referenceId: number, citationNote?: CitationNoteType) => {
+  const leksikon = await prisma.lexicon.findUnique({ where: { lexiconId: leksikonId } });
   if (!leksikon) {
     const err = new Error('Leksikon not found');
     (err as any).code = 'LEKSIKON_NOT_FOUND';
     throw err;
   }
 
-  const referensi = await prisma.referensi.findUnique({ where: { referensiId } });
+  const referensi = await prisma.reference.findUnique({ where: { referenceId: referenceId } });
   if (!referensi) {
     const err = new Error('Referensi not found');
     (err as any).code = 'REFERENSI_NOT_FOUND';
@@ -289,35 +289,35 @@ export const addReferenceToLeksikon = async  (leksikonId: number, referensiId: n
   }
 
   // Gunakan upsert agar tidak duplikat
-  return prisma.leksikonReferensi.upsert({
+  return prisma.lexiconReference.upsert({
     where: {
-      leksikonId_referensiId: {
-        leksikonId,
-        referensiId,
+      lexiconId_referenceId: {
+        lexiconId: leksikonId,
+        referenceId,
       },
     },
     update: {
       citationNote,
     },
     create: {
-      leksikonId,
-      referensiId,
+      lexiconId: leksikonId,
+      referenceId,
       citationNote,
     },
   });
 };
 
 
-export const removeReferenceFromLeksikon = async (leksikonId: number, referensiId: number) => {
-  return prisma.leksikonReferensi.delete({
-    where: { leksikonId_referensiId: { leksikonId, referensiId } },
+export const removeReferenceFromLeksikon = async (leksikonId: number, referenceId: number) => {
+  return prisma.lexiconReference.delete({
+    where: { lexiconId_referenceId: { lexiconId: leksikonId, referenceId } },
   });
 };
 
 export const getLeksikonReferences = async (id: number) => {
-  return prisma.leksikonReferensi.findMany({
-    where: { leksikonId: id },
-    include: { referensi: true },
+  return prisma.lexiconReference.findMany({
+    where: { lexiconId: id },
+    include: { reference: true },
   });
 };
 
@@ -328,8 +328,8 @@ export const updateAssetRole = async (
   assetRole: LeksikonAssetRole
 ) => {
   // Pastikan relasi ada
-  const existing = await prisma.leksikonAsset.findUnique({
-    where: { leksikonId_assetId: { leksikonId, assetId } },
+  const existing = await prisma.lexiconAsset.findUnique({
+    where: { lexiconId_assetId: { lexiconId: leksikonId, assetId } },
   });
 
   if (!existing) {
@@ -338,8 +338,8 @@ export const updateAssetRole = async (
     throw err;
   }
 
-  return prisma.leksikonAsset.update({
-    where: { leksikonId_assetId: { leksikonId, assetId } },
+  return prisma.lexiconAsset.update({
+    where: { lexiconId_assetId: { lexiconId: leksikonId, assetId } },
     data: { assetRole },
     include: { asset: true },
   });
@@ -348,11 +348,11 @@ export const updateAssetRole = async (
 // UPDATE citationNote di relasi leksikonReferensi
 export const updateCitationNote = async (
   leksikonId: number,
-  referensiId: number,
+  referenceId: number,
   citationNote?: CitationNoteType
 ) => {
-  const existing = await prisma.leksikonReferensi.findUnique({
-    where: { leksikonId_referensiId: { leksikonId, referensiId } },
+  const existing = await prisma.lexiconReference.findUnique({
+    where: { lexiconId_referenceId: { lexiconId: leksikonId, referenceId: referenceId } },
   });
 
   if (!existing) {
@@ -361,10 +361,10 @@ export const updateCitationNote = async (
     throw err;
   }
 
-  return prisma.leksikonReferensi.update({
-    where: { leksikonId_referensiId: { leksikonId, referensiId } },
+  return prisma.lexiconReference.update({
+    where: { lexiconId_referenceId: { lexiconId: leksikonId, referenceId: referenceId } },
     data: { citationNote },
-    include: { referensi: true },
+    include: { reference: true },
   });
 };
 
@@ -372,16 +372,16 @@ export const getAllLeksikonsPaginated = async (page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
   const [data, total] = await Promise.all([
-    prisma.leksikon.findMany({
+    prisma.lexicon.findMany({
       skip,
       take: limit,
       include: {
-        domainKodifikasi: true,
+        codificationDomain: true,
         contributor: true,
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.leksikon.count(),
+    prisma.lexicon.count(),
   ]);
 
   return {
@@ -395,10 +395,11 @@ export const getAllLeksikonsPaginated = async (page = 1, limit = 20) => {
   };
 };
 
-export const getLeksikonsByDomain = async (domainKodifikasiId: number) => {
-  return prisma.leksikon.findMany({
-    where: { domainKodifikasiId },
+export const getLeksikonsByDomain = async (domainId: number) => {
+  return prisma.lexicon.findMany({
+    where: { domainId },
     include: {
+      codificationDomain: true,
       contributor: true,
     },
   });
@@ -407,9 +408,9 @@ export const getLeksikonsByDomain = async (domainKodifikasiId: number) => {
 export const getLeksikonsByStatus = async (status?: string) => {
   // If no status provided, return all leksikons
   if (!status) {
-    return prisma.leksikon.findMany({
+    return prisma.lexicon.findMany({
       include: {
-        domainKodifikasi: true,
+        codificationDomain: true,
         contributor: true,
       },
       orderBy: { updatedAt: "desc" },
@@ -424,10 +425,10 @@ export const getLeksikonsByStatus = async (status?: string) => {
     return [];
   }
 
-  return prisma.leksikon.findMany({
+  return prisma.lexicon.findMany({
     where: { status: normalized as any },
     include: {
-      domainKodifikasi: true,
+      codificationDomain: true,
       contributor: true,
     },
     orderBy: { updatedAt: "desc" },
@@ -459,21 +460,21 @@ export const filterLeksikons = async (filters: {
 
   // Add domain filter if provided
   if (filters.domainId) {
-    whereCondition.domainKodifikasiId = filters.domainId;
+    whereCondition.domainId = filters.domainId;
   }
 
   const [data, total] = await Promise.all([
-    prisma.leksikon.findMany({
+    prisma.lexicon.findMany({
       where: whereCondition,
       include: {
-        domainKodifikasi: true,
+        codificationDomain: true,
         contributor: true,
       },
       skip,
       take: limit,
       orderBy: { updatedAt: "desc" },
     }),
-    prisma.leksikon.count({ where: whereCondition }),
+    prisma.lexicon.count({ where: whereCondition }),
   ]);
 
   return {
@@ -498,17 +499,17 @@ export const updateLeksikonStatus = async (id: number, status: string) => {
     throw new Error(`Invalid status: ${status}`);
   }
 
-  return prisma.leksikon.update({
-    where: { leksikonId: id },
+  return prisma.lexicon.update({
+    where: { lexiconId: id },
     data: { status: normalized as any },
   });
 };
 
-// GET assets by assetRole for a specific leksikon
-export const getAssetsByRole = async (leksikonId: number, assetRole: LeksikonAssetRole) => {
-  return prisma.leksikonAsset.findMany({
+// GET assets by assetRole for a specific lexicon
+export const getAssetsByRole = async (lexiconId: number, assetRole: LeksikonAssetRole) => {
+  return prisma.lexiconAsset.findMany({
     where: {
-      leksikonId,
+      lexiconId,
       assetRole,
     },
     include: {
@@ -524,17 +525,17 @@ export const getAssetsByRole = async (leksikonId: number, assetRole: LeksikonAss
 // 🔍 SEARCH & USAGE TRACKING FUNCTIONS
 // ============================================
 
-// Search assets used in lexicons by query (namaFile, tipe, penjelasan)
+// Search assets used in lexicons by query (fileName, fileType, description)
 export const searchAssetsInLeksikons = async (query: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
   const whereCondition = {
-    leksikonAssets: {
+    lexiconAssets: {
       some: {}, // Assets that are linked to at least one leksikon
     },
     OR: query ? [
-      { namaFile: { contains: query, mode: Prisma.QueryMode.insensitive } },
-      { penjelasan: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { fileName: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { description: { contains: query, mode: Prisma.QueryMode.insensitive } },
     ] : undefined,
   };
 
@@ -542,11 +543,11 @@ export const searchAssetsInLeksikons = async (query: string, page = 1, limit = 2
     prisma.asset.findMany({
       where: whereCondition,
       include: {
-        leksikonAssets: {
+        lexiconAssets: {
           include: {
-            leksikon: {
+            lexicon: {
               include: {
-                domainKodifikasi: true,
+                codificationDomain: true,
               },
             },
           },
@@ -554,7 +555,7 @@ export const searchAssetsInLeksikons = async (query: string, page = 1, limit = 2
       },
       skip,
       take: limit,
-      orderBy: { namaFile: 'asc' },
+      orderBy: { fileName: 'asc' },
     }),
     prisma.asset.count({ where: whereCondition }),
   ]);
@@ -577,16 +578,16 @@ export const getAssignedAssets = async (page = 1, limit = 20) => {
   const [assets, total] = await Promise.all([
     prisma.asset.findMany({
       where: {
-        leksikonAssets: {
+        lexiconAssets: {
           some: {}, // Only assets that have at least one leksikon association
         },
       },
       include: {
-        leksikonAssets: {
+        lexiconAssets: {
           include: {
-            leksikon: {
+            lexicon: {
               include: {
-                domainKodifikasi: true,
+                codificationDomain: true,
               },
             },
           },
@@ -594,11 +595,11 @@ export const getAssignedAssets = async (page = 1, limit = 20) => {
       },
       skip,
       take: limit,
-      orderBy: { namaFile: 'asc' },
+      orderBy: { fileName: 'asc' },
     }),
     prisma.asset.count({
       where: {
-        leksikonAssets: {
+        lexiconAssets: {
           some: {},
         },
       },
@@ -618,12 +619,12 @@ export const getAssignedAssets = async (page = 1, limit = 20) => {
 
 // Get which leksikons use a specific asset
 export const getAssetUsage = async (assetId: number) => {
-  return prisma.leksikonAsset.findMany({
+  return prisma.lexiconAsset.findMany({
     where: { assetId },
     include: {
-      leksikon: {
+      lexicon: {
         include: {
-          domainKodifikasi: true,
+          codificationDomain: true,
           contributor: true,
         },
       },
@@ -633,29 +634,29 @@ export const getAssetUsage = async (assetId: number) => {
   });
 };
 
-// Search references used in lexicons by query (judul, penulis, tipeReferensi)
+// Search references used in lexicons by query (title, authors, referenceType)
 export const searchReferencesInLeksikons = async (query: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
   const whereCondition = {
-    leksikonReferensi: {
+    lexiconReferences: {
       some: {}, // References that are linked to at least one leksikon
     },
     OR: query ? [
-      { judul: { contains: query, mode: Prisma.QueryMode.insensitive } },
-      { penulis: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { title: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { authors: { contains: query, mode: Prisma.QueryMode.insensitive } },
     ] : undefined,
   };
 
   const [references, total] = await Promise.all([
-    prisma.referensi.findMany({
+    prisma.reference.findMany({
       where: whereCondition,
       include: {
-        leksikonReferensi: {
+        lexiconReferences: {
           include: {
-            leksikon: {
+            lexicon: {
               include: {
-                domainKodifikasi: true,
+                codificationDomain: true,
               },
             },
           },
@@ -663,9 +664,9 @@ export const searchReferencesInLeksikons = async (query: string, page = 1, limit
       },
       skip,
       take: limit,
-      orderBy: { judul: 'asc' },
+      orderBy: { title: 'asc' },
     }),
-    prisma.referensi.count({ where: whereCondition }),
+    prisma.reference.count({ where: whereCondition }),
   ]);
 
   return {
@@ -684,18 +685,18 @@ export const getAssignedReferences = async (page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
   const [references, total] = await Promise.all([
-    prisma.referensi.findMany({
+    prisma.reference.findMany({
       where: {
-        leksikonReferensi: {
+        lexiconReferences: {
           some: {}, // Only references that have at least one leksikon association
         },
       },
       include: {
-        leksikonReferensi: {
+        lexiconReferences: {
           include: {
-            leksikon: {
+            lexicon: {
               include: {
-                domainKodifikasi: true,
+                codificationDomain: true,
               },
             },
           },
@@ -703,11 +704,11 @@ export const getAssignedReferences = async (page = 1, limit = 20) => {
       },
       skip,
       take: limit,
-      orderBy: { judul: 'asc' },
+      orderBy: { title: 'asc' },
     }),
-    prisma.referensi.count({
+    prisma.reference.count({
       where: {
-        leksikonReferensi: {
+        lexiconReferences: {
           some: {},
         },
       },
@@ -727,16 +728,16 @@ export const getAssignedReferences = async (page = 1, limit = 20) => {
 
 // Get which leksikons use a specific reference
 export const getReferenceUsage = async (referenceId: number) => {
-  return prisma.leksikonReferensi.findMany({
-    where: { referensiId: referenceId },
+  return prisma.lexiconReference.findMany({
+    where: { referenceId },
     include: {
-      leksikon: {
+      lexicon: {
         include: {
-          domainKodifikasi: true,
+          codificationDomain: true,
           contributor: true,
         },
       },
-      referensi: true,
+      reference: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -744,7 +745,7 @@ export const getReferenceUsage = async (referenceId: number) => {
 
 // Filter assets assigned to leksikons by Type, Status, Created At (kombinasi)
 export const filterLeksikonAssets = async (filters: {
-  tipe?: string;
+  fileType?: string;
   status?: string;
   createdAt?: string;
   page?: number;
@@ -756,12 +757,12 @@ export const filterLeksikonAssets = async (filters: {
 
   const where: any = {};
 
-  // Add tipe filter
-  if (filters.tipe) {
-    const normalized = filters.tipe.toUpperCase();
-    const allowed = ['FOTO', 'AUDIO', 'VIDEO', 'MODEL_3D'];
+  // Add fileType filter
+  if (filters.fileType) {
+    const normalized = filters.fileType.toUpperCase();
+    const allowed = ['PHOTO', 'AUDIO', 'VIDEO', 'MODEL_3D'];
     if (allowed.includes(normalized)) {
-      where.asset = { ...where.asset, tipe: normalized as any };
+      where.asset = { ...where.asset, fileType: normalized as any };
     }
   }
 
@@ -785,13 +786,13 @@ export const filterLeksikonAssets = async (filters: {
   }
 
   const [data, total] = await Promise.all([
-    prisma.leksikonAsset.findMany({
+    prisma.lexiconAsset.findMany({
       where,
       include: {
         asset: true,
-        leksikon: {
+        lexicon: {
           include: {
-            domainKodifikasi: {
+            codificationDomain: {
               include: {
                 subculture: {
                   include: {
@@ -807,7 +808,7 @@ export const filterLeksikonAssets = async (filters: {
       take: limit,
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.leksikonAsset.count({ where }),
+    prisma.lexiconAsset.count({ where }),
   ]);
 
   return {
@@ -818,7 +819,7 @@ export const filterLeksikonAssets = async (filters: {
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        tipe: filters.tipe || null,
+        fileType: filters.fileType || null,
         status: filters.status || null,
         createdAt: filters.createdAt || null,
       },
@@ -828,8 +829,8 @@ export const filterLeksikonAssets = async (filters: {
 
 // Filter references assigned to leksikons by Type, Year, Status (kombinasi)
 export const filterLeksikonReferences = async (filters: {
-  tipeReferensi?: string;
-  tahunTerbit?: string;
+  referenceType?: string;
+  publicationYear?: string;
   status?: string;
   page?: number;
   limit?: number;
@@ -840,18 +841,18 @@ export const filterLeksikonReferences = async (filters: {
 
   const where: any = {};
 
-  // Add tipeReferensi filter
-  if (filters.tipeReferensi) {
-    const normalized = filters.tipeReferensi.toUpperCase();
+  // Add referenceType filter
+  if (filters.referenceType) {
+    const normalized = filters.referenceType.toUpperCase();
     const allowed = ['JURNAL', 'BUKU', 'ARTIKEL', 'WEBSITE', 'LAPORAN'];
     if (allowed.includes(normalized)) {
-      where.referensi = { ...where.referensi, tipeReferensi: normalized as any };
+      where.referensi = { ...where.referensi, referenceType: normalized as any };
     }
   }
 
-  // Add tahunTerbit filter
-  if (filters.tahunTerbit) {
-    where.referensi = { ...where.referensi, tahunTerbit: { contains: filters.tahunTerbit, mode: 'insensitive' } };
+  // Add publicationYear filter
+  if (filters.publicationYear) {
+    where.referensi = { ...where.referensi, publicationYear: { contains: filters.publicationYear, mode: 'insensitive' } };
   }
 
   // Add status filter
@@ -864,13 +865,13 @@ export const filterLeksikonReferences = async (filters: {
   }
 
   const [data, total] = await Promise.all([
-    prisma.leksikonReferensi.findMany({
+    prisma.lexiconReference.findMany({
       where,
       include: {
-        referensi: true,
-        leksikon: {
+        reference: true,
+        lexicon: {
           include: {
-            domainKodifikasi: {
+            codificationDomain: {
               include: {
                 subculture: {
                   include: {
@@ -886,7 +887,7 @@ export const filterLeksikonReferences = async (filters: {
       take: limit,
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.leksikonReferensi.count({ where }),
+    prisma.lexiconReference.count({ where }),
   ]);
 
   return {
@@ -897,8 +898,8 @@ export const filterLeksikonReferences = async (filters: {
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        tipeReferensi: filters.tipeReferensi || null,
-        tahunTerbit: filters.tahunTerbit || null,
+        referenceType: filters.referenceType || null,
+        publicationYear: filters.publicationYear || null,
         status: filters.status || null,
       },
     },

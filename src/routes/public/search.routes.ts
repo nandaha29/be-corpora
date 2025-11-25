@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import * as searchController from '../../controllers/public/search.controller.js';
+import * as referenceController from '../../controllers/public/reference.controller.js';
+import * as contributorController from '../../controllers/public/contributor.controller.js';
 
 const router = Router();
 
@@ -53,5 +55,38 @@ router.get('/lexicon', searchController.searchLexicon);
  * @returns {object} Advanced search results with applied filters
  */
 router.get('/advanced', searchController.advancedSearch);
+
+/**
+ * @route GET /api/v1/search/references
+ * @desc Search published references by title, author, description, or type
+ * @access Public
+ * @query {string} q - Search query (required)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ * @returns {object} Search results with pagination metadata
+ */
+router.get('/references', referenceController.searchPublishedReferences);
+
+/**
+ * @route GET /api/v1/search/coordinator
+ * @desc Search published contributors (active coordinators) by name, institution, or expertise
+ * @access Public
+ * @query {string} q - Search query (required)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ * @returns {object} Search results with pagination metadata
+ */
+router.get('/coordinator', contributorController.searchPublishedContributors);
+
+/**
+ * @route GET /api/v1/search/culture
+ * @desc Search published cultures by name, island, province, city, classification, or characteristics
+ * @access Public
+ * @query {string} q - Search query (required)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 10)
+ * @returns {object} Search results with pagination metadata
+ */
+router.get('/culture', searchController.searchCultures);
 
 export default router;

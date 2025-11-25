@@ -18,7 +18,7 @@ export const getAllSubcultures = async () => {
   return prisma.subculture.findMany({
     include: {
       culture: true,
-      domainKodifikasis: true,
+      codificationDomains: true,
       subcultureAssets: {
         include: { asset: true },
       },
@@ -31,7 +31,7 @@ export const getSubcultureById = async (id: number) => {
     where: { subcultureId: id },
     include: {
       culture: true,
-      domainKodifikasis: true,
+      codificationDomains: true,
       subcultureAssets: {
         include: { asset: true },
       },
@@ -40,17 +40,17 @@ export const getSubcultureById = async (id: number) => {
 };
 
 export const createSubculture = async (data: CreateSubcultureInput) => {
-  const slug = generateSlug(data.namaSubculture);
+  const slug = generateSlug(data.subcultureName);
   return prisma.subculture.create({ 
     data: {
-      namaSubculture: data.namaSubculture,
-      salamKhas: data.salamKhas,
-      artiSalamKhas: data.artiSalamKhas,
-      penjelasan: data.penjelasan,
+      subcultureName: data.subcultureName,
+      traditionalGreeting: data.traditionalGreeting,
+      greetingMeaning: data.greetingMeaning,
+      explanation: data.explanation,
       cultureId: data.cultureId,
       status: data.status,
-      statusKonservasi: data.statusKonservasi,
-      statusPriorityDisplay: data.statusPriorityDisplay,
+      conservationStatus: data.conservationStatus,
+      displayPriorityStatus: data.displayPriorityStatus,
       slug,
     }
   });
@@ -62,8 +62,8 @@ export const updateSubculture = async (id: number, data: UpdateSubcultureInput) 
   
   let updateData: any = { ...data };
   
-  if (data.namaSubculture) {
-    updateData.slug = generateSlug(data.namaSubculture);
+  if (data.subcultureName) {
+    updateData.slug = generateSlug(data.subcultureName);
     console.log('Generated slug:', updateData.slug);
   }
   
@@ -151,7 +151,7 @@ export const getAllSubculturesPaginated = async (skip: number, limit: number) =>
       take: limit,
       include: {
         culture: true,
-        domainKodifikasis: true,
+        codificationDomains: true,
         subcultureAssets: { include: { asset: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -167,7 +167,7 @@ export const getSubculturesByCulture = async (cultureId: number) => {
     where: { cultureId },
     include: {
       culture: true,
-      domainKodifikasis: true,
+      codificationDomains: true,
       subcultureAssets: { include: { asset: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -194,10 +194,10 @@ export const getFilteredSubcultures = async (filters: {
     where.status = filters.status;
   }
   if (filters.statusPriorityDisplay) {
-    where.statusPriorityDisplay = filters.statusPriorityDisplay;
+    where.priorityDisplayStatus = filters.statusPriorityDisplay;
   }
   if (filters.statusKonservasi) {
-    where.statusKonservasi = filters.statusKonservasi;
+    where.conservationStatus = filters.statusKonservasi;
   }
   if (filters.cultureId) {
     where.cultureId = filters.cultureId;
@@ -206,10 +206,10 @@ export const getFilteredSubcultures = async (filters: {
   // Search filter
   if (filters.search) {
     where.OR = [
-      { namaSubculture: { contains: filters.search, mode: 'insensitive' } },
-      { salamKhas: { contains: filters.search, mode: 'insensitive' } },
-      { penjelasan: { contains: filters.search, mode: 'insensitive' } },
-      { culture: { namaBudaya: { contains: filters.search, mode: 'insensitive' } } },
+      { subcultureName: { contains: filters.search, mode: 'insensitive' } },
+      { traditionalGreeting: { contains: filters.search, mode: 'insensitive' } },
+      { explanation: { contains: filters.search, mode: 'insensitive' } },
+      { culture: { cultureName: { contains: filters.search, mode: 'insensitive' } } },
     ];
   }
 
@@ -218,11 +218,11 @@ export const getFilteredSubcultures = async (filters: {
       where,
       include: {
         culture: true,
-        domainKodifikasis: true,
+        codificationDomains: true,
         subcultureAssets: { include: { asset: true } },
       },
       orderBy: [
-        { statusPriorityDisplay: 'desc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+        { displayPriorityStatus: 'desc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
         { createdAt: 'desc' }
       ],
       skip,
@@ -260,26 +260,26 @@ export const getAssignedAssets = async (subcultureId: number) => {
 };
 
 export const getAssignedReferences = async (subcultureId: number) => {
-  // Get all leksikon that belong to this subculture's domainKodifikasis
-  const domainIds = await prisma.domainKodifikasi.findMany({
+  // Get all leksikon that belong to this subculture's codificationDomains
+  const domainIds = await prisma.codificationDomain.findMany({
     where: { subcultureId },
-    select: { domainKodifikasiId: true },
+    select: { domainId: true },
   });
 
-  const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+  const domainIdList = domainIds.map(d => d.domainId);
 
-  // Get all references used by leksikons in those domains
-  return prisma.leksikonReferensi.findMany({
+  // Get all references used by lexicons in those domains
+  return prisma.lexiconReference.findMany({
     where: {
-      leksikon: {
-        domainKodifikasiId: { in: domainIdList },
+      lexicon: {
+        domainId: { in: domainIdList },
       },
     },
     include: {
-      referensi: true,
-      leksikon: {
+      reference: true,
+      lexicon: {
         include: {
-          domainKodifikasi: {
+          codificationDomain: {
             include: {
               subculture: true,
             },
@@ -297,8 +297,8 @@ export const searchAssetsInSubculture = async (subcultureId: number, searchQuery
       subcultureId,
       asset: {
         OR: [
-          { namaFile: { contains: searchQuery, mode: 'insensitive' } },
-          { penjelasan: { contains: searchQuery, mode: 'insensitive' } },
+          { fileName: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
         ],
       },
     },
@@ -310,33 +310,33 @@ export const searchAssetsInSubculture = async (subcultureId: number, searchQuery
 };
 
 export const searchReferencesInSubculture = async (subcultureId: number, searchQuery: string) => {
-  // Get all leksikon that belong to this subculture's domainKodifikasis
-  const domainIds = await prisma.domainKodifikasi.findMany({
+  // Get all lexicons that belong to this subculture's codificationDomains
+  const domainIds = await prisma.codificationDomain.findMany({
     where: { subcultureId },
-    select: { domainKodifikasiId: true },
+    select: { domainId: true },
   });
 
-  const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+  const domainIdList = domainIds.map(d => d.domainId);
 
-  // Search references used by leksikons in those domains
-  return prisma.leksikonReferensi.findMany({
+  // Search references used by lexicons in those domains
+  return prisma.lexiconReference.findMany({
     where: {
-      leksikon: {
-        domainKodifikasiId: { in: domainIdList },
+      lexicon: {
+        domainId: { in: domainIdList },
       },
-      referensi: {
+      reference: {
         OR: [
-          { judul: { contains: searchQuery, mode: 'insensitive' } },
-          { penjelasan: { contains: searchQuery, mode: 'insensitive' } },
-          { penulis: { contains: searchQuery, mode: 'insensitive' } },
+          { title: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { authors: { contains: searchQuery, mode: 'insensitive' } },
         ],
       },
     },
     include: {
-      referensi: true,
-      leksikon: {
+      reference: true,
+      lexicon: {
         include: {
-          domainKodifikasi: {
+          codificationDomain: {
             include: {
               subculture: true,
             },
@@ -362,13 +362,13 @@ export const getAssetUsage = async (assetId: number) => {
   });
 };
 
-export const getReferenceUsage = async (referensiId: number) => {
-  return prisma.leksikonReferensi.findMany({
-    where: { referensiId },
+export const getReferenceUsage = async (referenceId: number) => {
+  return prisma.lexiconReference.findMany({
+    where: { referenceId },
     include: {
-      leksikon: {
+      lexicon: {
         include: {
-          domainKodifikasi: {
+          codificationDomain: {
             include: {
               subculture: {
                 include: {
@@ -384,7 +384,7 @@ export const getReferenceUsage = async (referensiId: number) => {
   });
 };
 
-export const addReferenceToSubculture = async (subcultureId: number, referensiId: number, leksikonId?: number) => {
+export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number) => {
   // Verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
   if (!subculture) {
@@ -393,58 +393,58 @@ export const addReferenceToSubculture = async (subcultureId: number, referensiId
     throw err;
   }
 
-  // Verify referensi exists
-  const referensi = await prisma.referensi.findUnique({ where: { referensiId } });
-  if (!referensi) {
-    const err = new Error('Referensi not found');
-    (err as any).code = 'REFERENSI_NOT_FOUND';
+  // Verify reference exists
+  const reference = await prisma.reference.findUnique({ where: { referenceId } });
+  if (!reference) {
+    const err = new Error('Reference not found');
+    (err as any).code = 'REFERENCE_NOT_FOUND';
     throw err;
   }
 
-  if (leksikonId) {
-    // Assign to specific leksikon
-    const leksikon = await prisma.leksikon.findUnique({ where: { leksikonId } });
-    if (!leksikon) {
-      const err = new Error('Leksikon not found');
-      (err as any).code = 'LEKSIKON_NOT_FOUND';
+  if (lexiconId) {
+    // Assign to specific lexicon
+    const lexicon = await prisma.lexicon.findUnique({ where: { lexiconId } });
+    if (!lexicon) {
+      const err = new Error('Lexicon not found');
+      (err as any).code = 'LEXICON_NOT_FOUND';
       throw err;
     }
 
-    // Check if leksikon belongs to subculture
-    const domainIds = await prisma.domainKodifikasi.findMany({
+    // Check if lexicon belongs to subculture
+    const domainIds = await prisma.codificationDomain.findMany({
       where: { subcultureId },
-      select: { domainKodifikasiId: true },
+      select: { domainId: true },
     });
-    const domainIdList = domainIds.map(d => d.domainKodifikasiId);
-    if (!domainIdList.includes(leksikon.domainKodifikasiId)) {
-      const err = new Error('Leksikon does not belong to this subculture');
-      (err as any).code = 'LEKSIKON_NOT_IN_SUBCULTURE';
+    const domainIdList = domainIds.map(d => d.domainId);
+    if (!domainIdList.includes(lexicon.domainId)) {
+      const err = new Error('Lexicon does not belong to this subculture');
+      (err as any).code = 'LEXICON_NOT_IN_SUBCULTURE';
       throw err;
     }
 
-    return prisma.leksikonReferensi.create({
-      data: { leksikonId, referensiId },
-      include: { referensi: true, leksikon: true },
+    return prisma.lexiconReference.create({
+      data: { lexiconId, referenceId },
+      include: { reference: true, lexicon: true },
     });
   } else {
-    // Assign to all leksikon in subculture
-    const domainIds = await prisma.domainKodifikasi.findMany({
+    // Assign to all lexicons in subculture
+    const domainIds = await prisma.codificationDomain.findMany({
       where: { subcultureId },
-      select: { domainKodifikasiId: true },
+      select: { domainId: true },
     });
-    const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+    const domainIdList = domainIds.map(d => d.domainId);
 
-    const leksikons = await prisma.leksikon.findMany({
-      where: { domainKodifikasiId: { in: domainIdList } },
-      select: { leksikonId: true },
+    const lexicons = await prisma.lexicon.findMany({
+      where: { domainId: { in: domainIdList } },
+      select: { lexiconId: true },
     });
 
-    const assignments = leksikons.map(leksikon => ({
-      leksikonId: leksikon.leksikonId,
-      referensiId,
+    const assignments = lexicons.map(lexicon => ({
+      lexiconId: lexicon.lexiconId,
+      referenceId,
     }));
 
-    return prisma.leksikonReferensi.createMany({
+    return prisma.lexiconReference.createMany({
       data: assignments,
       skipDuplicates: true,
     });
@@ -452,7 +452,7 @@ export const addReferenceToSubculture = async (subcultureId: number, referensiId
 };
 
 export const filterSubcultureAssets = async (subcultureId: number, filters: {
-  tipe?: string;
+  type?: string;
   assetRole?: string;
   status?: string;
   page?: number;
@@ -464,12 +464,12 @@ export const filterSubcultureAssets = async (subcultureId: number, filters: {
 
   const where: any = { subcultureId };
 
-  // Add tipe filter
-  if (filters.tipe) {
-    const normalized = filters.tipe.toUpperCase();
-    const allowed = ["FOTO", "AUDIO", "VIDEO", "MODEL_3D"];
+  // Add type filter
+  if (filters.type) {
+    const normalized = filters.type.toUpperCase();
+    const allowed = ["PHOTO", "AUDIO", "VIDEO", "MODEL_3D"];
     if (allowed.includes(normalized)) {
-      where.asset = { tipe: normalized as any };
+      where.asset = { fileType: normalized as any };
     }
   }
 
@@ -510,7 +510,7 @@ export const filterSubcultureAssets = async (subcultureId: number, filters: {
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        tipe: filters.tipe || null,
+        type: filters.type || null,
         assetRole: filters.assetRole || null,
         status: filters.status || null,
       },
@@ -519,8 +519,8 @@ export const filterSubcultureAssets = async (subcultureId: number, filters: {
 };
 
 export const filterSubcultureReferences = async (subcultureId: number, filters: {
-  tipeReferensi?: string;
-  tahunTerbit?: string;
+  referenceType?: string;
+  publicationYear?: string;
   status?: string;
   citationNote?: string;
   page?: number;
@@ -531,30 +531,30 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
   const skip = (page - 1) * limit;
 
   // Get domain IDs for subculture
-  const domainIds = await prisma.domainKodifikasi.findMany({
+  const domainIds = await prisma.codificationDomain.findMany({
     where: { subcultureId },
-    select: { domainKodifikasiId: true },
+    select: { domainId: true },
   });
-  const domainIdList = domainIds.map(d => d.domainKodifikasiId);
+  const domainIdList = domainIds.map(d => d.domainId);
 
   const where: any = {
-    leksikon: {
-      domainKodifikasiId: { in: domainIdList },
+    lexicon: {
+      domainId: { in: domainIdList },
     },
   };
 
-  // Add tipeReferensi filter
-  if (filters.tipeReferensi) {
-    const normalized = filters.tipeReferensi.toUpperCase();
-    const allowed = ["JURNAL", "BUKU", "ARTIKEL", "WEBSITE", "LAPORAN"];
+  // Add referenceType filter
+  if (filters.referenceType) {
+    const normalized = filters.referenceType.toUpperCase();
+    const allowed = ["JOURNAL", "BOOK", "ARTICLE", "WEBSITE", "REPORT"];
     if (allowed.includes(normalized)) {
-      where.referensi = { tipeReferensi: normalized as any };
+      where.reference = { referenceType: normalized as any };
     }
   }
 
-  // Add tahunTerbit filter
-  if (filters.tahunTerbit) {
-    where.referensi = { ...where.referensi, tahunTerbit: { contains: filters.tahunTerbit, mode: 'insensitive' } };
+  // Add publicationYear filter
+  if (filters.publicationYear) {
+    where.reference = { ...where.reference, publicationYear: { contains: filters.publicationYear, mode: 'insensitive' } };
   }
 
   // Add status filter
@@ -562,7 +562,7 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
     const normalized = filters.status.toUpperCase();
     const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
     if (allowed.includes(normalized)) {
-      where.referensi = { ...where.referensi, status: normalized as any };
+      where.reference = { ...where.reference, status: normalized as any };
     }
   }
 
@@ -575,13 +575,13 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
   }
 
   const [data, total] = await Promise.all([
-    prisma.leksikonReferensi.findMany({
+    prisma.lexiconReference.findMany({
       where,
       include: {
-        referensi: true,
-        leksikon: {
+        reference: true,
+        lexicon: {
           include: {
-            domainKodifikasi: {
+            codificationDomain: {
               include: {
                 subculture: true,
               },
@@ -593,7 +593,7 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
       take: limit,
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.leksikonReferensi.count({ where }),
+    prisma.lexiconReference.count({ where }),
   ]);
 
   return {
@@ -604,8 +604,8 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        tipeReferensi: filters.tipeReferensi || null,
-        tahunTerbit: filters.tahunTerbit || null,
+        referenceType: filters.referenceType || null,
+        publicationYear: filters.publicationYear || null,
         status: filters.status || null,
         citationNote: filters.citationNote || null,
       },

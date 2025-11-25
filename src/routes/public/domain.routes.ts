@@ -8,22 +8,22 @@ const router = Router();
 // ============================================
 
 /**
- * @route GET /api/public/domains/:dk_id
- * @desc Get detailed information about a specific domain kodifikasi
+ * @route GET /api/public/domains/:domain_id
+ * @desc Get detailed information about a specific domain
  * @access Public
- * @param {number} dk_id - Domain Kodifikasi ID
+ * @param {number} domain_id - Domain ID
  * @returns {object} Domain details including related subculture and lexicons
  */
-router.get('/:dk_id', domainController.getDomainDetail);
+router.get('/:domain_id', domainController.getDomainDetail);
 
 /**
- * @route GET /api/public/domains/:dk_id/search
+ * @route GET /api/public/domains/:domain_id/search
  * @desc Search for lexicons within a specific domain
  * @access Public
- * @param {number} dk_id - Domain Kodifikasi ID
+ * @param {number} domain_id - Domain ID
  * @query {string} query - Search term for lexicons
  * @returns {object} Search results with lexicons from the domain
  */
-router.get('/:dk_id/search', domainController.searchLeksikonsInDomain);
+router.get('/:domain_id/search', domainController.searchLeksikonsInDomain);
 
 export default router;

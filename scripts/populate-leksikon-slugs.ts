@@ -19,8 +19,8 @@ async function populateLeksikonSlugs() {
   try {
     console.log("Starting leksikon slug population...");
 
-    // Get all leksikons without slug or with empty slug
-    const leksikons = await prisma.leksikon.findMany({
+    // Get all lexicons without slug or with empty slug
+    const lexicons = await prisma.lexicon.findMany({
       where: {
         OR: [
           { slug: null },
@@ -29,28 +29,28 @@ async function populateLeksikonSlugs() {
       } as any,
     });
 
-    console.log(`Found ${leksikons.length} leksikons without slug`);
+    console.log(`Found ${lexicons.length} lexicons without slug`);
 
-    for (const leksikon of leksikons) {
-      const slug = generateSlug(leksikon.kataLeksikon);
+    for (const lexicon of lexicons) {
+      const slug = generateSlug(lexicon.lexiconWord);
 
       // Check if slug already exists (to handle duplicates)
-      const existing = await prisma.leksikon.findUnique({
+      const existing = await prisma.lexicon.findUnique({
         where: { slug } as any,
       });
 
       let finalSlug = slug;
-      if (existing && existing.leksikonId !== leksikon.leksikonId) {
+      if (existing && existing.lexiconId !== lexicon.lexiconId) {
         // Append ID to make unique
-        finalSlug = `${slug}-${leksikon.leksikonId}`;
+        finalSlug = `${slug}-${lexicon.lexiconId}`;
       }
 
-      await prisma.leksikon.update({
-        where: { leksikonId: leksikon.leksikonId },
+      await prisma.lexicon.update({
+        where: { lexiconId: lexicon.lexiconId },
         data: { slug: finalSlug } as any,
       });
 
-      console.log(`Updated ${leksikon.kataLeksikon} -> ${finalSlug}`);
+      console.log(`Updated ${lexicon.lexiconWord} -> ${finalSlug}`);
     }
 
     console.log("Leksikon slug population completed!");

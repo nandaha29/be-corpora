@@ -1,22 +1,41 @@
 import { prisma } from '../../lib/prisma.js';
 import {
-  CreateDomainKodifikasiInput,
-  UpdateDomainKodifikasiInput,
+  CreateCodificationDomainInput,
+  UpdateCodificationDomainInput,
 } from '../../lib/validators.js';
 import { Prisma } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-export const getAllDomainKodifikasi = async () => {
-  return prisma.domainKodifikasi.findMany();
+export const getAllDomainKodifikasi = async (page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    prisma.codificationDomain.findMany({
+      skip,
+      take: limit,
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.codificationDomain.count(),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 export const getDomainKodifikasiById = async (id: number) => {
-  return prisma.domainKodifikasi.findUnique({
-    where: { domainKodifikasiId: id },
+  return prisma.codificationDomain.findUnique({
+    where: { domainId: id },
   });
 };
 
-export const createDomainKodifikasi = async (data: CreateDomainKodifikasiInput) => {
+export const createDomainKodifikasi = async (data: CreateCodificationDomainInput) => {
   // Verify referenced Subculture exists
   const subculture = await prisma.subculture.findUnique({
     where: { subcultureId: data.subcultureId },
@@ -28,21 +47,21 @@ export const createDomainKodifikasi = async (data: CreateDomainKodifikasiInput) 
   }
 
   try {
-    const created = await prisma.domainKodifikasi.create({
+    const created = await prisma.codificationDomain.create({
       data,
     });
     return created;
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
-      const err = new Error('Unique constraint failed on the fields: kode');
-      (err as any).code = 'KODE_DUPLICATE';
+      const err = new Error('Unique constraint failed on the fields: code');
+      (err as any).code = 'CODE_DUPLICATE';
       throw err;
     }
     throw error;
   }
 };
 
-export const updateDomainKodifikasi = async (id: number, data: UpdateDomainKodifikasiInput) => {
+export const updateDomainKodifikasi = async (id: number, data: UpdateCodificationDomainInput) => {
   // If subcultureId is being updated, verify it exists
   if (data.subcultureId) {
     const subculture = await prisma.subculture.findUnique({
@@ -57,16 +76,16 @@ export const updateDomainKodifikasi = async (id: number, data: UpdateDomainKodif
 
   try {
     // Using prisma.update; Prisma will throw P2025 if the record doesn't exist
-    return await prisma.domainKodifikasi.update({
-      where: { domainKodifikasiId: id },
+    return await prisma.codificationDomain.update({
+      where: { domainId: id },
       data,
     });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
       // Unique constraint failed
       if (error.code === 'P2002') {
-        const err = new Error('Unique constraint failed on the fields: kode');
-        (err as any).code = 'KODE_DUPLICATE';
+        const err = new Error('Unique constraint failed on the fields: code');
+        (err as any).code = 'CODE_DUPLICATE';
         throw err;
       }
       // Record to update not found => rethrow to be handled by controller
@@ -79,14 +98,14 @@ export const updateDomainKodifikasi = async (id: number, data: UpdateDomainKodif
 };
 
 export const deleteDomainKodifikasi = async (id: number) => {
-  return prisma.domainKodifikasi.delete({
-    where: { domainKodifikasiId: id },
+  return prisma.codificationDomain.delete({
+    where: { domainId: id },
   });
 };
 
-// Filter domain kodifikasi by kode and/or status with pagination
+// Filter domain kodifikasi by code and/or status with pagination
 export const filterDomainKodifikasis = async (filters: {
-  kode?: string;
+  code?: string;
   status?: string;
   page?: number;
   limit?: number;
@@ -98,10 +117,10 @@ export const filterDomainKodifikasis = async (filters: {
   // Build where condition dynamically
   const whereCondition: any = {};
 
-  // Add kode filter if provided
-  if (filters.kode) {
-    whereCondition.kode = {
-      contains: filters.kode,
+  // Add code filter if provided
+  if (filters.code) {
+    whereCondition.code = {
+      contains: filters.code,
       // mode: 'insensitive'
     };
   }
@@ -116,7 +135,7 @@ export const filterDomainKodifikasis = async (filters: {
   }
 
   const [data, total] = await Promise.all([
-    prisma.domainKodifikasi.findMany({
+    prisma.codificationDomain.findMany({
       where: whereCondition,
       // include: {
       //   subculture: true,
@@ -125,7 +144,7 @@ export const filterDomainKodifikasis = async (filters: {
       take: limit,
       orderBy: { updatedAt: "desc" },
     }),
-    prisma.domainKodifikasi.count({ where: whereCondition }),
+    prisma.codificationDomain.count({ where: whereCondition }),
   ]);
 
   return {
@@ -136,24 +155,24 @@ export const filterDomainKodifikasis = async (filters: {
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        kode: filters.kode || null,
+        code: filters.code || null,
         status: filters.status || null,
       },
     },
   };
 };
 
-// Search domain kodifikasi by query across kode, namaDomain, and penjelasan
+// Search domain kodifikasi by query across code, domainName, and explanation
 export const searchDomainKodifikasis = async (query: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
   const [data, total] = await Promise.all([
-    prisma.domainKodifikasi.findMany({
+    prisma.codificationDomain.findMany({
       where: {
         OR: [
-          { kode: { contains: query } },
-          { namaDomain: { contains: query } },
-          { penjelasan: { contains: query } },
+          { code: { contains: query } },
+          { domainName: { contains: query } },
+          { explanation: { contains: query } },
         ],
       },
       // include: {
@@ -163,12 +182,12 @@ export const searchDomainKodifikasis = async (query: string, page = 1, limit = 2
       take: limit,
       orderBy: { updatedAt: "desc" },
     }),
-    prisma.domainKodifikasi.count({
+    prisma.codificationDomain.count({
       where: {
         OR: [
-          { kode: { contains: query } },
-          { namaDomain: { contains: query } },
-          { penjelasan: { contains: query } },
+          { code: { contains: query } },
+          { domainName: { contains: query } },
+          { explanation: { contains: query } },
         ],
       },
     }),

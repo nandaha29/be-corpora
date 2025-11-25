@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as cultureService from '../../services/admin/culture.service.js';
 import { createCultureSchema, updateCultureSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
+import { StatusKonservasi, StatusPublish } from '@prisma/client';
 
 // ✅ GET all cultures
 // export const getCultures = async (req: Request, res: Response) => {
@@ -146,7 +147,7 @@ export async function getCultureWithAssets(req: Request, res: Response) {
 
     res.json({
       cultureId: data.cultureId,
-      namaBudaya: data.namaBudaya,
+      cultureName: data.cultureName,
       assetsSubculture,
     });
     return;
@@ -156,3 +157,59 @@ export async function getCultureWithAssets(req: Request, res: Response) {
     return;
   }
 }
+
+// ✅ SEARCH cultures
+export const searchCultures = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const searchQuery = req.query.q as string;
+
+    const result = await cultureService.searchCultures(page, limit, searchQuery);
+
+    res.status(200).json({
+      success: true,
+      message: 'Successfully searched cultures',
+      ...result,
+    });
+    return;
+  } catch (error) {
+    console.error('Error searching cultures:', error);
+    res.status(500).json({ success: false, message: 'Failed to search cultures' });
+    return;
+  }
+};
+
+// ✅ FILTER cultures (separate from search)
+export const filterCultures = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const conservationStatus = req.query.conservationStatus as StatusKonservasi;
+    const status = req.query.status as StatusPublish;
+    const originIsland = req.query.originIsland as string;
+    const province = req.query.province as string;
+    const cityRegion = req.query.cityRegion as string;
+
+    const result = await cultureService.filterCultures(
+      page,
+      limit,
+      conservationStatus,
+      status,
+      originIsland,
+      province,
+      cityRegion
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Successfully filtered cultures',
+      ...result,
+    });
+    return;
+  } catch (error) {
+    console.error('Error filtering cultures:', error);
+    res.status(500).json({ success: false, message: 'Failed to filter cultures' });
+    return;
+  }
+};

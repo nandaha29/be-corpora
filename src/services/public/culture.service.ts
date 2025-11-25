@@ -1,41 +1,93 @@
 import { prisma } from '../../lib/prisma.js';
+import { Prisma, StatusPublish } from '@prisma/client';
+
+// Get all published cultures with pagination
+export const getAllPublishedCultures = async (page: number = 1, limit: number = 20) => {
+  const skip = (page - 1) * limit;
+
+  const [cultures, totalCount] = await Promise.all([
+    prisma.culture.findMany({
+      where: { status: 'PUBLISHED' },
+      skip,
+      take: limit,
+      orderBy: {
+        cultureId: 'asc',
+      },
+      include: {
+        cultureAssets: { 
+          include: { asset: true },
+          take: 1 // Include only one asset per culture for preview
+        },
+        subcultures: {
+          where: { status: 'PUBLISHED' },
+          select: {
+            subcultureId: true,
+            subcultureName: true,
+          },
+        },
+      },
+    }),
+    prisma.culture.count({ where: { status: 'PUBLISHED' } }),
+  ]);
+
+  return {
+    data: cultures,
+    total: totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
+};
 
 // Search leksikons within a culture hierarchy (culture and its subcultures)
-export const searchLeksikonsInCulture = async (cultureId: number, query: string) => {
+export const searchLeksikonsInCulture = async (cultureId: number, query: string, page: number = 1, limit: number = 10) => {
   const searchTerm = query.toLowerCase();
 
   // Get all domain IDs that belong to subcultures of this culture
-  const domains = await prisma.domainKodifikasi.findMany({
+  const domains = await prisma.codificationDomain.findMany({
     where: {
       subculture: {
         cultureId,
       },
     },
     select: {
-      domainKodifikasiId: true,
+      domainId: true,
     },
   });
 
-  const domainIds = domains.map(d => d.domainKodifikasiId);
+  const domainIds = domains.map(d => d.domainId);
 
-  return prisma.leksikon.findMany({
-    where: {
-      domainKodifikasiId: { in: domainIds },
-      OR: [
-        { kataLeksikon: { contains: searchTerm, mode: 'insensitive' } },
-        { ipa: { contains: searchTerm, mode: 'insensitive' } },
-        { transliterasi: { contains: searchTerm, mode: 'insensitive' } },
-        { maknaEtimologi: { contains: searchTerm, mode: 'insensitive' } },
-        { maknaKultural: { contains: searchTerm, mode: 'insensitive' } },
-        { commonMeaning: { contains: searchTerm, mode: 'insensitive' } },
-        { translation: { contains: searchTerm, mode: 'insensitive' } },
-        { varian: { contains: searchTerm, mode: 'insensitive' } },
-        { translationVarians: { contains: searchTerm, mode: 'insensitive' } },
-        { deskripsiLain: { contains: searchTerm, mode: 'insensitive' } },
-      ],
-    },
+  // Calculate pagination
+  const skip = (page - 1) * limit;
+
+  // Build where clause
+  const whereClause = {
+    domainId: { in: domainIds },
+    status: StatusPublish.PUBLISHED,
+    OR: [
+      { lexiconWord: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { ipaInternationalPhoneticAlphabet: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { transliteration: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { etymologicalMeaning: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { culturalMeaning: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { commonMeaning: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { translation: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { variant: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { variantTranslations: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+      { otherDescription: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } },
+    ],
+  };
+
+  // Get total count for pagination
+  const totalCount = await prisma.lexicon.count({
+    where: whereClause,
+  });
+
+  // Get paginated results
+  const lexicons = await prisma.lexicon.findMany({
+    where: whereClause,
     include: {
-      domainKodifikasi: {
+      codificationDomain: {
         include: {
           subculture: {
             include: {
@@ -45,10 +97,22 @@ export const searchLeksikonsInCulture = async (cultureId: number, query: string)
         },
       },
       contributor: true,
-      leksikonAssets: { include: { asset: true } },
+      lexiconAssets: { include: { asset: true } },
     },
-    take: 50,
+    skip,
+    take: limit,
+    orderBy: {
+      lexiconWord: 'asc',
+    },
   });
+
+  return {
+    data: lexicons,
+    total: totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
 };
 
 // Get culture details
@@ -59,14 +123,14 @@ export const getCultureDetail = async (cultureId: number) => {
       subcultures: {
         where: { status: 'PUBLISHED' },
         include: {
-          domainKodifikasis: {
+          codificationDomains: {
             where: { status: 'PUBLISHED' },
             include: {
-              leksikons: {
+              lexicons: {
                 where: { status: 'PUBLISHED' },
                 include: {
                   contributor: true,
-                  leksikonAssets: { include: { asset: true } },
+                  lexiconAssets: { include: { asset: true } },
                 },
               },
             },

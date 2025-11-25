@@ -19,6 +19,8 @@ import domainRoutes from "./routes/public/domain.routes.js";
 import culturePublicRoutes from "./routes/public/culture.routes.js";
 import regionRoutes from "./routes/public/region.routes.js";
 import referencePublicRoutes from "./routes/public/reference.routes.js";
+import contributorPublicRoutes from "./routes/public/contributor.routes.js";
+import assetPublicRoutes from "./routes/public/asset.routes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -57,6 +59,8 @@ app.use("/api/v1/domains", domainRoutes);
 app.use("/api/v1/public/cultures", culturePublicRoutes);
 app.use("/api/v1/public/regions", regionRoutes);
 app.use("/api/v1/public/references", referencePublicRoutes);
+app.use("/api/v1/public/contributors", contributorPublicRoutes);
+app.use("/api/v1/public/assets", assetPublicRoutes);
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

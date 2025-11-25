@@ -16,16 +16,16 @@ router.get("/", authenticateAdmin, subcultureController.getAllSubculturesPaginat
 
 // POST /api/v1/admin/subcultures
 // Membuat subculture baru
-// Body: namaSubculture, salamKhas, artiSalamKhas, penjelasan, cultureId, status, statusKonservasi, statusPriorityDisplay
+// Body: subcultureName, traditionalGreeting, greetingMeaning, explanation, cultureId, status, conservationStatus, displayPriorityStatus
 // Digunakan untuk: Menambahkan subculture baru ke database
 router.post("/", authenticateAdmin, subcultureController.createSubculture);
 
 // GET /api/v1/admin/subcultures/filter
 // Filter dan pencarian subculture berdasarkan berbagai kriteria
-// Query params: status, statusPriorityDisplay, statusKonservasi, cultureId, search, page, limit
+// Query params: status, displayPriorityStatus, conservationStatus, cultureId, search, page, limit
 // Digunakan untuk: Advanced filtering dan searching subculture (status, priority, konservasi, dll)
 // SUPPORTS COMBINATION FILTERS: Can filter by multiple criteria at once
-// Example: /api/v1/admin/subcultures/filter?status=PUBLISHED&cultureId=5&statusPriorityDisplay=HIGH&page=1&limit=20
+// Example: /api/v1/admin/subcultures/filter?status=PUBLISHED&cultureId=5&displayPriorityStatus=HIGH&page=1&limit=20
 router.get("/filter", authenticateAdmin, subcultureController.getFilteredSubcultures);
 
 // GET /api/v1/admin/subcultures/:id
@@ -34,8 +34,8 @@ router.get("/filter", authenticateAdmin, subcultureController.getFilteredSubcult
 router.get("/:id", authenticateAdmin, subcultureController.getSubcultureById);
 
 // PUT /api/v1/admin/subcultures/:id
-// Update subculture (termasuk statusPriorityDisplay)
-// Body: namaSubculture, salamKhas, artiSalamKhas, penjelasan, cultureId, status, statusKonservasi, statusPriorityDisplay
+// Update subculture (termasuk displayPriorityStatus)
+// Body: subcultureName, traditionalGreeting, greetingMeaning, explanation, cultureId, status, conservationStatus, displayPriorityStatus
 // Digunakan untuk: Mengubah data subculture termasuk priority display
 router.put("/:id", authenticateAdmin, subcultureController.updateSubculture);
 
@@ -60,19 +60,19 @@ router.get("/:id/assigned-references", authenticateAdmin, subcultureController.g
 
 // POST /api/v1/admin/subcultures/:id/references
 // Menambahkan referensi ke subculture (assign ke leksikon dalam subculture)
-// Body: referensiId, leksikonId (opsional, jika tidak ada akan assign ke semua leksikon)
+// Body: referenceId, lexiconId (opsional, jika tidak ada akan assign ke semua leksikon)
 // Digunakan untuk: Menambahkan referensi ke subculture
 router.post("/:id/references", authenticateAdmin, subcultureController.addReferenceToSubculture);
 
 // GET /api/v1/admin/subcultures/:id/filter-assets
 // Filter asset subculture by Type, Role, Status (kombinasi)
-// Query params: tipe, assetRole, status, page, limit
+// Query params: type, assetRole, status, page, limit
 // Digunakan untuk: Advanced filtering assets dalam subculture
 router.get("/:id/filter-assets", authenticateAdmin, subcultureController.filterSubcultureAssets);
 
 // GET /api/v1/admin/subcultures/:id/filter-references
 // Filter referensi subculture by Type, Year, Status, Citation (kombinasi)
-// Query params: tipeReferensi, tahunTerbit, status, citationNote, page, limit
+// Query params: referenceType, publicationYear, status, citationNote, page, limit
 // Digunakan untuk: Advanced filtering referensi dalam subculture
 router.get("/:id/filter-references", authenticateAdmin, subcultureController.filterSubcultureReferences);
 
@@ -97,7 +97,7 @@ router.get("/:id/search-references", authenticateAdmin, subcultureController.sea
 // Digunakan untuk: Mendeteksi apakah asset masih digunakan (orphan detection)
 router.get("/assets/:assetId/usage", authenticateAdmin, subcultureController.getAssetUsage);
 
-// GET /api/v1/admin/subcultures/references/:referensiId/usage
+// GET /api/v1/admin/subcultures/references/:referenceId/usage
 // Melihat di subculture mana saja referensi tertentu digunakan
 // Digunakan untuk: Mendeteksi apakah referensi masih digunakan (orphan detection)
 router.get("/references/:referensiId/usage", authenticateAdmin, subcultureController.getReferenceUsage);

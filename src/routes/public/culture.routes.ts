@@ -8,6 +8,16 @@ const router = Router();
 // ============================================
 
 /**
+ * @route GET /api/public/cultures
+ * @desc Get all published cultures with pagination
+ * @access Public
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ * @returns {object} List of published cultures with pagination metadata
+ */
+router.get('/', cultureController.getAllCultures);
+
+/**
  * @route GET /api/public/cultures/:culture_id
  * @desc Get detailed information about a specific culture
  * @access Public

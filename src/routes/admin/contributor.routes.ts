@@ -19,6 +19,35 @@ const router = Router();
 router.get('/search', authenticateAdmin,contributorController.searchContributors);
 
 /**
+ * @route GET /api/admin/contributors/coordinators/search
+ * @desc Search coordinators by name, institution, or expertise
+ * @access Admin only
+ * @query {string} q - Search query (required)
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/search', authenticateAdmin, contributorController.searchCoordinators);
+
+/**
+ * @route GET /api/admin/contributors/coordinators/filter
+ * @desc Filter coordinators by status, expertise area, institution (combination)
+ * @access Admin only
+ * @query {string} coordinatorStatus - Filter by status (ACTIVE, INACTIVE, ALUMNI)
+ * @query {string} expertiseArea - Filter by expertise area
+ * @query {string} institution - Filter by institution
+ * @query {number} page - Page number (default: 1)
+ * @query {number} limit - Items per page (default: 20)
+ */
+router.get('/filter', authenticateAdmin, contributorController.filterCoordinators);
+
+/**
+ * @route GET /api/admin/contributors/coordinators
+ * @desc Get all coordinators (for debugging)
+ * @access Admin only
+ */
+// router.get('/', authenticateAdmin, contributorController.getAllCoordinators);
+
+/**
  * @route GET /api/admin/contributors
  * @desc Get all contributors with pagination
  * @access Admin only
@@ -39,8 +68,8 @@ router.get('/:id', authenticateAdmin, contributorController.getContributorById);
  * @route POST /api/admin/contributors
  * @desc Create new contributor
  * @access Admin only
- * @body {string} namaContributor - Contributor name
- * @body {string} institusi - Institution
+ * @body {string} contributorName - Contributor name
+ * @body {string} institution - Institution
  * @body {string} email - Email address
  * @body {string} expertiseArea - Expertise area
  * @body {string} contactInfo - Contact information
@@ -52,8 +81,8 @@ router.post('/', authenticateAdmin,contributorController.createContributor);
  * @desc Update contributor by ID
  * @access Admin only
  * @param {number} id - Contributor ID
- * @body {string} namaContributor - Contributor name
- * @body {string} institusi - Institution
+ * @body {string} contributorName - Contributor name
+ * @body {string} institution - Institution
  * @body {string} email - Email address
  * @body {string} expertiseArea - Expertise area
  * @body {string} contactInfo - Contact information

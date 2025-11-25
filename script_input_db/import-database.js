@@ -129,11 +129,11 @@ async function importDatabaseFromJSON() {
       }
     }
 
-    if (data.tables.DOMAIN_KODIFIKASI) {
-      console.log(`📦 Importing ${data.tables.DOMAIN_KODIFIKASI.length} domain records...`);
-      for (const record of data.tables.DOMAIN_KODIFIKASI) {
+    if (data.tables.CODIFICATION_DOMAIN) {
+      console.log(`📦 Importing ${data.tables.CODIFICATION_DOMAIN.length} domain records...`);
+      for (const record of data.tables.CODIFICATION_DOMAIN) {
         const { subculture, leksikons, ...domainData } = record;
-        await prisma.domainKodifikasi.create({ data: domainData });
+        await prisma.codificationDomain.create({ data: domainData });
       }
     }
 
@@ -148,32 +148,34 @@ async function importDatabaseFromJSON() {
     if (data.tables.ASSET) {
       console.log(`📦 Importing ${data.tables.ASSET.length} asset records...`);
       for (const record of data.tables.ASSET) {
-        await prisma.asset.create({ data: record });
+        const { explanation, ...assetData } = record;
+        await prisma.asset.create({ data: { ...assetData, description: explanation } });
       }
     }
 
-    if (data.tables.REFERENSI) {
-      console.log(`📦 Importing ${data.tables.REFERENSI.length} referensi records...`);
-      for (const record of data.tables.REFERENSI) {
-        await prisma.referensi.create({ data: record });
+    if (data.tables.REFERENCE) {
+      console.log(`📦 Importing ${data.tables.REFERENCE.length} reference records...`);
+      for (const record of data.tables.REFERENCE) {
+        const { explanation, author, ...referenceData } = record;
+        await prisma.reference.create({ data: { ...referenceData, description: explanation, authors: author } });
       }
     }
 
-    if (data.tables.LEKSIKON) {
-      console.log(`📦 Importing ${data.tables.LEKSIKON.length} leksikon records...`);
-      for (const record of data.tables.LEKSIKON) {
-        const { domainKodifikasi, contributor, leksikonAssets, leksikonReferensis, ...leksikonData } = record;
-        await prisma.leksikon.create({ data: leksikonData });
+    if (data.tables.LEXICON) {
+      console.log(`📦 Importing ${data.tables.LEXICON.length} lexicon records...`);
+      for (const record of data.tables.LEXICON) {
+        const { codificationDomain, contributor, lexiconAssets, lexiconReferences, ...lexiconData } = record;
+        await prisma.lexicon.create({ data: lexiconData });
       }
     }
 
     // Import junction tables
     console.log('📦 Importing junction tables...');
 
-    if (data.tables.LEKSIKON_ASSETS) {
-      for (const record of data.tables.LEKSIKON_ASSETS) {
-        const { leksikon, asset, ...junctionData } = record;
-        await prisma.leksikonAsset.create({ data: junctionData });
+    if (data.tables.LEXICON_ASSETS) {
+      for (const record of data.tables.LEXICON_ASSETS) {
+        const { LEXICON, asset, ...junctionData } = record;
+        await prisma.lexiconAsset.create({ data: junctionData });
       }
     }
 
@@ -198,10 +200,10 @@ async function importDatabaseFromJSON() {
       }
     }
 
-    if (data.tables.LEKSIKON_REFERENSI) {
-      for (const record of data.tables.LEKSIKON_REFERENSI) {
-        const { leksikon, referensi, ...junctionData } = record;
-        await prisma.leksikonReferensi.create({ data: junctionData });
+    if (data.tables.LEXICON_REFERENCE) {
+      for (const record of data.tables.LEXICON_REFERENCE) {
+        const { LEXICON, REFERENCE, ...junctionData } = record;
+        await prisma.lexiconReference.create({ data: junctionData });
       }
     }
 

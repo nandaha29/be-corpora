@@ -226,3 +226,97 @@ export const removeAssetFromContributor = async (req: Request, res: Response) =>
     return res.status(500).json({ message: 'Failed to remove asset' });
   }
 };
+
+// SEARCH coordinators
+export const searchCoordinators = async (req: Request, res: Response) => {
+  try {
+    const keyword = String(req.query.q || '');
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    if (!keyword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Query parameter "q" is required',
+      });
+    }
+
+    const result = await contributorService.searchCoordinators(keyword, page, limit);
+
+    res.status(200).json({
+      success: true,
+      message: 'Coordinators search completed successfully',
+      ...result,
+    });
+    return;
+  } catch (error) {
+    console.error('Search coordinators error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search coordinators',
+      error: (error as Error).message
+    });
+    return;
+  }
+};
+
+// FILTER coordinators by status, expertise, institution
+export const filterCoordinators = async (req: Request, res: Response) => {
+  try {
+    const coordinatorStatus = req.query.coordinatorStatus as string | undefined;
+    const expertiseArea = req.query.expertiseArea as string | undefined;
+    const institution = req.query.institution as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+    // console.log('Filter coordinators params:', { coordinatorStatus, expertiseArea, institution, page, limit });
+
+    const result = await contributorService.filterCoordinators({
+      coordinatorStatus,
+      expertiseArea,
+      institution,
+      page,
+      limit,
+    });
+
+    // console.log('Filter coordinators result:', result);
+
+    res.status(200).json({
+      success: true,
+      message: 'Coordinators filtered successfully',
+      ...result,
+    });
+    return;
+  } catch (error) {
+    console.error('Filter coordinators error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to filter coordinators',
+      error: (error as Error).message
+    });
+    return;
+  }
+};
+
+// GET all coordinators (for debugging)
+export const getAllCoordinators = async (req: Request, res: Response) => {
+  try {
+    const coordinators = await contributorService.getAllCoordinators();
+
+    res.status(200).json({
+      success: true,
+      message: 'All coordinators retrieved successfully',
+      data: coordinators,
+      total: coordinators.length,
+    });
+    return;
+  } catch (error) {
+    console.error('Get all coordinators error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve coordinators',
+      error: (error as Error).message
+    });
+    return;
+  }
+};

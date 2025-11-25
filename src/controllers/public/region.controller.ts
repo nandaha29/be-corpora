@@ -53,7 +53,7 @@ export const getRegionData = async (req: Request, res: Response) => {
             cultureAssets: {
               include: { asset: true },
               where: {
-                asset: { tipe: 'FOTO', status: 'ACTIVE' },
+                asset: { fileType: 'PHOTO', status: 'ACTIVE' },
                 assetRole: 'THUMBNAIL',
               },
             },
@@ -78,7 +78,7 @@ export const getRegionData = async (req: Request, res: Response) => {
               cultureAssets: {
                 include: { asset: true },
                 where: {
-                  asset: { tipe: 'FOTO', status: 'ACTIVE' },
+                  asset: { fileType: 'PHOTO', status: 'ACTIVE' },
                   assetRole: 'THUMBNAIL',
                 },
               },
@@ -92,7 +92,7 @@ export const getRegionData = async (req: Request, res: Response) => {
         const nameQuery = regionId.replace('-', ' ');
         culture = await prisma.culture.findFirst({
           where: { 
-            namaBudaya: { contains: nameQuery, mode: 'insensitive' },
+            cultureName: { contains: nameQuery, mode: 'insensitive' },
             status: { in: ['DRAFT', 'PUBLISHED'] }
           },
           include: {
@@ -105,7 +105,7 @@ export const getRegionData = async (req: Request, res: Response) => {
             cultureAssets: {
               include: { asset: true },
               where: {
-                asset: { tipe: 'FOTO', status: 'ACTIVE' },
+                asset: { fileType: 'PHOTO', status: 'ACTIVE' },
                 assetRole: 'THUMBNAIL',
               },
             },
@@ -118,12 +118,12 @@ export const getRegionData = async (req: Request, res: Response) => {
         // Format culture data
         regionData = {
           id: culture.cultureId,
-          name: culture.namaBudaya || 'Unknown Culture',
-          description: culture.karakteristik || culture.pulauAsal || 'No description available',
+          name: culture.cultureName || 'Unknown Culture',
+          description: culture.characteristics || culture.originIsland || 'No description available',
           salamKhas: null, // Culture doesn't have salam khas
           culture: {
-            name: culture.namaBudaya,
-            province: culture.provinsi,
+            name: culture.cultureName,
+            province: culture.province,
           },
           heroImage: culture.cultureAssets?.[0]?.asset?.url || null,
           galleryImages: culture.cultureAssets?.slice(0, 3).map(ca => ca.asset?.url).filter(Boolean) || [],

@@ -31,7 +31,7 @@ export const createContributor = async (data: CreateContributorInput) => {
   return prisma.contributor.create({
     data: {
       ...data,
-      institusi: data.institusi ?? '',
+      institution: data.institution ?? '',
       expertiseArea: data.expertiseArea ?? '',
       contactInfo: data.contactInfo ?? '',
     },
@@ -58,8 +58,8 @@ export const searchContributors = async (query: string) => {
   return prisma.contributor.findMany({
     where: {
       OR: [
-        { namaContributor: { contains: query, mode: 'insensitive' } },
-        { institusi: { contains: query, mode: 'insensitive' } },
+        { contributorName: { contains: query, mode: 'insensitive' } },
+        { institution: { contains: query, mode: 'insensitive' } },
         { expertiseArea: { contains: query, mode: 'insensitive' } },
         { email: { contains: query, mode: 'insensitive' } },
       ],
@@ -154,4 +154,143 @@ export const removeAssetFromContributor = async (contributorId: number, assetId:
     }
     throw error;
   }
+};
+
+// Search coordinators by keyword
+export const searchCoordinators = async (keyword: string, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const whereClause = {
+    isCoordinator: true,
+    OR: [
+      { contributorName: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
+      { institution: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
+      { expertiseArea: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
+      { email: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
+    ],
+  };
+
+  const [data, total] = await Promise.all([
+    prisma.contributor.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      include: {
+        contributorAssets: {
+          include: { asset: true },
+        },
+      },
+      orderBy: { contributorName: 'asc' },
+    }),
+    prisma.contributor.count({
+      where: whereClause,
+    }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      query: keyword,
+    },
+  };
+};
+
+// Filter coordinators by status and other criteria
+export const filterCoordinators = async (filters: {
+  coordinatorStatus?: string;
+  expertiseArea?: string;
+  institution?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  const whereCondition: any = {
+    isCoordinator: true,
+  };
+
+  // console.log('Filter coordinators - initial whereCondition:', whereCondition);
+
+  // Add coordinatorStatus filter if provided
+  if (filters.coordinatorStatus) {
+    const normalized = filters.coordinatorStatus.toUpperCase();
+    const allowed = ["ACTIVE", "INACTIVE", "ALUMNI"];
+    if (allowed.includes(normalized)) {
+      whereCondition.coordinatorStatus = normalized as any;
+      // console.log('Added coordinatorStatus filter:', normalized);
+    } else {
+      // console.log('Invalid coordinatorStatus:', normalized);
+    }
+  }
+
+  // Add expertiseArea filter if provided
+  if (filters.expertiseArea) {
+    whereCondition.expertiseArea = {
+      contains: filters.expertiseArea,
+      mode: Prisma.QueryMode.insensitive
+    };
+  }
+
+  // Add institution filter if provided
+  if (filters.institution) {
+    whereCondition.institution = {
+      contains: filters.institution,
+      mode: Prisma.QueryMode.insensitive
+    };
+  }
+
+  // console.log('Final whereCondition:', whereCondition);
+
+  const [data, total] = await Promise.all([
+    prisma.contributor.findMany({
+      where: whereCondition,
+      skip,
+      take: limit,
+      include: {
+        contributorAssets: {
+          include: { asset: true },
+        },
+      },
+      orderBy: { contributorName: 'asc' },
+    }),
+    prisma.contributor.count({ where: whereCondition }),
+  ]);
+
+  // console.log('Query result - total:', total, 'data length:', data.length);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      filters: {
+        coordinatorStatus: filters.coordinatorStatus || null,
+        expertiseArea: filters.expertiseArea || null,
+        institution: filters.institution || null,
+      },
+    },
+  };
+};
+
+// Get all coordinators (without pagination for debugging)
+export const getAllCoordinators = async () => {
+  return prisma.contributor.findMany({
+    where: {
+      isCoordinator: true,
+    },
+    include: {
+      contributorAssets: {
+        include: { asset: true },
+      },
+    },
+    orderBy: { contributorName: 'asc' },
+  });
 };

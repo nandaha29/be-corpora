@@ -38,7 +38,7 @@ export const getAllAssetsPaginated = async (req: Request, res: Response) => {
 // ✅ Filter assets by type and/or status with pagination and sorting
 export const filterAssets = async (req: Request, res: Response) => {
   try {
-    const tipe = req.query.tipe as string | undefined;
+    const fileType = req.query.fileType as string | undefined;
     const status = req.query.status as string | undefined;
     const sortBy = req.query.sortBy as string | undefined;
     const order = req.query.order as string | undefined;
@@ -46,7 +46,7 @@ export const filterAssets = async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
     const result = await assetService.filterAssets({
-      tipe,
+      fileType,
       status,
       sortBy,
       order,
@@ -54,7 +54,11 @@ export const filterAssets = async (req: Request, res: Response) => {
       limit,
     });
 
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'Assets filtered successfully',
+      ...result,
+    });
     return;
   } catch (error) {
     console.error('Filter error:', error);
@@ -69,7 +73,11 @@ export const getAssetById = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const asset = await assetService.getAssetById(id);
     if (!asset) return res.status(404).json({ message: 'Asset not found' });
-    res.status(200).json({ success: true, data: asset });
+    res.status(200).json({
+      success: true,
+      message: 'Asset retrieved successfully',
+      data: asset
+    });
     return;
   } catch {
     res.status(500).json({ message: 'Failed to fetch asset' });
@@ -83,25 +91,33 @@ export const createAsset = async (req: Request, res: Response) => {
     const metadata = req.body;
     const parsed = createAssetSchema.parse(metadata);
 
-    if (['FOTO', 'AUDIO'].includes(parsed.tipe)) {
+    if (['PHOTO', 'AUDIO'].includes(parsed.fileType)) {
       if (!req.file) {
-        return res.status(400).json({ message: 'File is required for FOTO and AUDIO types' });
+        return res.status(400).json({ message: 'File is required for PHOTO and AUDIO types' });
       }
-      const maxSize = parsed.tipe === 'FOTO' ? 500 * 1024 : 10 * 1024 * 1024;
+      const maxSize = parsed.fileType === 'PHOTO' ? 500 * 1024 : 10 * 1024 * 1024;
       if (req.file.size > maxSize) {
-        const sizeText = parsed.tipe === 'FOTO' ? '500kb' : '10mb';
+        const sizeText = parsed.fileType === 'PHOTO' ? '500kb' : '10mb';
         return res.status(400).json({ message: `File size must be less than ${sizeText}` });
       }
       const newAsset = await assetService.createAsset(parsed, req.file);
-      res.status(201).json({ success: true, data: newAsset });
+      res.status(201).json({
+        success: true,
+        message: 'Asset created successfully',
+        data: newAsset
+      });
       return;
-    } else if (['VIDEO', 'MODEL_3D'].includes(parsed.tipe)) {
+    } else if (['VIDEO', 'MODEL_3D'].includes(parsed.fileType)) {
       if (req.file) {
         return res.status(400).json({ message: 'File not allowed for VIDEO and MODEL_3D types' });
       }
       // URL is ensured by schema
       const newAsset = await assetService.createAssetFromUrl(parsed as CreateAssetInput & { url: string });
-      res.status(201).json({ success: true, data: newAsset });
+      res.status(201).json({
+        success: true,
+        message: 'Asset created successfully',
+        data: newAsset
+      });
       return;
     } else {
       return res.status(400).json({ message: 'Invalid asset type' });
@@ -123,12 +139,12 @@ export const updateAsset = async (req: Request, res: Response) => {
     if (!asset) return res.status(404).json({ message: 'Asset not found' });
 
     if (req.file) {
-      if (!['FOTO', 'AUDIO'].includes(asset.tipe)) {
-        return res.status(400).json({ message: 'File upload only allowed for FOTO and AUDIO types' });
+      if (!['PHOTO', 'AUDIO'].includes(asset.fileType)) {
+        return res.status(400).json({ message: 'File upload only allowed for PHOTO and AUDIO types' });
       }
-      const maxSize = asset.tipe === 'FOTO' ? 500 * 1024 : 10 * 1024 * 1024;
+      const maxSize = asset.fileType === 'PHOTO' ? 500 * 1024 : 10 * 1024 * 1024;
       if (req.file.size > maxSize) {
-        const sizeText = asset.tipe === 'FOTO' ? '500kb' : '10mb';
+        const sizeText = asset.fileType === 'PHOTO' ? '500kb' : '10mb';
         return res.status(400).json({ message: `File size must be less than ${sizeText}` });
       }
       // Upload new file
@@ -136,14 +152,18 @@ export const updateAsset = async (req: Request, res: Response) => {
       const fileSize = req.file.size.toString();
       const hashChecksum = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
       updateData = { ...parsed, url: blob.url, fileSize, hashChecksum };
-    } else if (parsed.url && ['VIDEO', 'MODEL_3D'].includes(asset.tipe)) {
+    } else if (parsed.url && ['VIDEO', 'MODEL_3D'].includes(asset.fileType)) {
       // Allow updating url for VIDEO and MODEL_3D
-    } else if (parsed.url && ['FOTO', 'AUDIO'].includes(asset.tipe)) {
-      return res.status(400).json({ message: 'Cannot update URL for FOTO and AUDIO types' });
+    } else if (parsed.url && ['PHOTO', 'AUDIO'].includes(asset.fileType)) {
+      return res.status(400).json({ message: 'Cannot update URL for PHOTO and AUDIO types' });
     }
 
     const updated = await assetService.updateAsset(id, updateData);
-    res.status(200).json({ success: true, data: updated });
+    res.status(200).json({
+      success: true,
+      message: 'Asset updated successfully',
+      data: updated,
+    });
     return;
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -162,17 +182,24 @@ export const deleteAsset = async (req: Request, res: Response) => {
   }
 };
 
-// // ✅ Public Asset File SCHEMA BELUM ADA STATUS PUBLIC APA BELUM
-// export const getPublicAssetFile = async (req: Request, res: Response) => {
-//   try {
-//     const id = Number(req.params.id);
-//     const asset = await assetService.getPublicAssetFile(id);
-//     if (!asset) return res.status(404).json({ message: 'File not found or unpublished' });
-//     res.status(200).json({ success: true, data: asset });
-//   } catch {
-//     res.status(500).json({ message: 'Failed to access public file' });
-//   }
-// };
+// ✅ Get public asset file (only if status = 'PUBLISHED')
+export const getPublicAssetFile = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const asset = await assetService.getPublicAssetFile(id);
+    if (!asset) return res.status(404).json({ message: 'File not found or not published' });
+    res.status(200).json({
+      success: true,
+      message: 'Public asset file retrieved successfully',
+      data: asset
+    });
+    return;
+  } catch {
+    res.status(500).json({ message: 'Failed to access public file' });
+    return;
+  }
+};
+
 
 // ✅ Bulk Upload
 export const bulkUploadAssets = async (req: Request, res: Response) => {
@@ -190,8 +217,8 @@ export const bulkUploadAssets = async (req: Request, res: Response) => {
 
     // Check that all assets are FOTO or AUDIO
     for (const asset of assets) {
-      if (!['FOTO', 'AUDIO'].includes(asset.tipe)) {
-        return res.status(400).json({ message: 'Bulk upload only supports FOTO and AUDIO types' });
+      if (!['PHOTO', 'AUDIO'].includes(asset.fileType)) {
+        return res.status(400).json({ message: 'Bulk upload only supports PHOTO and AUDIO types' });
       }
     }
 
@@ -202,9 +229,9 @@ export const bulkUploadAssets = async (req: Request, res: Response) => {
         return res.status(400).json({ message: `File ${i + 1} is missing` });
       }
       const asset = assets[i];
-      const maxSize = asset.tipe === 'FOTO' ? 500 * 1024 : 10 * 1024 * 1024;
+      const maxSize = asset.fileType === 'PHOTO' ? 500 * 1024 : 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        const sizeText = asset.tipe === 'FOTO' ? '500kb' : '10mb';
+        const sizeText = asset.fileType === 'PHOTO' ? '500kb' : '10mb';
         return res.status(400).json({ message: `File ${i + 1} size must be less than ${sizeText}` });
       }
     }
@@ -233,7 +260,11 @@ export const searchAssets = async (req: Request, res: Response) => {
     }
 
     const result = await assetService.searchAssets(q.trim(), page, limit);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'Assets searched successfully',
+      ...result,
+    });
     return;
   } catch (error) {
     console.error('Error searching assets:', error);

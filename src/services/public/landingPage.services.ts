@@ -1,10 +1,11 @@
 import { prisma } from '../../lib/prisma.js';
+import { StatusPublish, StatusFile, StatusCoordinator } from '@prisma/client';
 
 export const getLandingPageData = async () => {
     // HEROSECTION: Get a random published culture that has active banner photo assets from culture or subcultures
   const cultures = await prisma.culture.findMany({
     where: {
-      status: 'PUBLISHED',
+      status: StatusPublish.PUBLISHED,
     },
     include: {
       cultureAssets: {
@@ -13,14 +14,14 @@ export const getLandingPageData = async () => {
         },
         where: {
           asset: { 
-            tipe: 'FOTO',
-            status: 'ACTIVE'
+            fileType: 'PHOTO',
+            status: StatusFile.ACTIVE
           },
           assetRole: 'BANNER',
         },
       },
       subcultures: {
-        where: { status: 'PUBLISHED' },
+        where: { status: StatusPublish.PUBLISHED },
         include: {
           subcultureAssets: {
             include: {
@@ -28,13 +29,13 @@ export const getLandingPageData = async () => {
             },
             where: {
               asset: { 
-                tipe: 'FOTO',
-                status: 'ACTIVE'
+                fileType: 'PHOTO',
+                status: StatusFile.ACTIVE
               },
               assetRole: 'THUMBNAIL',
             },
           },
-        },
+        },   
       },
     },
   });
@@ -45,26 +46,26 @@ export const getLandingPageData = async () => {
   // Get up to 3 active highlight photo URLs from the hero culture's subcultures (HIGHLIGHT role)
   const highlightAssets = heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => 
     sub.subcultureAssets
-      .filter((sa: { assetRole: string; asset: { tipe: string; status: string; }; }) => 
-        sa.assetRole === 'HIGHLIGHT' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE'
+      .filter((sa: { assetRole: string; asset: { fileType: string; status: any; }; }) => 
+        sa.assetRole === 'HIGHLIGHT' && sa.asset.fileType === 'PHOTO' && sa.asset.status === StatusFile.ACTIVE
       )
       .map(sa => sa.asset.url)
   ).slice(0, 3) || []; // Take up to 3, but only use 2 for rotation
 
   // Get hero image from BANNER role (from culture assets or subculture assets)
   const heroImageAsset = heroCulture?.cultureAssets?.find((ca: any) => 
-    ca.assetRole === 'BANNER' && ca.asset.tipe === 'FOTO' && ca.asset.status === 'ACTIVE'
+    ca.assetRole === 'BANNER' && ca.asset.fileType === 'PHOTO' && ca.asset.status === StatusFile.ACTIVE
   )?.asset.url || 
   heroCulture?.subcultures.flatMap((sub: { subcultureAssets: any[]; }) => 
     sub.subcultureAssets
-      .filter((sa: { assetRole: string; asset: { tipe: string; status: string; }; }) => 
-        sa.assetRole === 'BANNER' && sa.asset.tipe === 'FOTO' && sa.asset.status === 'ACTIVE'
+      .filter((sa: { assetRole: string; asset: { fileType: string; status: any; }; }) => 
+        sa.assetRole === 'BANNER' && sa.asset.fileType === 'PHOTO' && sa.asset.status === StatusFile.ACTIVE
       )
       .map(sa => sa.asset.url)
   )[0] || null; // Take the first BANNER as hero image (prefer culture banner, fallback to subculture banner)
 
   const heroSection = {
-    cultureName: heroCulture?.provinsi || 'Default Culture',
+    cultureName: heroCulture?.cultureName || 'Default Culture',
     heroImage: heroImageAsset, // 1 BANNER image for hero (from culture or subculture)
     highlightImages: highlightAssets.slice(0, 2), // 2 images for highlight rotation
   };
@@ -72,21 +73,21 @@ export const getLandingPageData = async () => {
   // SUBCULTURE SECTION: Get 4 published subcultures ordered by priority status (HIGH first)
   const subcultures = await prisma.subculture.findMany({
     where: {
-      status: 'PUBLISHED',
+      status: StatusPublish.PUBLISHED,
     },
     take: 4,
     orderBy: [
-      { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+      { displayPriorityStatus: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
       // { createdAt: 'desc' } // Secondary order by newest first
-    ] as any,
+    ],
     include: {
       culture: true,
       subcultureAssets: {
         include: { asset: true },
         where: {
           asset: { 
-            tipe: 'FOTO',
-            status: 'ACTIVE'
+            fileType: 'PHOTO',
+            status: StatusFile.ACTIVE
           },
           assetRole: 'THUMBNAIL',
         },
@@ -97,10 +98,10 @@ export const getLandingPageData = async () => {
   const subcultureSection = subcultures.map((sub: any) => ({
     id: sub.subcultureId,
     slug: sub.slug,
-    name: sub.namaSubculture,
-    description: sub.penjelasan,
-    culture: sub.culture.namaBudaya,
-    province: sub.culture.provinsi,
+    name: sub.subcultureName,
+    description: sub.explanation,
+    culture: sub.culture.cultureName,
+    province: sub.culture.province,
     heroImage: sub.subcultureAssets && sub.subcultureAssets.length > 0 ? sub.subcultureAssets[0]!.asset.url : null,
   }));
 
@@ -111,20 +112,20 @@ export const getLandingPageData = async () => {
       contributor: true,
     },
     where: {
-      asset: { tipe: 'FOTO' },
+      asset: { fileType: 'PHOTO' },
       assetNote: 'LOGO', // Only get LOGO assets
       contributor: {
         isCoordinator: true,
-        statusCoordinator: 'ACTIVE',
+        coordinatorStatus: StatusCoordinator.ACTIVE,
       },
     },
   });
 
   // VISI & MISI SECTION: Statistics
   const stats = await Promise.all([
-    prisma.culture.count({ where: { status: 'PUBLISHED' } }),
-    prisma.subculture.count({ where: { status: 'PUBLISHED' } }),
-    prisma.leksikon.count({ where: { status: 'PUBLISHED' } }),
+    prisma.culture.count({ where: { status: StatusPublish.PUBLISHED } }),
+    prisma.subculture.count({ where: { status: StatusPublish.PUBLISHED } }),
+    prisma.lexicon.count({ where: { status: StatusPublish.PUBLISHED } }),
     prisma.contributor.count(),
     prisma.asset.count(),
   ]);
@@ -141,13 +142,13 @@ export const getLandingPageData = async () => {
   const teamScientis = await prisma.contributor.findMany({
     where: {
       isCoordinator: true,
-      statusCoordinator: 'ACTIVE',
+      coordinatorStatus: StatusCoordinator.ACTIVE,
     },
     orderBy: [
-      { statusPriorityDisplay: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
+      { displayPriorityStatus: 'asc' }, // HIGH first, then MEDIUM, LOW, HIDDEN
     ],
     select: {
-      namaContributor: true,
+      contributorName: true,
       expertiseArea: true,
     },
   });

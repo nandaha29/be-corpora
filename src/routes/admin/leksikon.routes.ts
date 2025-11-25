@@ -33,23 +33,23 @@ router.get("/domain-kodifikasi/:dk_id/leksikons", authenticateAdmin, leksikonCon
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
-router.get('/filter', authenticateAdmin, leksikonController.filterLeksikons);
+router.get('/search/assets', authenticateAdmin, leksikonController.searchAssetsInLeksikons);
 
 /**
  * @route GET /api/admin/leksikons/search/assets
  * @desc Search assets that are used in any leksikon
  * @access Admin only
- * @query {string} q - Search query (namaFile, tipe, penjelasan)
+ * @query {string} q - Search query (fileName, fileType, description)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
-router.get('/search/assets', authenticateAdmin, leksikonController.searchAssetsInLeksikons);
+router.get('/search/references', authenticateAdmin, leksikonController.searchReferencesInLeksikons);
 
 /**
  * @route GET /api/admin/leksikons/search/references
  * @desc Search references that are used in any leksikon
  * @access Admin only
- * @query {string} q - Search query (judul, penulis, tipeReferensi)
+ * @query {string} q - Search query (title, authors, referenceType)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
@@ -178,7 +178,8 @@ router
   .delete(authenticateAdmin, leksikonController.removeReferenceFromLeksikon);
 
 // Asset role update
-router.put('/:id/assets/:assetId', authenticateAdmin, leksikonController.updateAssetRole);
+// DUPLICATE: Same as line 151 with /role, prefer the /role version for clarity
+// router.put('/:id/assets/:assetId', authenticateAdmin, leksikonController.updateAssetRole);
 
 // Citation note update
 router.put('/:id/references/:referenceId', authenticateAdmin, leksikonController.updateCitationNote);
@@ -207,7 +208,7 @@ router.get("/domain-kodifikasi/:dk_id/leksikons", authenticateAdmin, leksikonCon
  * @route GET /api/admin/leksikons/search/assets
  * @desc Search assets that are used in any leksikon
  * @access Admin only
- * @query {string} q - Search query (namaFile, tipe, penjelasan)
+ * @query {string} q - Search query (fileName, fileType, description)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
@@ -217,11 +218,12 @@ router.get('/search/assets', authenticateAdmin, leksikonController.searchAssetsI
  * @route GET /api/admin/leksikons/search/references
  * @desc Search references that are used in any leksikon
  * @access Admin only
- * @query {string} q - Search query (judul, penulis, tipeReferensi)
+ * @query {string} q - Search query (title, authors, referenceType)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  */
-router.get('/search/references', authenticateAdmin, leksikonController.searchReferencesInLeksikons);
+// DUPLICATE: Same route as line 46 above, remove if not needed
+// router.get('/search/references', authenticateAdmin, leksikonController.searchReferencesInLeksikons);
 
 // ============================================
 // 📊 USAGE TRACKING
@@ -265,7 +267,7 @@ router.get('/references/:referenceId/usages', authenticateAdmin, leksikonControl
  * @route GET /api/admin/leksikons/filter/assets
  * @desc Filter assets assigned to lexicons by Type, Status, Created At
  * @access Admin only
- * @query {string} tipe - Asset type filter (FOTO, AUDIO, VIDEO, MODEL_3D) - optional
+ * @query {string} fileType - Asset type filter (PHOTO, AUDIO, VIDEO, MODEL_3D) - optional
  * @query {string} status - Asset status filter (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED) - optional
  * @query {string} createdAt - Created date filter (ISO date string) - optional
  * @query {number} page - Page number (default: 1)
@@ -277,8 +279,8 @@ router.get('/filter/assets', authenticateAdmin, leksikonController.filterLeksiko
  * @route GET /api/admin/leksikons/filter/references
  * @desc Filter references assigned to lexicons by Type, Year, Status
  * @access Admin only
- * @query {string} tipeReferensi - Reference type filter (JURNAL, BUKU, ARTIKEL, WEBSITE, LAPORAN) - optional
- * @query {string} tahunTerbit - Publication year filter - optional
+ * @query {string} referenceType - Reference type filter (JURNAL, BUKU, ARTIKEL, WEBSITE, LAPORAN) - optional
+ * @query {string} publicationYear - Publication year filter - optional
  * @query {string} status - Reference status filter (DRAFT, PUBLISHED, ARCHIVED) - optional
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)

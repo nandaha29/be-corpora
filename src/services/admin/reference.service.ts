@@ -1,60 +1,61 @@
 import { prisma } from "../../lib/prisma.js";
 import { Prisma } from "@prisma/client";
 
-import { CreateReferensiInput, UpdateReferensiInput } from '../../lib/validators.js';
+import { CreateReferenceInput, UpdateReferenceInput } from '../../lib/validators.js';
 
 export const getAllReferences = async () => {
-  return prisma.referensi.findMany();
+  return prisma.reference.findMany();
 };
 
 export const getReferenceById = async (id: number) => {
-  return prisma.referensi.findUnique({
-    where: { referensiId: id },
+  return prisma.reference.findUnique({
+    where: { referenceId: id },
   });
 };
 
-export const createReference = async (data: CreateReferensiInput) => {
-  return prisma.referensi.create({
+export const createReference = async (data: CreateReferenceInput) => {
+  return prisma.reference.create({
     data: {
       ...data,
-      penjelasan: data.penjelasan ?? "",
+      description: data.description ?? "",
       url: data.url ?? "",
-      penulis: data.penulis ?? "",
-      tahunTerbit: data.tahunTerbit ?? "",
+      authors: data.authors ?? "",
+      publicationYear: data.publicationYear ?? "",
+      topicCategory: data.topicCategory ?? "",
     },
   });
 };
 
-export const updateReference = async (id: number, data: UpdateReferensiInput) => {
-  return prisma.referensi.update({
-    where: { referensiId: id },
+export const updateReference = async (id: number, data: UpdateReferenceInput) => {
+  return prisma.reference.update({
+    where: { referenceId: id },
     data,
   });
 };
 
 export const deleteReference = async (id: number) => {
-  return prisma.referensi.delete({
-    where: { referensiId: id },
+  return prisma.reference.delete({
+    where: { referenceId: id },
   });
 };
 
-// ✅ Get all referensi (with pagination + filter)
+// ✅ Get all references (with pagination + filter)
 export const getAllReferensiPaginated = async (page = 1, limit = 10, type?: string) => {
   const skip = (page - 1) * limit;
 
-  const [referensi, totalCount] = await Promise.all([
-    prisma.referensi.findMany({
+  const [references, totalCount] = await Promise.all([
+    prisma.reference.findMany({
       skip,
       take: limit,
       orderBy: {
-        referensiId: 'asc',
+        referenceId: 'asc',
       },
     }),
-    prisma.referensi.count(),
+    prisma.reference.count(),
   ]);
 
   return {
-    data: referensi,
+    data: references,
     total: totalCount,
     page,
     limit,
@@ -74,30 +75,30 @@ export const getAllReferensiPaginated = async (page = 1, limit = 10, type?: stri
 export const searchReferensi = async (keyword: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
-  const enumValues = ['JURNAL', 'BUKU', 'ARTIKEL', 'WEBSITE', 'LAPORAN'];
+  const enumValues = ['JOURNAL', 'BOOK', 'ARTICLE', 'WEBSITE', 'REPORT', 'THESIS', 'DISSERTATION', 'FIELD_NOTE'];
   const isEnumMatch = enumValues.includes(keyword.toUpperCase());
 
   const whereClause: any = {
     OR: [
-      { judul: { contains: keyword, mode: 'insensitive' } },
-      { penjelasan: { contains: keyword, mode: 'insensitive' } },
-      { penulis: { contains: keyword, mode: 'insensitive' } },
-      { tahunTerbit: { contains: keyword, mode: 'insensitive' } },
+      { title: { contains: keyword, mode: 'insensitive' } },
+      { description: { contains: keyword, mode: 'insensitive' } },
+      { authors: { contains: keyword, mode: 'insensitive' } },
+      { publicationYear: { contains: keyword, mode: 'insensitive' } },
     ],
   };
 
   if (isEnumMatch) {
-    whereClause.OR.push({ tipeReferensi: { equals: keyword.toUpperCase() as any } });
+    whereClause.OR.push({ referenceType: { equals: keyword.toUpperCase() as any } });
   }
 
   const [data, total] = await Promise.all([
-    prisma.referensi.findMany({
+    prisma.reference.findMany({
       where: whereClause,
       skip,
       take: limit,
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.referensi.count({
+    prisma.reference.count({
       where: whereClause,
     }),
   ]);
@@ -116,8 +117,8 @@ export const searchReferensi = async (keyword: string, page = 1, limit = 20) => 
 
 // ✅ Filter references by type, year, status, createdAt with pagination
 export const filterReferences = async (filters: {
-  tipeReferensi?: string;
-  tahunTerbit?: string;
+  referenceType?: string;
+  publicationYear?: string;
   status?: string;
   createdAtFrom?: string;
   createdAtTo?: string;
@@ -131,19 +132,19 @@ export const filterReferences = async (filters: {
   // Build where condition dynamically
   const whereCondition: any = {};
 
-  // Add tipeReferensi filter if provided
-  if (filters.tipeReferensi) {
-    const normalized = filters.tipeReferensi.toUpperCase();
-    const allowed = ["JURNAL", "BUKU", "ARTIKEL", "WEBSITE", "LAPORAN"];
+  // Add referenceType filter if provided
+  if (filters.referenceType) {
+    const normalized = filters.referenceType.toUpperCase();
+    const allowed = ["JOURNAL", "BOOK", "ARTICLE", "WEBSITE", "REPORT", "THESIS", "DISSERTATION", "FIELD_NOTE"];
     if (allowed.includes(normalized)) {
-      whereCondition.tipeReferensi = normalized as any;
+      whereCondition.referenceType = normalized as any;
     }
   }
 
-  // Add tahunTerbit filter if provided
-  if (filters.tahunTerbit) {
-    whereCondition.tahunTerbit = {
-      contains: filters.tahunTerbit,
+  // Add publicationYear filter if provided
+  if (filters.publicationYear) {
+    whereCondition.publicationYear = {
+      contains: filters.publicationYear,
       mode: 'insensitive'
     };
   }
@@ -169,13 +170,13 @@ export const filterReferences = async (filters: {
   }
 
   const [data, total] = await Promise.all([
-    prisma.referensi.findMany({
+    prisma.reference.findMany({
       where: whereCondition,
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
     }),
-    prisma.referensi.count({ where: whereCondition }),
+    prisma.reference.count({ where: whereCondition }),
   ]);
 
   return {
@@ -186,8 +187,8 @@ export const filterReferences = async (filters: {
       limit,
       totalPages: Math.ceil(total / limit),
       filters: {
-        tipeReferensi: filters.tipeReferensi || null,
-        tahunTerbit: filters.tahunTerbit || null,
+        referenceType: filters.referenceType || null,
+        publicationYear: filters.publicationYear || null,
         status: filters.status || null,
         createdAtFrom: filters.createdAtFrom || null,
         createdAtTo: filters.createdAtTo || null,

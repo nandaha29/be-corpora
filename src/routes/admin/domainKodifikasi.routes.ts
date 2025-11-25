@@ -24,9 +24,9 @@ router
  * @route POST /api/admin/domain-kodifikasi
  * @desc Create new domain kodifikasi
  * @access Admin only
- * @body {string} kode - Domain code
- * @body {string} namaDomain - Domain name
- * @body {string} penjelasan - Description
+ * @body {string} code - Domain code
+ * @body {string} domainName - Domain name
+ * @body {string} explanation - Description
  * @body {number} subcultureId - Subculture ID
  * @body {string} status - Status (DRAFT, PUBLISHED, ARCHIVED)
  */
@@ -35,9 +35,9 @@ router.get('/filter', authenticateAdmin, domainController.filterDomainKodifikasi
 
 /**
  * @route GET /api/admin/domain-kodifikasi/filter
- * @desc Filter domain kodifikasi by kode and/or status with pagination
+ * @desc Filter domain kodifikasi by code and/or status with pagination
  * @access Admin only
- * @query {string} kode - Kode filter (partial match, case insensitive) - optional
+ * @query {string} code - Code filter (partial match, case insensitive) - optional
  * @query {string} status - Status filter (DRAFT, PUBLISHED, ARCHIVED) - optional
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
@@ -47,7 +47,7 @@ router.get('/search', authenticateAdmin, domainController.searchDomainKodifikasi
 
 /**
  * @route GET /api/admin/domain-kodifikasi/search
- * @desc Search domain kodifikasi by query across kode, namaDomain, and penjelasan
+ * @desc Search domain kodifikasi by query across code, domainName, and explanation
  * @access Admin only
  * @query {string} q - Search query (required)
  * @query {number} page - Page number (default: 1)
@@ -69,9 +69,9 @@ router.delete('/:id', authenticateAdmin, domainController.deleteDomain);
  * @desc Update domain kodifikasi by ID
  * @access Admin only
  * @param {number} id - Domain Kodifikasi ID
- * @body {string} kode - Domain code
- * @body {string} namaDomain - Domain name
- * @body {string} penjelasan - Description
+ * @body {string} code - Domain code
+ * @body {string} domainName - Domain name
+ * @body {string} explanation - Description
  * @body {number} subcultureId - Subculture ID
  * @body {string} status - Status
  */

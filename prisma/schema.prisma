@@ -15,7 +15,7 @@ model Admin {
   adminId   Int       @id @default(autoincrement()) @map("admin_id")
   username  String    @unique
   email     String    @unique
-  password  String    // hashed with bcrypt
+  password  String // hashed with bcrypt
   role      AdminRole @default(EDITOR)
   isActive  Boolean   @default(true) @map("is_active")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -29,119 +29,120 @@ model Admin {
 // ============================================
 
 model Culture {
-  cultureId        Int              @id @default(autoincrement()) @map("culture_id")
-  slug             String           @unique
-  namaBudaya       String           @map("nama_budaya")
-  pulauAsal        String           @map("pulau_asal")
-  provinsi         String           @map("provinsi")
-  kotaDaerah       String           @map("kota_daerah")
-  klasifikasi      String?
-  karakteristik    String?          @db.Text
-  statusKonservasi StatusKonservasi @default(TREATED) @map("status_konservasi")
-  latitude         Float?
-  longitude        Float?
-  status           StatusPublish    @default(DRAFT) @map("status")
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @updatedAt @map("updated_at")
-  subcultures      Subculture[]
-  cultureAssets    CultureAsset[]
+  cultureId          Int                @id @default(autoincrement()) @map("culture_id")
+  slug               String             @unique
+  cultureName        String             @map("culture_name")
+  originIsland       String             @map("origin_island")
+  province           String             @map("province")
+  cityRegion         String             @map("city_region")
+  classification     String?
+  characteristics    String?            @db.Text
+  conservationStatus StatusKonservasi   @default(TREATED) @map("conservation_status")
+  latitude           Float?
+  longitude          Float?
+  status             StatusPublish      @default(DRAFT) @map("status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  subcultures        Subculture[]
+  cultureAssets      CultureAsset[]
+  cultureReferences  CultureReference[]
 
   @@map("CULTURE")
 }
 
-
 model Subculture {
-  subcultureId          Int                 @id @default(autoincrement()) @map("subculture_id")
-  namaSubculture        String              @map("nama_subkultur")
-  slug                  String              @unique @map("slug")
-  salamKhas             String              @db.Text @map("salam_khas")
-  artiSalamKhas         String?             @map("arti_salam_khas")
-  penjelasan            String              @db.Text
-  cultureId             Int                 @map("culture_id")
-  status                StatusPublish       @default(DRAFT) @map("status")
-  statusPriorityDisplay StatusPriority?     @default(LOW) @map("status_priority_display")
-  statusKonservasi      StatusKonservasi    @default(TREATED) @map("status_konservasi")
-  createdAt             DateTime            @default(now()) @map("created_at")
-  updatedAt             DateTime            @updatedAt @map("updated_at")
-  domainKodifikasis     DomainKodifikasi[]
-  culture               Culture             @relation(fields: [cultureId], references: [cultureId])
+  subcultureId          Int                   @id @default(autoincrement()) @map("subculture_id")
+  slug                  String                @unique @map("slug")
+  subcultureName        String                @map("subculture_name")
+  traditionalGreeting   String                @map("traditional_greeting") @db.Text
+  greetingMeaning       String?               @map("greeting_meaning")
+  explanation           String                @db.Text
+  cultureId             Int                   @map("culture_id")
+  status                StatusPublish         @default(DRAFT) @map("status")
+  displayPriorityStatus StatusPriority?       @default(LOW) @map("display_priority_status")
+  conservationStatus    StatusKonservasi      @default(TREATED) @map("conservation_status")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  culture               Culture               @relation(fields: [cultureId], references: [cultureId])
+  codificationDomains   CodificationDomain[]
   subcultureAssets      SubcultureAsset[]
+  subcultureReferences  SubcultureReference[]
 
   @@map("SUBCULTURE")
 }
 
-model DomainKodifikasi {
-  domainKodifikasiId Int           @id @default(autoincrement()) @map("dk_id")
-  kode               String
-  namaDomain         String        @map("nama_domain")
-  penjelasan         String
-  subcultureId       Int           @map("subculture_id")
-  status             StatusPublish @default(DRAFT) @map("status")
-  createdAt          DateTime      @default(now()) @map("created_at")
-  updatedAt          DateTime      @updatedAt @map("updated_at")
-  subculture         Subculture    @relation(fields: [subcultureId], references: [subcultureId])
-  leksikons          Leksikon[]
+model CodificationDomain {
+  domainId     Int           @id @default(autoincrement()) @map("domain_id")
+  code         String
+  domainName   String        @map("domain_name")
+  explanation  String
+  subcultureId Int           @map("subculture_id")
+  status       StatusPublish @default(DRAFT) @map("status")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  subculture   Subculture    @relation(fields: [subcultureId], references: [subcultureId])
+  lexicons     Lexicon[]
 
-  @@map("DOMAIN_KODIFIKASI")
+  @@map("CODIFICATION_DOMAIN")
 }
 
-model Leksikon {
-  leksikonId         Int                 @id @default(autoincrement()) @map("leksikon_id")
-  slug               String              @unique @map("slug")
-  kataLeksikon       String              @map("kata_leksikon")
-  ipa                String              @map("ipa_international_phonetic_alphabet")
-  transliterasi      String
-  maknaEtimologi     String              @map("makna_etimologi")
-  maknaKultural      String              @map("makna_kultural")
-  commonMeaning      String              @map("common_meaning")
-  translation        String
-  varian             String?
-  translationVarians String?             @map("translation_varians")
-  deskripsiLain      String?             @db.Text @map("deskripsi_lain")
-  domainKodifikasiId Int                 @map("dk_id")
-  statusPreservasi   StatusKonservasi    @default(MAINTAINED) @map("status_preservasi")
-  contributorId      Int                 @map("contributor_id")
-  status             StatusPublish       @default(DRAFT) @map("status")
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt @map("updated_at")
-  contributor        Contributor         @relation(fields: [contributorId], references: [contributorId])
-  domainKodifikasi   DomainKodifikasi    @relation(fields: [domainKodifikasiId], references: [domainKodifikasiId])
-  leksikonAssets     LeksikonAsset[]
-  leksikonReferensis LeksikonReferensi[]
+model Lexicon {
+  lexiconId                        Int                @id @default(autoincrement()) @map("lexicon_id")
+  slug                             String             @unique @map("slug")
+  lexiconWord                      String             @map("lexicon_word")
+  ipaInternationalPhoneticAlphabet String             @map("ipa_international_phonetic_alphabet")
+  transliteration                  String
+  etymologicalMeaning              String             @map("etymological_meaning")
+  culturalMeaning                  String             @map("cultural_meaning")
+  commonMeaning                    String             @map("common_meaning")
+  translation                      String
+  variant                          String?
+  variantTranslations              String?            @map("variant_translations")
+  otherDescription                 String?            @map("other_description") @db.Text
+  domainId                         Int                @map("domain_id")
+  preservationStatus               StatusKonservasi   @default(MAINTAINED) @map("preservation_status")
+  contributorId                    Int                @map("contributor_id")
+  status                           StatusPublish      @default(DRAFT) @map("status")
+  createdAt                        DateTime           @default(now()) @map("created_at")
+  updatedAt                        DateTime           @updatedAt @map("updated_at")
+  contributor                      Contributor        @relation(fields: [contributorId], references: [contributorId])
+  codificationDomain               CodificationDomain @relation(fields: [domainId], references: [domainId])
+  lexiconAssets                    LexiconAsset[]
+  lexiconReferences                LexiconReference[]
 
-  @@map("LEKSIKON")
+  @@map("LEXICON")
 }
 
 model Contributor {
-  contributorId         Int                  @id @default(autoincrement()) @map("contributor_id")
-  namaContributor       String               @map("nama_contributor")
-  institusi             String
+  contributorId         Int                @id @default(autoincrement()) @map("contributor_id")
+  contributorName       String             @map("contributor_name")
+  institution           String
   email                 String
-  expertiseArea         String               @map("expertise_area")
-  contactInfo           String               @map("contact_info")
-  statusPriorityDisplay StatusPriority?      @default(LOW) @map("status_priority_display")
-  isCoordinator         Boolean              @default(false) @map("is_coordinator")
-  statusCoordinator     StatusCoordinator    @default(INACTIVE) @map("status_coordinator")
-  registeredAt          DateTime             @default(now()) @map("registered_at")
-  leksikons             Leksikon[]
+  expertiseArea         String             @map("expertise_area")
+  contactInfo           String             @map("contact_info")
+  displayPriorityStatus StatusPriority?    @default(LOW) @map("display_priority_status")
+  isCoordinator         Boolean            @default(false) @map("is_coordinator")
+  coordinatorStatus     StatusCoordinator  @default(INACTIVE) @map("coordinator_status")
+  registeredAt          DateTime           @default(now()) @map("registered_at")
+  lexicons              Lexicon[]
   contributorAssets     ContributorAsset[]
 
   @@map("CONTRIBUTOR")
 }
 
 model Asset {
-  assetId           Int                 @id @default(autoincrement()) @map("asset_id")
-  namaFile          String              @map("nama_file")
-  tipe              AssetType           @map("tipe")
-  penjelasan        String?             @db.Text @map("penjelasan")
-  url               String              @map("url")
-  fileSize          String?             @map("file_size")
-  hashChecksum      String?             @map("hash_checksum")
-  metadataJson      String?             @map("metadata_json")
-  status            StatusFile          @default(ARCHIVED) @map("status")
-  createdAt         DateTime            @default(now()) @map("created_at")
-  updatedAt         DateTime            @updatedAt @map("updated_at")
-  leksikonAssets    LeksikonAsset[]
+  assetId           Int                @id @default(autoincrement()) @map("asset_id")
+  fileName          String             @map("file_name")
+  fileType          AssetType          @map("file_type")
+  description       String?            @map("description") @db.Text
+  url               String             @map("url")
+  fileSize          String?            @map("file_size")
+  hashChecksum      String?            @map("hash_checksum")
+  metadataJson      String?            @map("metadata_json")
+  status            StatusFile         @default(ARCHIVED) @map("status")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  lexiconAssets     LexiconAsset[]
   subcultureAssets  SubcultureAsset[]
   cultureAssets     CultureAsset[]
   contributorAssets ContributorAsset[]
@@ -149,36 +150,39 @@ model Asset {
   @@map("ASSET")
 }
 
-model Referensi {
-  referensiId       Int                 @id @default(autoincrement()) @map("referensi_id")
-  judul             String
-  tipeReferensi     TipeReferensi       @map("tipe_referensi")
-  penjelasan        String?             @db.Text
-  url               String?
-  penulis           String?
-  tahunTerbit       String?             @map("tahun_terbit")
-  status            StatusPublish       @default(DRAFT)
-  createdAt         DateTime            @default(now()) @map("created_at")
-  updatedAt         DateTime            @updatedAt @map("updated_at")
-  leksikonReferensi LeksikonReferensi[]
+model Reference {
+  referenceId          Int                   @id @default(autoincrement()) @map("reference_id")
+  title                String                @map("title")
+  referenceType        ReferenceType         @map("reference_type")
+  description          String?               @map("description") @db.Text
+  url                  String?
+  authors              String?               @map("authors")
+  publicationYear      String?               @map("publication_year")
+  topicCategory        String?               @map("topic_category")
+  status               StatusPublish         @default(DRAFT)
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  lexiconReferences    LexiconReference[]
+  subcultureReferences SubcultureReference[]
+  cultureReferences    CultureReference[]
 
-  @@map("REFERENSI")
+  @@map("REFERENCE")
 }
 
 // ============================================
 // JUNCTION TABLES (Many-to-Many Relations)
 // ============================================
 
-model LeksikonAsset {
-  leksikonId Int               @map("leksikon_id")
-  assetId    Int               @map("asset_id")
-  assetRole  LeksikonAssetRole @map("asset_role")
-  createdAt  DateTime          @default(now()) @map("created_at")
-  asset      Asset             @relation(fields: [assetId], references: [assetId])
-  leksikon   Leksikon          @relation(fields: [leksikonId], references: [leksikonId])
+model LexiconAsset {
+  lexiconId Int               @map("lexicon_id")
+  assetId   Int               @map("asset_id")
+  assetRole LeksikonAssetRole @map("asset_role")
+  createdAt DateTime          @default(now()) @map("created_at")
+  asset     Asset             @relation(fields: [assetId], references: [assetId])
+  lexicon   Lexicon           @relation(fields: [lexiconId], references: [lexiconId])
 
-  @@id([leksikonId, assetId])
-  @@map("LEKSIKON_ASSETS")
+  @@id([lexiconId, assetId])
+  @@map("LEXICON_ASSETS")
 }
 
 model SubcultureAsset {
@@ -217,16 +221,47 @@ model ContributorAsset {
   @@map("CONTRIBUTOR_ASSETS")
 }
 
-model LeksikonReferensi {
-  leksikonId   Int               @map("leksikon_id")
-  referensiId  Int               @map("referensi_id")
-  citationNote CitationNoteType? @map("citation_note")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  leksikon     Leksikon          @relation(fields: [leksikonId], references: [leksikonId])
-  referensi    Referensi         @relation(fields: [referensiId], references: [referensiId])
+// ============================================
+// REFERENCE JUNCTION TABLES
+// ============================================
 
-  @@id([leksikonId, referensiId])
-  @@map("LEKSIKON_REFERENSI")
+model LexiconReference {
+  lexiconId    Int               @map("lexicon_id")
+  referenceId  Int               @map("reference_id")
+  citationNote CitationNoteType? @map("citation_note")
+  displayOrder Int?              @default(0) @map("display_order")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  lexicon      Lexicon           @relation(fields: [lexiconId], references: [lexiconId])
+  reference    Reference         @relation(fields: [referenceId], references: [referenceId])
+
+  @@id([lexiconId, referenceId])
+  @@map("LEXICON_REFERENCE")
+}
+
+model SubcultureReference {
+  subcultureId Int               @map("subculture_id")
+  referenceId  Int               @map("reference_id")
+  citationNote CitationNoteType? @map("citation_note")
+  displayOrder Int?              @default(0) @map("display_order")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  subculture   Subculture        @relation(fields: [subcultureId], references: [subcultureId])
+  reference    Reference         @relation(fields: [referenceId], references: [referenceId])
+
+  @@id([subcultureId, referenceId])
+  @@map("SUBCULTURE_REFERENCE")
+}
+
+model CultureReference {
+  cultureId    Int               @map("culture_id")
+  referenceId  Int               @map("reference_id")
+  citationNote CitationNoteType? @map("citation_note")
+  displayOrder Int?              @default(0) @map("display_order")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  culture      Culture           @relation(fields: [cultureId], references: [cultureId])
+  reference    Reference         @relation(fields: [referenceId], references: [referenceId])
+
+  @@id([cultureId, referenceId])
+  @@map("CULTURE_REFERENCE")
 }
 
 // ============================================
@@ -245,16 +280,19 @@ enum StatusCoordinator {
   ALUMNI
 }
 
-enum TipeReferensi {
+enum ReferenceType {
   JOURNAL
   BOOK
   ARTICLE
-  WEBSITES
+  WEBSITE
   REPORT
+  THESIS
+  DISSERTATION
+  FIELD_NOTE
 }
 
 enum AssetType {
-  FOTO
+  PHOTO
   AUDIO
   VIDEO
   MODEL_3D
@@ -271,6 +309,7 @@ enum StatusFile {
   PROCESSING
   ARCHIVED
   CORRUPTED
+  PUBLISHED
 }
 
 enum StatusKonservasi {
@@ -281,22 +320,28 @@ enum StatusKonservasi {
 }
 
 enum CitationNoteType {
-  RESOURCE
+  DIRECT_QUOTE
+  PARAPHRASE
+  INTERPRETATION
+  FIELD_OBSERVATION
+  ORAL_TRADITION
+  SECONDARY_SOURCE
+  GENERAL_REFERENCE
 }
 
 enum StatusPriority {
-  HIGH       
-  MEDIUM     
-  LOW        
-  HIDDEN     
+  HIGH
+  MEDIUM
+  LOW
+  HIDDEN
 }
 
 // ============================================
 // ASSET ROLE ENUMS
 // ============================================
 
-// CULTURE tidak pakai ASSETS ROLE -> jadi ambil fotonya dari HIGHLIGHT di SUBCULTURE (jadi bisa dihapus)
 enum CultureAssetRole {
+  HIGHLIGHT
   THUMBNAIL
   GALLERY
   BANNER
@@ -322,7 +367,7 @@ enum LeksikonAssetRole {
 
 enum ContributorAssetRole {
   LOGO
-  FOTO_DIRI
+  SELF_PHOTO
   SIGNATURE
   CERTIFICATE
   GALLERY

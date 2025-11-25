@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as referenceService from "../../services/admin/reference.service.js";
-import { createReferensiSchema, updateReferensiSchema } from "../../lib/validators.js";
+import { createReferenceSchema, updateReferenceSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
 
 // Get All
@@ -27,7 +27,8 @@ export const getReferenceById = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
-      message: "Success",
+      success: true,
+      message: "Reference retrieved successfully",
       data: reference,
     });
     return;
@@ -40,10 +41,11 @@ export const getReferenceById = async (req: Request, res: Response) => {
 // Create
 export const createReference = async (req: Request, res: Response) => {
   try {
-    const validatedData = createReferensiSchema.parse(req.body);
+    const validatedData = createReferenceSchema.parse(req.body);
     const newReference = await referenceService.createReference(validatedData);
 
     res.status(201).json({
+      success: true,
       message: "Reference created successfully",
       data: newReference,
     });
@@ -56,7 +58,8 @@ export const createReference = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(500).json({ message: "Failed to create reference" });
+    // console.error('Create reference error:', error);
+    res.status(500).json({ message: "Failed to create reference", error:error});
     return;
   }
 };
@@ -65,10 +68,11 @@ export const createReference = async (req: Request, res: Response) => {
 export const updateReference = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const validatedData = updateReferensiSchema.parse(req.body);
+    const validatedData = updateReferenceSchema.parse(req.body);
     const updatedReference = await referenceService.updateReference(Number(id), validatedData);
 
     res.status(200).json({
+      success: true,
       message: "Reference updated successfully",
       data: updatedReference,
     });
@@ -96,7 +100,10 @@ export const deleteReference = async (req: Request, res: Response) => {
     const { id } = req.params;
     await referenceService.deleteReference(Number(id));
 
-    res.status(200).json({ message: "Reference deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Reference deleted successfully"
+    });
     return;
   } catch (error) {
     if (error instanceof Error && error.message.includes("Record to delete not found")) {
@@ -149,7 +156,11 @@ export const searchReferensi = async (req: Request, res: Response) => {
 
     const result = await referenceService.searchReferensi(keyword, page, limit);
 
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: `Found references matching "${keyword}"`,
+      ...result,
+    });
     return;
 
   } catch (error) {
@@ -161,8 +172,8 @@ export const searchReferensi = async (req: Request, res: Response) => {
 // ✅ FILTER references by type, year, status, createdAt
 export const filterReferences = async (req: Request, res: Response) => {
   try {
-    const tipeReferensi = req.query.tipeReferensi as string | undefined;
-    const tahunTerbit = req.query.tahunTerbit as string | undefined;
+    const referenceType = req.query.referenceType as string | undefined;
+    const publicationYear = req.query.publicationYear as string | undefined;
     const status = req.query.status as string | undefined;
     const createdAtFrom = req.query.createdAtFrom as string | undefined;
     const createdAtTo = req.query.createdAtTo as string | undefined;
@@ -170,8 +181,8 @@ export const filterReferences = async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
     const result = await referenceService.filterReferences({
-      tipeReferensi,
-      tahunTerbit,
+      referenceType,
+      publicationYear,
       status,
       createdAtFrom,
       createdAtTo,
@@ -179,7 +190,11 @@ export const filterReferences = async (req: Request, res: Response) => {
       limit,
     });
 
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'References filtered successfully',
+      ...result,
+    });
     return;
   } catch (error) {
     console.error('Filter error:', error);

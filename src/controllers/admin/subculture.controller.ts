@@ -18,63 +18,94 @@ export const getSubcultureById = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const subculture = await subcultureService.getSubcultureById(id);
     if (!subculture) {
-      return res.status(404).json({ error: "Subculture not found" });
+      return res.status(404).json({ success: false, message: "Subculture not found" });
     }
-    return res.json(subculture);
+    return res.status(200).json({
+      success: true,
+      message: "Subculture retrieved successfully",
+      data: subculture
+    });
   } catch (error) {
-    return res.status(500).json({ error: "Failed to fetch subculture" });
+    return res.status(500).json({ success: false, message: "Failed to fetch subculture" });
   }
 };
 
 export const createSubculture = async (req: Request, res: Response) => {
   try {
-    const parsed = createSubcultureSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error });
-    }
-
-    const subculture = await subcultureService.createSubculture(parsed.data);
-    return res.status(201).json(subculture);
+    const validatedData = createSubcultureSchema.parse(req.body);
+    const newSubculture = await subcultureService.createSubculture(validatedData);
+    res.status(201).json({
+      success: true,
+      message: 'Subculture created successfully',
+      data: newSubculture,
+    });
+    return;
   } catch (error) {
-    return res.status(500).json({ error: error });
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: error.issues,
+      });
+    }
+    res.status(500).json({ success: false, message: 'Failed to create subculture', error: error });
+    return;
   }
 };
+
 
 export const updateSubculture = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    console.log('UpdateSubculture controller called with id:', id);
-    console.log('Request body:', req.body);
-    
+
     if (Number.isNaN(id)) {
-      return res.status(400).json({ error: "Invalid subculture ID" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid subculture ID"
+      });
     }
 
-    const parsed = updateSubcultureSchema.safeParse(req.body);
-    console.log('Validation result:', parsed);
-    
-    if (!parsed.success) {
-      console.log('Validation errors:', parsed.error);
-      return res.status(400).json({ error: parsed.error });
-    }
+    const validatedData = updateSubcultureSchema.parse(req.body);
+    const updatedSubculture = await subcultureService.updateSubculture(id, validatedData);
 
-    console.log('Parsed data:', parsed.data);
-    const subculture = await subcultureService.updateSubculture(id, parsed.data);
-    return res.json(subculture);
+    res.status(200).json({
+      success: true,
+      message: 'Subculture updated successfully',
+      data: updatedSubculture,
+    });
+    return;
   } catch (error) {
-    console.error('Error updating subculture:', error);
+    // console.error('Error updating subculture:', error);
+
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: error.issues,
+      });
+    }
 
     // Handle specific Prisma errors
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
-        return res.status(404).json({ error: "Subculture not found" });
+        return res.status(404).json({
+          success: false,
+          message: "Subculture not found"
+        });
       }
       if (error.code === 'P2002') {
-        return res.status(409).json({ error: "Unique constraint violation" });
+        return res.status(409).json({
+          success: false,
+          message: "Unique constraint violation"
+        });
       }
     }
 
-    return res.status(500).json({ error: "Failed to update subculture", details: (error as Error).message });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update subculture'
+    });
+    return;
   }
 };
 
@@ -82,9 +113,29 @@ export const deleteSubculture = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await subcultureService.deleteSubculture(id);
-    return res.json({ message: "Subculture deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Subculture deleted successfully"
+    });
+    return;
   } catch (error) {
-    return res.status(500).json({ error: "Failed to delete subculture" });
+    console.error('Error deleting subculture:', error);
+
+    // Handle specific Prisma errors
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return res.status(404).json({
+          success: false,
+          message: "Subculture not found"
+        });
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete subculture"
+    });
+    return;
   }
 };
 
@@ -92,13 +143,17 @@ export const deleteSubculture = async (req: Request, res: Response) => {
 export const getSubcultureAssets = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
+    if (Number.isNaN(id)) return res.status(400).json({ success: false, message: 'Invalid id' });
 
     const assets = await subcultureService.getSubcultureAssets(id);
-    return res.status(200).json(assets);
+    return res.status(200).json({
+      success: true,
+      message: 'Subculture assets retrieved successfully',
+      data: assets
+    });
   } catch (error) {
     console.error('Failed to get subculture assets:', error);
-    return res.status(500).json({ message: 'Failed to retrieve assets' });
+    return res.status(500).json({ success: false, message: 'Failed to retrieve assets' });
   }
 };
 
@@ -158,11 +213,15 @@ export const getAllSubculturesPaginated = async (req: Request, res: Response) =>
     const { subcultures, total } = await subcultureService.getAllSubculturesPaginated(skip, limit);
 
     res.status(200).json({
-      status: "success",
-      page,
-      limit,
-      total,
+      success: true,
+      message: "Subcultures retrieved successfully",
       data: subcultures,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Error fetching paginated subcultures:", error);
@@ -185,7 +244,8 @@ export const getSubculturesByCulture = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Subcultures retrieved successfully",
       data: subcultures,
     });
   } catch (error) {
@@ -209,7 +269,11 @@ export const getFilteredSubcultures = async (req: Request, res: Response) => {
 
     const result = await subcultureService.getFilteredSubcultures(filters);
 
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: "Subcultures filtered successfully",
+      ...result,
+    });
   } catch (error) {
     console.error("Error fetching filtered subcultures:", error);
     res.status(500).json({ error: "Failed to fetch filtered subcultures" });
@@ -224,7 +288,8 @@ export const getAssignedAssets = async (req: Request, res: Response) => {
 
     const assets = await subcultureService.getAssignedAssets(subcultureId);
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Assigned assets retrieved successfully",
       data: assets,
     });
   } catch (error) {
@@ -241,7 +306,8 @@ export const getAssignedReferences = async (req: Request, res: Response) => {
 
     const references = await subcultureService.getAssignedReferences(subcultureId);
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Assigned references retrieved successfully",
       data: references,
     });
   } catch (error) {
@@ -263,7 +329,8 @@ export const searchAssetsInSubculture = async (req: Request, res: Response) => {
 
     const assets = await subcultureService.searchAssetsInSubculture(subcultureId, searchQuery.trim());
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Assets searched successfully",
       data: assets,
     });
   } catch (error) {
@@ -285,7 +352,8 @@ export const searchReferencesInSubculture = async (req: Request, res: Response) 
 
     const references = await subcultureService.searchReferencesInSubculture(subcultureId, searchQuery.trim());
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "References searched successfully",
       data: references,
     });
   } catch (error) {
@@ -302,7 +370,8 @@ export const getAssetUsage = async (req: Request, res: Response) => {
 
     const usage = await subcultureService.getAssetUsage(assetId);
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Asset usage retrieved successfully",
       data: usage,
     });
   } catch (error) {
@@ -311,15 +380,16 @@ export const getAssetUsage = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/v1/admin/references/:referensiId/usage
+// GET /api/v1/admin/references/:referenceId/usage
 export const getReferenceUsage = async (req: Request, res: Response) => {
   try {
-    const referensiId = Number(req.params.referensiId);
-    if (Number.isNaN(referensiId)) return res.status(400).json({ message: 'Invalid reference ID' });
+    const referenceId = Number(req.params.referenceId);
+    if (Number.isNaN(referenceId)) return res.status(400).json({ message: 'Invalid reference ID' });
 
-    const usage = await subcultureService.getReferenceUsage(referensiId);
+    const usage = await subcultureService.getReferenceUsage(referenceId);
     return res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Reference usage retrieved successfully",
       data: usage,
     });
   } catch (error) {
@@ -332,14 +402,15 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
 export const addReferenceToSubculture = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
-    const { referensiId, leksikonId } = req.body;
+    const { referenceId, lexiconId } = req.body;
 
     if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
-    if (!referensiId) return res.status(400).json({ message: 'referensiId is required' });
+    if (!referenceId) return res.status(400).json({ message: 'referenceId is required' });
 
-    const result = await subcultureService.addReferenceToSubculture(subcultureId, referensiId, leksikonId);
+    const result = await subcultureService.addReferenceToSubculture(subcultureId, referenceId, lexiconId);
     return res.status(201).json({
       status: "success",
+      message: 'Add references successfully',
       data: result,
     });
   } catch (error) {
@@ -352,7 +423,7 @@ export const addReferenceToSubculture = async (req: Request, res: Response) => {
 export const filterSubcultureAssets = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
-    const tipe = req.query.tipe as string | undefined;
+    const type = req.query.type as string | undefined;
     const assetRole = req.query.assetRole as string | undefined;
     const status = req.query.status as string | undefined;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
@@ -361,14 +432,18 @@ export const filterSubcultureAssets = async (req: Request, res: Response) => {
     if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
 
     const result = await subcultureService.filterSubcultureAssets(subcultureId, {
-      tipe,
+      type,
       assetRole,
       status,
       page,
       limit,
     });
 
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: "Subculture assets filtered successfully",
+      ...result,
+    });
   } catch (error) {
     console.error('Failed to filter subculture assets:', error);
     return res.status(500).json({ message: 'Failed to filter assets' });
@@ -379,8 +454,8 @@ export const filterSubcultureAssets = async (req: Request, res: Response) => {
 export const filterSubcultureReferences = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
-    const tipeReferensi = req.query.tipeReferensi as string | undefined;
-    const tahunTerbit = req.query.tahunTerbit as string | undefined;
+    const referenceType = req.query.referenceType as string | undefined;
+    const publicationYear = req.query.publicationYear as string | undefined;
     const status = req.query.status as string | undefined;
     const citationNote = req.query.citationNote as string | undefined;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
@@ -389,15 +464,19 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
     if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
 
     const result = await subcultureService.filterSubcultureReferences(subcultureId, {
-      tipeReferensi,
-      tahunTerbit,
+      referenceType,
+      publicationYear,
       status,
       citationNote,
       page,
       limit,
     });
 
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: "Subculture references filtered successfully",
+      ...result,
+    });
   } catch (error) {
     console.error('Failed to filter subculture references:', error);
     return res.status(500).json({ message: 'Failed to filter references' });

@@ -33,9 +33,9 @@ router.get('/search', authenticateAdmin, assetController.searchAssets);
  * @route GET /api/admin/assets/filter
  * @desc Filter assets by type and/or status with pagination
  * @access Admin only
- * @query {string} tipe - Filter by type (FOTO, AUDIO, VIDEO, MODEL_3D)
- * @query {string} status - Filter by status (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED)
- * @query {string} sortBy - Sort by field (createdAt, namaFile, etc.) (default: createdAt)
+ * @query {string} fileType - Filter by type (PHOTO, AUDIO, VIDEO, MODEL_3D)
+ * @query {string} status - Filter by status (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED, PUBLISHED)
+ * @query {string} sortBy - Sort by field (createdAt, fileName, etc.) (default: createdAt)
  * @query {string} order - Sort order (asc, desc) (default: desc)
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
@@ -54,15 +54,15 @@ router.get('/:id', authenticateAdmin, assetController.getAssetById);
  * @route POST /api/admin/assets/upload
  * @desc Upload single asset file
  * @access Admin only
- * @param {file} file - Asset file (FOTO, AUDIO, VIDEO, MODEL_3D)
- * @body {string} namaFile - File name
- * @body {string} tipe - File type (FOTO, AUDIO, VIDEO, MODEL_3D)
- * @body {string} penjelasan - Description (optional)
+ * @param {file} file - Asset file (PHOTO, AUDIO, VIDEO, MODEL_3D)
+ * @body {string} fileName - File name
+ * @body {string} fileType - File type (PHOTO, AUDIO, VIDEO, MODEL_3D)
+ * @body {string} description - Description (optional)
  * @body {string} url - URL (optional, required for VIDEO and MODEL_3D)
  * @body {string} fileSize - File size (optional)
  * @body {string} hashChecksum - Hash checksum (optional)
  * @body {string} metadataJson - Metadata JSON (optional)
- * @body {string} status - Status (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED)
+ * @body {string} status - Status (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED, PUBLISHED)
  */
 router.post('/upload', authenticateAdmin, upload.single('file'), assetController.createAsset);
 
@@ -72,9 +72,9 @@ router.post('/upload', authenticateAdmin, upload.single('file'), assetController
  * @access Admin only
  * @param {number} id - Asset ID
  * @param {file} file - New asset file (optional)
- * @body {string} namaFile - File name
- * @body {string} tipe - File type
- * @body {string} penjelasan - Description (optional)
+ * @body {string} fileName - File name
+ * @body {string} fileType - File type
+ * @body {string} description - Description (optional)
  * @body {string} url - URL (optional)
  * @body {string} fileSize - File size (optional)
  * @body {string} hashChecksum - Hash checksum (optional)
@@ -101,10 +101,14 @@ router.delete('/:id', authenticateAdmin, assetController.deleteAsset);
 router.post('/bulk-upload', authenticateAdmin, upload.array('files'), assetController.bulkUploadAssets);
 
 // ============================================
-// PUBLIC ASSET ENDPOINTS (TODO: Implement status-based access)
+// ✅ PUBLIC ASSET ENDPOINTS IMPLEMENTED
 // ============================================
+// Status: Implemented in routes/public/asset.routes.ts
+// Route: GET /api/v1/public/assets/:id/file
+// Access: Public (no authentication required)
+// Requirements: Asset status must be 'PUBLISHED'
 
-// TODO: Implement public access for published assets
 // router.get('/public/assets/:id/file', assetController.getPublicAssetFile);
+
 
 export default router;

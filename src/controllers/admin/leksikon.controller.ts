@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
-import { createLeksikonSchema, updateLeksikonSchema, createLeksikonAssetSchema, createLeksikonReferensiSchema, updateCitationNoteSchema } from '../../lib/validators.js';
+import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, createLexiconReferenceSchema, updateCitationNoteSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { LeksikonAssetRole } from '@prisma/client';
@@ -24,7 +24,11 @@ export const getLeksikonById = async (req: Request, res: Response) => {
 
     const item = await leksikonService.getLeksikonById(id);
     if (!item) return res.status(404).json({ message: 'Leksikon not found' });
-    return res.status(200).json(item);
+    return res.status(200).json({
+      success: true,
+      message: 'Leksikon retrieved successfully',
+      data: item,
+    });
   } catch (error) {
     console.error('Failed to get leksikon by id:', error);
     return res.status(500).json({ message: 'Failed to retrieve leksikon', details: error });
@@ -34,9 +38,13 @@ export const getLeksikonById = async (req: Request, res: Response) => {
 // POST /api/leksikons
 export const createLeksikon = async (req: Request, res: Response) => {
   try {
-    const validated = createLeksikonSchema.parse(req.body);
+    const validated = createLexiconSchema.parse(req.body);
     const created = await leksikonService.createLeksikon(validated);
-    return res.status(201).location(`/api/leksikons/${created.leksikonId}`).json(created);
+    return res.status(201).location(`/api/leksikons/${created.lexiconId}`).json({
+      success: true,
+      message: 'Leksikon created successfully',
+      data: created,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({ message: 'Validation failed', errors: error });
@@ -58,9 +66,13 @@ export const updateLeksikon = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
 
-    const validated = updateLeksikonSchema.parse(req.body);
+    const validated = updateLexiconSchema.parse(req.body);
     const updated = await leksikonService.updateLeksikon(id, validated);
-    return res.status(200).json(updated);
+    return res.status(200).json({
+      success: true,
+      message: 'Leksikon updated successfully',
+      data: updated,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({ message: 'Validation failed', errors: error });
@@ -151,15 +163,15 @@ export const addAssetToLeksikon = async (req: Request, res: Response) => {
     const { assetId, assetRole } = req.body;
 
     // Validasi input dengan Zod
-    const validated = createLeksikonAssetSchema.parse({
-      leksikonId,
+    const validated = createLexiconAssetSchema.parse({
+      lexiconId: leksikonId,
       assetId,
       assetRole,
     });
 
     // Lakukan upsert di service agar tidak duplikat
     const result = await leksikonService.addAssetToLeksikon(
-      validated.leksikonId,
+      validated.lexiconId,
       validated.assetId,
       validated.assetRole
     );
@@ -258,16 +270,16 @@ export const addReferenceToLeksikon = async (req: Request, res: Response) => {
     if (Number.isNaN(leksikonId))
       return res.status(400).json({ message: 'Invalid leksikon ID' });
 
-    const { referensiId, citationNote } = req.body;
-    const validated = createLeksikonReferensiSchema.parse({
-      leksikonId,
-      referensiId,
+    const { referenceId, citationNote } = req.body;
+    const validated = createLexiconReferenceSchema.parse({
+      lexiconId: leksikonId,
+      referenceId,
       citationNote,
     });
 
     const result = await leksikonService.addReferenceToLeksikon(
-      validated.leksikonId,
-      validated.referensiId,
+      validated.lexiconId,
+      validated.referenceId,
       validated.citationNote
     );
 
@@ -356,15 +368,15 @@ export const updateAssetRole = async (req: Request, res: Response) => {
 export const updateCitationNote = async (req: Request, res: Response) => {
   try {
     const leksikonId = Number(req.params.id);
-    const referensiId = Number(req.params.referenceId);
+    const referenceId = Number(req.params.referenceId);
 
-    if (Number.isNaN(leksikonId) || Number.isNaN(referensiId))
+    if (Number.isNaN(leksikonId) || Number.isNaN(referenceId))
       return res.status(400).json({ message: 'Invalid IDs' });
 
     const validated = updateCitationNoteSchema.parse(req.body);
     const result = await leksikonService.updateCitationNote(
       leksikonId,
-      referensiId,
+      referenceId,
       validated.citationNote
     );
 
@@ -393,7 +405,12 @@ export const getAllLeksikonsPaginated = async (req: Request, res: Response) => {
 
   try {
     const result = await leksikonService.getAllLeksikonsPaginated(page, limit);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'Leksikons retrieved successfully',
+      data: result.data,
+      pagination: result.meta,
+    });
     return;
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch leksikons", error });
@@ -440,7 +457,12 @@ export const filterLeksikons = async (req: Request, res: Response) => {
       limit,
     });
 
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'Leksikons filtered successfully',
+      data: result.data,
+      pagination: result.meta,
+    });
     return;
   } catch (error) {
     res.status(500).json({ message: "Failed to filter leksikons", error });
@@ -458,7 +480,11 @@ export const updateLeksikonStatus = async (req: Request, res: Response) => {
 
   try {
     const updated = await leksikonService.updateLeksikonStatus(id, status);
-    res.status(200).json({ message: "Status updated successfully", data: updated });
+    res.status(200).json({
+      success: true,
+      message: 'Leksikon status updated successfully',
+      data: updated,
+    });
     return;
   } catch (error) {
     res.status(500).json({ message: "Failed to update leksikon status", error });

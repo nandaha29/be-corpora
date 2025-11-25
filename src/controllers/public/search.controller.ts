@@ -1,23 +1,26 @@
 import { Request, Response } from 'express';
 import * as searchService from '../../services/public/search.service.js';
+import { SearchQuerySchema } from '../../lib/public.validator.js';
+import { z } from 'zod';
 
 // Global search across all content
 export const globalSearch = async (req: Request, res: Response) => {
   try {
-    const { q: query, type, culture_id, subculture_id, domain_id } = req.query;
+    const querySchema = z.object({
+      q: z.string().min(1, 'Query parameter "q" is required'),
+      type: z.string().optional(),
+      culture_id: z.string().optional().transform((v) => v ? parseInt(v) : undefined),
+      subculture_id: z.string().optional().transform((v) => v ? parseInt(v) : undefined),
+      domain_id: z.string().optional().transform((v) => v ? parseInt(v) : undefined),
+    });
 
-    if (!query || typeof query !== 'string') {
-      return res.status(400).json({
-        success: false,
-        message: 'Query parameter "q" is required',
-      });
-    }
+    const { q: query, type, culture_id, subculture_id, domain_id } = querySchema.parse(req.query);
 
     const filters: any = {};
     if (type) filters.type = type;
-    if (culture_id) filters.culture_id = parseInt(culture_id as string);
-    if (subculture_id) filters.subculture_id = parseInt(subculture_id as string);
-    if (domain_id) filters.domain_id = parseInt(domain_id as string);
+    if (culture_id) filters.culture_id = culture_id;
+    if (subculture_id) filters.subculture_id = subculture_id;
+    if (domain_id) filters.domain_id = domain_id;
 
     const results = await searchService.globalSearch(query, filters);
 
@@ -27,11 +30,17 @@ export const globalSearch = async (req: Request, res: Response) => {
       data: results,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: error.issues,
+      });
+    }
     console.error('Global search error:', error);
     return res.status(500).json({
       success: false,
       message: 'Search failed',
-      details: error instanceof Error ? error.message : error,
     });
   }
 };
@@ -39,14 +48,7 @@ export const globalSearch = async (req: Request, res: Response) => {
 // Search specifically in lexicon fields
 export const searchLeksikons = async (req: Request, res: Response) => {
   try {
-    const { q: query } = req.query;
-
-    if (!query || typeof query !== 'string') {
-      return res.status(400).json({
-        success: false,
-        message: 'Query parameter "q" is required',
-      });
-    }
+    const { q: query } = SearchQuerySchema.pick({ q: true }).parse(req.query);
 
     const results = await searchService.searchLeksikons(query);
 
@@ -56,11 +58,17 @@ export const searchLeksikons = async (req: Request, res: Response) => {
       data: results,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: error.issues,
+      });
+    }
     console.error('Lexicon search error:', error);
     return res.status(500).json({
       success: false,
       message: 'Lexicon search failed',
-      details: error instanceof Error ? error.message : error,
     });
   }
 };
@@ -68,23 +76,18 @@ export const searchLeksikons = async (req: Request, res: Response) => {
 // Advanced search with multiple parameters
 export const advancedSearch = async (req: Request, res: Response) => {
   try {
-    const { kata, makna, dk_id, culture_id, subculture_id, status } = req.query;
+    const advancedSearchSchema = z.object({
+      kata: z.string().optional(),
+      makna: z.string().optional(),
+      dk_id: z.string().optional().transform((v) => v ? parseInt(v) : undefined),
+      culture_id: z.string().optional().transform((v) => v ? parseInt(v) : undefined),
+      subculture_id: z.string().optional().transform((v) => v ? parseInt(v) : undefined),
+      status: z.string().optional(),
+    }).refine((data) => data.kata || data.makna || data.dk_id || data.culture_id || data.subculture_id || data.status, {
+      message: 'At least one search parameter is required (kata, makna, dk_id, culture_id, subculture_id, or status)',
+    });
 
-    const params: any = {};
-    if (kata) params.kata = kata as string;
-    if (makna) params.makna = makna as string;
-    if (dk_id) params.dk_id = parseInt(dk_id as string);
-    if (culture_id) params.culture_id = parseInt(culture_id as string);
-    if (subculture_id) params.subculture_id = parseInt(subculture_id as string);
-    if (status) params.status = status as string;
-
-    // At least one search parameter is required
-    if (!kata && !makna && !dk_id && !culture_id && !subculture_id && !status) {
-      return res.status(400).json({
-        success: false,
-        message: 'At least one search parameter is required (kata, makna, dk_id, culture_id, subculture_id, or status)',
-      });
-    }
+    const params = advancedSearchSchema.parse(req.query);
 
     const results = await searchService.advancedSearch(params);
 
@@ -94,11 +97,17 @@ export const advancedSearch = async (req: Request, res: Response) => {
       data: results,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: error.issues,
+      });
+    }
     console.error('Advanced search error:', error);
     return res.status(500).json({
       success: false,
       message: 'Advanced search failed',
-      details: error instanceof Error ? error.message : error,
     });
   }
 };
@@ -310,3 +319,34 @@ export const searchLexicon = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Search cultures
+export const searchCultures = async (req: Request, res: Response) => {
+  try {
+    const { q: query } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Query parameter "q" is required',
+      });
+    }
+
+    const result = await searchService.searchCultures(query, page, limit);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Culture search completed successfully',
+      ...result,
+    });
+  } catch (error) {
+    console.error('Culture search error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Culture search failed',
+      details: error instanceof Error ? error.message : error,
+    });
+  }
+};;

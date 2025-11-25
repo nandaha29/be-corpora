@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import { AdminRegisterInput, AdminLoginInput } from '../../lib/validators.js';
+import { AdminRegisterInput, AdminLoginInput, UpdateAdminInput } from '../../lib/validators.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { AdminRole } from '@prisma/client';
@@ -43,6 +43,7 @@ export const registerAdmin = async (data: AdminRegisterInput) => {
         email: data.email,
         password: hashedPassword,
         role: data.role || AdminRole.EDITOR,
+        isActive: data.isActive ?? true,
       },
       select: {
         adminId: true,
@@ -156,6 +157,61 @@ export const updateAdminStatus = async (adminId: number, isActive: boolean) => {
   });
 
   return admin;
+};
+
+export const updateAdmin = async (adminId: number, data: UpdateAdminInput) => {
+  // Check if email or username already exists if updating them
+  if (data.email || data.username) {
+    const existingAdmin = await prisma.admin.findFirst({
+      where: {
+        OR: [
+          data.email ? { email: data.email } : {},
+          data.username ? { username: data.username } : {},
+        ].filter(obj => Object.keys(obj).length > 0),
+        NOT: { adminId }
+      }
+    });
+
+    if (existingAdmin) {
+      if (existingAdmin.email === data.email) {
+        const err = new Error('Email already registered');
+        (err as any).code = 'EMAIL_EXISTS';
+        throw err;
+      }
+      if (existingAdmin.username === data.username) {
+        const err = new Error('Username already taken');
+        (err as any).code = 'USERNAME_EXISTS';
+        throw err;
+      }
+    }
+  }
+
+  try {
+    const admin = await prisma.admin.update({
+      where: { adminId },
+      data,
+      select: {
+        adminId: true,
+        username: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    return admin;
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        const err = new Error('Email or username already exists');
+        (err as any).code = 'DUPLICATE_ENTRY';
+        throw err;
+      }
+    }
+    throw error;
+  }
 };
 
 export const changeAdminPassword = async (adminId: number, newPassword: string) => {

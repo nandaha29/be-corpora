@@ -24,7 +24,7 @@ async function populateSlugs() {
     console.log(`Found ${subcultures.length} subcultures without slug`);
 
     for (const subculture of subcultures) {
-      const slug = generateSlug(subculture.namaSubculture);
+      const slug = generateSlug(subculture.subcultureName);
 
       // Check if slug already exists
       const existing = await prisma.subculture.findUnique({
@@ -42,7 +42,7 @@ async function populateSlugs() {
         data: { slug: finalSlug },
       });
 
-      console.log(`Updated ${subculture.namaSubculture} -> ${finalSlug}`);
+      console.log(`Updated ${subculture.subcultureName} -> ${finalSlug}`);
     }
 
     console.log("Slug population completed!");
