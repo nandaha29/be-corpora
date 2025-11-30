@@ -16,6 +16,7 @@ const router = Router();
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 10)
  * @returns {object} List of lexicons with pagination metadata
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan untuk daftar semua leksikon tanpa filter
  */
 router.get('/', lexiconController.getAllLexicons);
 
@@ -25,6 +26,7 @@ router.get('/', lexiconController.getAllLexicons);
  * @access Public
  * @param {string|number} identifier - Lexicon term (slug) or ID
  * @returns {object} Complete lexicon details including assets, references, and related data
+ * @note DIGUNAKAN: Frontend menggunakan untuk detail leksikon
  */
 router.get('/:identifier', lexiconController.getLexiconDetail);
 

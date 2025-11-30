@@ -12,6 +12,7 @@ const router = Router();
  * @desc Get landing page data including featured content, statistics, and highlights
  * @access Public
  * @returns {object} Landing page data with cultures, subcultures, lexicons, and statistics
+ * @note DIGUNAKAN: Frontend memanggil /api/v1/public/landing (mismatch versi API - perlu sinkronisasi)
  */
 router.get('/', landingPageController.getLandingPage);
 
@@ -24,6 +25,7 @@ router.get('/', landingPageController.getLandingPage);
  * @body {string} subject - Contact subject
  * @body {string} message - Contact message
  * @returns {object} Success confirmation
+ * @note TIDAK DIGUNAKAN: Tidak ada form kontak di frontend; route dan controller dikomentari
  */
 router.post('/contact', landingPageController.submitContactForm);
 

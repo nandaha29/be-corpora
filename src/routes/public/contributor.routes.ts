@@ -14,6 +14,7 @@ const router = Router();
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  * @returns {object} List of active coordinators with basic info
+ * @note DIGUNAKAN: Frontend menggunakan untuk daftar kontributor dengan pagination
  */
 router.get('/', contributorController.getPublishedContributors);
 
@@ -23,6 +24,7 @@ router.get('/', contributorController.getPublishedContributors);
  * @access Public
  * @param {number} contributor_id - Contributor ID
  * @returns {object} Contributor details including assets
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan di kode frontend
  */
 router.get('/:contributor_id', contributorController.getPublishedContributorById);
 

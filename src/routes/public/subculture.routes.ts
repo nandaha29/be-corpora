@@ -16,6 +16,7 @@ const router = Router();
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 10)
  * @returns {object} Subculture gallery with assets, statistics, and pagination
+ * @note DIGUNAKAN: Frontend menggunakan di page.tsx untuk galeri subkultur
  */
 router.get('/', subcultureController.getSubculturesGallery);
 
@@ -26,6 +27,7 @@ router.get('/', subcultureController.getSubculturesGallery);
  * @param {string} identifier - Subculture slug or ID
  * @query {string} searchQuery - Optional search within subculture content
  * @returns {object} Complete subculture details including domains, lexicons, and assets
+ * @note DIGUNAKAN: Frontend menggunakan di page.tsx untuk detail subkultur
  */
 router.get('/:identifier', subcultureController.getSubcultureDetail);
 
@@ -38,6 +40,7 @@ router.get('/:identifier', subcultureController.getSubcultureDetail);
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 10)
  * @returns {object} Lexicons from the subculture with pagination
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan spesifik untuk leksikon dalam subkultur
  */
 router.get('/:identifier/lexicon', subcultureController.getSubcultureLexicons);
 

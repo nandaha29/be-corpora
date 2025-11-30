@@ -16,6 +16,7 @@ const router = Router();
  * @query {string} query - Search term
  * @query {string} category - Search category (subculture, lexicon, all)
  * @returns {object} Formatted search results with categories and highlights
+ * @note DIGUNAKAN: Frontend menggunakan di global-search-container.tsx dan page.tsx
  */
 router.get('/global', searchController.globalSearchFormatted);
 
@@ -26,6 +27,7 @@ router.get('/global', searchController.globalSearchFormatted);
  * @query {string} query - Search term
  * @query {object} filters - Additional filters (optional)
  * @returns {object} Comprehensive search results across cultures, subcultures, lexicons, etc.
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan untuk pencarian global umum
  */
 router.get('/', searchController.globalSearch);
 
@@ -37,6 +39,7 @@ router.get('/', searchController.globalSearch);
  * @query {array} fields - Fields to search in (optional)
  * @query {number} limit - Maximum results (default: 20)
  * @returns {object} Lexicon search results with relevance scores
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan spesifik untuk pencarian leksikon
  */
 router.get('/lexicon', searchController.searchLexicon);
 
@@ -53,6 +56,7 @@ router.get('/lexicon', searchController.searchLexicon);
  * @query {number} page - Page number
  * @query {number} limit - Items per page
  * @returns {object} Advanced search results with applied filters
+ * @note DIGUNAKAN: Frontend menggunakan di page.tsx untuk pencarian advanced
  */
 router.get('/advanced', searchController.advancedSearch);
 
@@ -64,6 +68,7 @@ router.get('/advanced', searchController.advancedSearch);
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  * @returns {object} Search results with pagination metadata
+ * @note DIGUNAKAN: Frontend menggunakan di page.tsx untuk pencarian referensi
  */
 router.get('/references', referenceController.searchPublishedReferences);
 
@@ -75,6 +80,7 @@ router.get('/references', referenceController.searchPublishedReferences);
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  * @returns {object} Search results with pagination metadata
+ * @note DIGUNAKAN: Frontend menggunakan di page.tsx untuk pencarian kontributor
  */
 router.get('/coordinator', contributorController.searchPublishedContributors);
 
@@ -86,6 +92,7 @@ router.get('/coordinator', contributorController.searchPublishedContributors);
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 10)
  * @returns {object} Search results with pagination metadata
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan untuk pencarian budaya
  */
 router.get('/culture', searchController.searchCultures);
 

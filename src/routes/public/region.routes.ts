@@ -13,6 +13,7 @@ const router = Router();
  * @access Public
  * @param {string} regionId - Region identifier (province name or region code)
  * @returns {object} Region data including culture statistics, subcultures, and lexicons for map visualization
+ * @note DIGUNAKAN: Frontend menggunakan untuk data popup peta
  */
 router.get('/:regionId', regionController.getRegionData);
 

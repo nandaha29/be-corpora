@@ -12,6 +12,7 @@ const router = Router();
  * @desc Get public asset file (only if status = 'PUBLISHED')
  * @access Public (no authentication required)
  * @param {number} id - Asset ID
+ * @note STATUS TIDAK DIKETAHUI: Tidak disebutkan dalam daftar penggunaan frontend
  */
 router.get('/:id/file', assetController.getPublicAssetFile);
 

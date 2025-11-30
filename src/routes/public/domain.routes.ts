@@ -13,6 +13,7 @@ const router = Router();
  * @access Public
  * @param {number} domain_id - Domain ID
  * @returns {object} Domain details including related subculture and lexicons
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan di kode frontend
  */
 router.get('/:domain_id', domainController.getDomainDetail);
 
@@ -23,6 +24,7 @@ router.get('/:domain_id', domainController.getDomainDetail);
  * @param {number} domain_id - Domain ID
  * @query {string} query - Search term for lexicons
  * @returns {object} Search results with lexicons from the domain
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan di kode frontend
  */
 router.get('/:domain_id/search', domainController.searchLeksikonsInDomain);
 

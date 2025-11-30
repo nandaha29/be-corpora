@@ -12,6 +12,7 @@ const router = Router();
  * @desc Get all published references
  * @access Public
  * @returns {array} List of all published references (jurnal, buku, artikel, website, laporan)
+ * @note DIGUNAKAN: Frontend menggunakan untuk mengambil daftar referensi
  */
 router.get('/', referenceController.getPublishedReferences);
 
@@ -21,6 +22,7 @@ router.get('/', referenceController.getPublishedReferences);
  * @access Public
  * @param {number} reference_id - Reference ID
  * @returns {object} Reference details including title, author, type, and description
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan untuk detail referensi spesifik
  */
 router.get('/:reference_id', referenceController.getPublishedReferenceById);
 

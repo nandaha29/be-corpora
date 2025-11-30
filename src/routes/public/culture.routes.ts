@@ -14,6 +14,7 @@ const router = Router();
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 20)
  * @returns {object} List of published cultures with pagination metadata
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan di kode frontend
  */
 router.get('/', cultureController.getAllCultures);
 
@@ -23,6 +24,7 @@ router.get('/', cultureController.getAllCultures);
  * @access Public
  * @param {number} culture_id - Culture ID
  * @returns {object} Culture details including subcultures, domains, and lexicons
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan di kode frontend
  */
 router.get('/:culture_id', cultureController.getCultureDetail);
 
@@ -35,6 +37,7 @@ router.get('/:culture_id', cultureController.getCultureDetail);
  * @query {number} page - Page number (default: 1)
  * @query {number} limit - Items per page (default: 10)
  * @returns {object} Search results with lexicons from the culture
+ * @note TIDAK DIGUNAKAN: Tidak ada pemanggilan di kode frontend
  */
 router.get('/:culture_id/search', cultureController.searchLeksikonsInCulture);
 
