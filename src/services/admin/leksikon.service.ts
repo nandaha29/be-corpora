@@ -2,6 +2,26 @@ import { prisma } from '../../lib/prisma.js';
 import { CreateLexiconInput, UpdateLexiconInput } from '../../lib/validators.js';
 import { Prisma, LeksikonAssetRole, CitationNoteType } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import fs from 'fs';
+import csv from 'csv-parser';
+import { z } from 'zod';
+
+// Schema for bulk import lexicon validation
+const BulkLexiconSchema = z.object({
+  slug: z.string().optional(), // Optional, will be auto-generated from lexiconWord if empty
+  lexiconWord: z.string().min(1, 'Lexicon word is required'),
+  ipaInternationalPhoneticAlphabet: z.string().optional(),
+  transliteration: z.string().min(1, 'Transliteration is required'),
+  etymologicalMeaning: z.string().min(1, 'Etymological meaning is required'),
+  culturalMeaning: z.string().min(1, 'Cultural meaning is required'),
+  commonMeaning: z.string().min(1, 'Common meaning is required'),
+  translation: z.string().min(1, 'Translation is required'),
+  variant: z.string().optional(),
+  variantTranslations: z.string().optional(),
+  otherDescription: z.string().optional(),
+  domainId: z.string().transform(val => parseInt(val)).refine(val => !isNaN(val), 'Domain ID must be a number'),
+  contributorId: z.string().transform(val => parseInt(val)).refine(val => !isNaN(val), 'Contributor ID must be a number'),
+});
 
 // Helper function to generate slug
 const generateSlug = (name: string): string => {
@@ -904,4 +924,213 @@ export const filterLeksikonReferences = async (filters: {
       },
     },
   };
+};
+
+// Bulk import lexicons from CSV file
+export const bulkImportLeksikonsFromCSV = async (filePath: string) => {
+  const results = {
+    imported: 0,
+    skipped: 0,
+    errors: [] as string[],
+    importedLexicons: [] as string[], // List of imported lexicon words
+    skippedLexicons: [] as string[], // List of skipped lexicon words
+  };
+
+  // Header mapping for flexible CSV headers
+  const headerMapping: Record<string, string> = {
+    'Leksikon': 'lexiconWord',
+    'Transliterasi': 'transliteration',
+    'Makna Etimologi': 'etymologicalMeaning',
+    'Makna Kultural': 'culturalMeaning',
+    'Common Meaning': 'commonMeaning',
+    'Translation': 'translation',
+    'Varian': 'variant',
+    'Translation varians': 'variantTranslations',
+    'Deskripsi Lain': 'otherDescription',
+    'Domain ID': 'domainId',
+    'domainId': 'domainId', // Support camelCase format
+    'Contributor ID': 'contributorId',
+    'contributorId': 'contributorId', // Support camelCase format
+    'Slug': 'slug',
+    'slug': 'slug', // Support lowercase format
+  };
+
+  return new Promise<typeof results>((resolve, reject) => {
+    const data: any[] = [];
+
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => data.push(row))
+      .on('end', async () => {
+        try {
+          const validData: any[] = [];
+          const batchSize = 100;
+
+          // Log first row to see what headers we're working with
+          if (data.length > 0) {
+            // console.log('CSV Headers detected:', Object.keys(data[0]));
+          }
+          
+          for (const row of data) {
+            // Map headers to expected field names (case-insensitive, whitespace-tolerant)
+            const mappedRow: any = {};
+            for (const [key, value] of Object.entries(row)) {
+              // Normalize key: trim and remove BOM if present
+              const normalizedKey = key.trim().replace(/^\uFEFF/, '');
+              
+              // Try exact match first
+              let mappedKey: string = headerMapping[normalizedKey] || '';
+              
+              // If no exact match, try case-insensitive match
+              if (!mappedKey) {
+                const lowerKey = normalizedKey.toLowerCase();
+                const foundKey = Object.keys(headerMapping).find(
+                  h => h.toLowerCase().trim() === lowerKey
+                );
+                mappedKey = foundKey ? (headerMapping[foundKey] || normalizedKey) : normalizedKey;
+              }
+              
+              mappedRow[mappedKey] = value;
+            }
+            
+            // console.log('Original row:', row);
+            // console.log('Mapped row:', mappedRow);
+
+            try {
+              // Validate row data
+              const validated = BulkLexiconSchema.parse(mappedRow);
+
+              // Check if contributor exists
+              const contributor = await prisma.contributor.findUnique({
+                where: { contributorId: validated.contributorId },
+              });
+              if (!contributor) {
+                results.errors.push(`Contributor ID ${validated.contributorId} tidak ditemukan. Pastikan import contributor terlebih dahulu.`);
+                results.skipped++;
+                results.skippedLexicons.push(validated.lexiconWord);
+                continue;
+              }
+
+              // Check if domain exists
+              const domain = await prisma.codificationDomain.findUnique({
+                where: { domainId: validated.domainId },
+              });
+              if (!domain) {
+                results.errors.push(`Domain ID ${validated.domainId} tidak ditemukan. Pastikan import domain kodifikasi terlebih dahulu.`);
+                results.skipped++;
+                results.skippedLexicons.push(validated.lexiconWord);
+                continue;
+              }
+
+              // Generate slug if not provided
+              let finalSlug = validated.slug;
+              if (!finalSlug || finalSlug.trim() === '') {
+                finalSlug = generateSlug(validated.lexiconWord);
+              }
+
+              // Check if slug is unique (after generation)
+              const existing = await prisma.lexicon.findUnique({
+                where: { slug: finalSlug },
+              });
+              if (existing) {
+                results.errors.push(`Slug "${finalSlug}" sudah ada. Slug di-generate dari lexiconWord "${validated.lexiconWord}". Gunakan lexiconWord yang berbeda atau slug manual.`);
+                results.skipped++;
+                results.skippedLexicons.push(validated.lexiconWord);
+                continue;
+              }
+
+              validData.push({
+                slug: finalSlug,
+                lexiconWord: validated.lexiconWord,
+                ipaInternationalPhoneticAlphabet: validated.transliteration,
+                transliteration: validated.transliteration,
+                etymologicalMeaning: validated.etymologicalMeaning,
+                culturalMeaning: validated.culturalMeaning,
+                commonMeaning: validated.commonMeaning,
+                translation: validated.translation,
+                variant: validated.variant || null,
+                variantTranslations: validated.variantTranslations || null,
+                otherDescription: validated.otherDescription || null,
+                domainId: validated.domainId,
+                contributorId: validated.contributorId,
+                // status: 'DRAFT', // Use default from schema
+                // preservationStatus: 'MAINTAINED', // Use default from schema
+              });
+
+            } catch (validationError) {
+              if (validationError instanceof z.ZodError) {
+                const errorMessages = validationError.issues.map(err => `${err.path.join('.')}: ${err.message}`);
+                results.errors.push(`Baris data tidak valid: ${errorMessages.join(', ')}`);
+              } else {
+                results.errors.push(`Error memproses baris: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`);
+              }
+              results.skipped++;
+              // Note: For validation errors, we don't have lexiconWord yet, so skip adding to skippedLexicons
+            }
+          }
+
+          // Batch insert valid data
+          for (let i = 0; i < validData.length; i += batchSize) {
+            const batch = validData.slice(i, i + batchSize);
+            // console.log('Valid data to insert:', JSON.stringify(batch, null, 2));
+            try {
+              const insertResult = await prisma.lexicon.createMany({
+                data: batch,
+                skipDuplicates: true,
+              });
+              
+              // Only count actually inserted rows
+              const actuallyInserted = insertResult.count;
+              results.imported += actuallyInserted;
+              
+              // Track which ones were actually inserted
+              // Note: We can't know which specific rows were inserted vs skipped due to skipDuplicates
+              // So we'll add all to importedLexicons, but the count will be accurate
+              if (actuallyInserted > 0) {
+                batch.forEach(item => results.importedLexicons.push(item.lexiconWord));
+              }
+              
+              // If some rows were skipped due to duplicates
+              if (actuallyInserted < batch.length) {
+                const skippedCount = batch.length - actuallyInserted;
+                results.skipped += skippedCount;
+                results.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${skippedCount} row(s) skipped due to duplicate slugs or other unique constraints`);
+              }
+              
+              // console.log(`Inserted ${actuallyInserted} out of ${batch.length} rows in batch ${Math.floor(i / batchSize) + 1}`);
+              
+              // Verify insertion by querying back the inserted slugs
+              if (actuallyInserted > 0) {
+                const insertedSlugs = batch.map(item => item.slug);
+                const verifyResult = await prisma.lexicon.findMany({
+                  where: { slug: { in: insertedSlugs } },
+                  select: { slug: true, lexiconWord: true },
+                });
+                // console.log(`Verified ${verifyResult.length} records in database:`, verifyResult);
+              }
+            } catch (insertError) {
+              // console.error('Insert error:', insertError);
+              results.errors.push(`Gagal insert batch ${Math.floor(i / batchSize) + 1}: ${insertError instanceof Error ? insertError.message : 'Unknown error'}`);
+              results.skipped += batch.length;
+            }
+          }
+
+          // Clean up uploaded file
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          } catch (cleanupError) {
+            // console.warn('Failed to cleanup temp file:', cleanupError);
+          }
+
+          resolve(results);
+        } catch (error) {
+          reject(error);
+        }
+      })
+      .on('error', (error) => {
+        reject(error);
+      });
+  });
 };

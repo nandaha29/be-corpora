@@ -90,7 +90,7 @@ model Lexicon {
   lexiconId                        Int                @id @default(autoincrement()) @map("lexicon_id")
   slug                             String             @unique @map("slug")
   lexiconWord                      String             @map("lexicon_word")
-  ipaInternationalPhoneticAlphabet String             @map("ipa_international_phonetic_alphabet")
+  ipaInternationalPhoneticAlphabet String?            @map("ipa_international_phonetic_alphabet")
   transliteration                  String
   etymologicalMeaning              String             @map("etymological_meaning")
   culturalMeaning                  String             @map("cultural_meaning")

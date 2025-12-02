@@ -4,6 +4,30 @@ import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, cre
 import { ZodError } from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { LeksikonAssetRole } from '@prisma/client';
+import multer from 'multer';
+import path from 'path';
+
+// Configure multer for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(process.cwd(), 'temp-uploads'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  },
+});
 
 // GET /api/leksikons
 // export const getLeksikons = async (req: Request, res: Response) => {
@@ -725,3 +749,36 @@ export const filterLeksikonReferences = async (req: Request, res: Response) => {
     });
   }
 };
+
+// POST /api/admin/leksikons/import - Bulk import leksikons from CSV
+export const bulkImportLeksikons = [
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    try {
+      console.log('Uploaded file info:', req.file); // Debug log
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No file uploaded. Please upload a CSV file.',
+        });
+      }
+
+      const filePath = req.file.path;
+      console.log('File path:', filePath); // Debug log
+      const result = await leksikonService.bulkImportLeksikonsFromCSV(filePath);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Bulk import completed',
+        data: result,
+      });
+    } catch (error) {
+      console.error('Bulk import failed:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Bulk import failed',
+        details: error instanceof Error ? error.message : error,
+      });
+    }
+  },
+];

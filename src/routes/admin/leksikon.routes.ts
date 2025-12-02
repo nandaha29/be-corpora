@@ -300,4 +300,13 @@ router.get('/filter/references', authenticateAdmin, leksikonController.filterLek
  */
 router.patch("/:id/status", authenticateAdmin, leksikonController.updateLeksikonStatus);
 
+/**
+ * @route POST /api/admin/leksikons/import
+ * @desc Bulk import leksikons from CSV file
+ * @access Admin only
+ * @body {file} file - CSV file containing leksikon data (slug optional, auto-generated from lexiconWord)
+ * @returns {object} Import summary with success count, skipped, and errors
+ */
+router.post("/import", authenticateAdmin, leksikonController.bulkImportLeksikons);
+
 export default router;
