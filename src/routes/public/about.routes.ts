@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as cultureController from '../../controllers/public/culture.controller.js';
+import * as aboutController from '../../controllers/public/about.controller.js';
 
 const router = Router();
 
@@ -9,13 +9,11 @@ const router = Router();
 
 /**
  * @route GET /api/public/about
- * @desc Get about page data (culture with references)
+ * @desc Get about page data including stats, team, references, and project information
  * @access Public
- * @query {string} slug - Optional culture slug to get specific culture (default: first published culture)
- * @returns {object} Culture details with references for about page
- * @note DIGUNAKAN: Frontend menggunakan untuk halaman about yang menampilkan informasi budaya dengan referensi
+ * @returns {object} About page data with visiMisiSection, teamScientis, collaborationAssets, academicReferences, projectSteps, projectProcess, projectRoadmap, platformFeatures, youtubeVideos, galleryPhotos
  */
-router.get('/', cultureController.getAboutPage);
+router.get('/', aboutController.getAboutPage);
 
 export default router;
 
