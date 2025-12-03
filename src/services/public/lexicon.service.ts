@@ -210,7 +210,6 @@ export const getLexiconDetail = async (identifier: string) => {
   if (!lexicon) {
     return null;
   }
-  // ... rest of the code
 
   // // Get subculture's gallery images
   // const subcultureGalleryImages = (lexicon as any).codificationDomain?.subculture?.subcultureAssets

@@ -176,6 +176,20 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     // highlights,
   };
 
+  //   // // Get subculture's gallery images
+  // // const subcultureGalleryImages = (lexicon as any).codificationDomain?.subculture?.subcultureAssets
+  // //   .filter((sa: any) => sa.asset.fileType === 'PHOTO')
+  // //   .map((sa: any) => ({ url: sa.asset.url })) || [];
+
+  // // Get lexicon's gallery images
+  // const lexiconGalleryImages = (lexicon as any).lexiconAssets
+  //   .filter((la: any) => la.assetRole === 'GALLERY' && la.asset.fileType === 'PHOTO')
+  //   .map((la: any) => ({ url: la.asset.url }));
+
+  // // Combine galleries
+  // // const galleryImages = [...subcultureGalleryImages, ...lexiconGalleryImages];
+  // const galleryImages = [...lexiconGalleryImages];
+
   // Gallery images from lexicons only (photos with assetRole 'GALLERY')
   const galleryImages = subculture.codificationDomains
     .flatMap(dk => dk.lexicons)
