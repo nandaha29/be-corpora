@@ -136,7 +136,10 @@ export const getLexiconDetail = async (identifier: string) => {
             },
           },
         },
-        lexiconAssets: { include: { asset: true } },
+        lexiconAssets: { 
+          include: { asset: true },
+          where: { asset: { status: 'ACTIVE' } }
+        },
         lexiconReferences: { include: { reference: true } },
       },
     });
@@ -165,7 +168,10 @@ export const getLexiconDetail = async (identifier: string) => {
             },
           },
         },
-        lexiconAssets: { include: { asset: true } },
+        lexiconAssets: { 
+          include: { asset: true },
+          where: { asset: { status: 'ACTIVE' } }
+        },
         lexiconReferences: { include: { reference: true } },
       },
     });
@@ -191,7 +197,10 @@ export const getLexiconDetail = async (identifier: string) => {
               },
             },
           },
-          lexiconAssets: { include: { asset: true } },
+          lexiconAssets: { 
+            include: { asset: true },
+            where: { asset: { status: 'ACTIVE' } }
+          },
           lexiconReferences: { include: { reference: true } },
         },
       });
@@ -203,10 +212,10 @@ export const getLexiconDetail = async (identifier: string) => {
   }
   // ... rest of the code
 
-  // Get subculture's gallery images
-  const subcultureGalleryImages = (lexicon as any).codificationDomain?.subculture?.subcultureAssets
-    .filter((sa: any) => sa.asset.fileType === 'PHOTO')
-    .map((sa: any) => ({ url: sa.asset.url })) || [];
+  // // Get subculture's gallery images
+  // const subcultureGalleryImages = (lexicon as any).codificationDomain?.subculture?.subcultureAssets
+  //   .filter((sa: any) => sa.asset.fileType === 'PHOTO')
+  //   .map((sa: any) => ({ url: sa.asset.url })) || [];
 
   // Get lexicon's gallery images
   const lexiconGalleryImages = (lexicon as any).lexiconAssets
@@ -214,7 +223,8 @@ export const getLexiconDetail = async (identifier: string) => {
     .map((la: any) => ({ url: la.asset.url }));
 
   // Combine galleries
-  const galleryImages = [...subcultureGalleryImages, ...lexiconGalleryImages];
+  // const galleryImages = [...subcultureGalleryImages, ...lexiconGalleryImages];
+  const galleryImages = [...lexiconGalleryImages];
 
   return {
     id: (lexicon as any).slug || lexicon.lexiconId.toString(),
