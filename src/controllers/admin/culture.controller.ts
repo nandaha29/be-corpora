@@ -213,3 +213,93 @@ export const filterCultures = async (req: Request, res: Response) => {
     return;
   }
 };
+
+// POST /api/v1/admin/cultures/:id/references
+// Assign reference directly to CultureReference (for about page)
+export const addReferenceToCulture = async (req: Request, res: Response) => {
+  try {
+    const cultureId = Number(req.params.id);
+    const { referenceId, citationNote, displayOrder } = req.body;
+
+    if (Number.isNaN(cultureId)) {
+      return res.status(400).json({ success: false, message: 'Invalid culture ID' });
+    }
+    if (!referenceId) {
+      return res.status(400).json({ success: false, message: 'referenceId is required' });
+    }
+
+    const result = await cultureService.addReferenceToCulture(
+      cultureId,
+      referenceId,
+      citationNote,
+      displayOrder
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Reference assigned to culture successfully',
+      data: result,
+    });
+  } catch (error: any) {
+    console.error('Failed to add reference to culture:', error);
+    if (error.code === 'CULTURE_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: 'Culture not found' });
+    }
+    if (error.code === 'REFERENCE_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: 'Reference not found' });
+    }
+    return res.status(500).json({ success: false, message: 'Failed to add reference' });
+  }
+};
+
+// GET /api/v1/admin/cultures/:id/references
+// Get all references assigned directly to culture
+export const getCultureReferences = async (req: Request, res: Response) => {
+  try {
+    const cultureId = Number(req.params.id);
+
+    if (Number.isNaN(cultureId)) {
+      return res.status(400).json({ success: false, message: 'Invalid culture ID' });
+    }
+
+    const result = await cultureService.getCultureReferences(cultureId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Culture references retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Failed to get culture references:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve references' });
+  }
+};
+
+// DELETE /api/v1/admin/cultures/:id/references/:referenceId
+// Remove reference from CultureReference
+export const removeReferenceFromCulture = async (req: Request, res: Response) => {
+  try {
+    const cultureId = Number(req.params.id);
+    const referenceId = Number(req.params.referenceId);
+
+    if (Number.isNaN(cultureId)) {
+      return res.status(400).json({ success: false, message: 'Invalid culture ID' });
+    }
+    if (Number.isNaN(referenceId)) {
+      return res.status(400).json({ success: false, message: 'Invalid reference ID' });
+    }
+
+    await cultureService.removeReferenceFromCulture(cultureId, referenceId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Reference removed from culture successfully',
+    });
+  } catch (error: any) {
+    console.error('Failed to remove reference from culture:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, message: 'Reference assignment not found' });
+    }
+    return res.status(500).json({ success: false, message: 'Failed to remove reference' });
+  }
+};

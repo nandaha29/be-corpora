@@ -102,6 +102,15 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
       subcultureAssets: {
         include: { asset: true },
       },
+      subcultureReferences: {
+        where: {
+          reference: { status: 'PUBLISHED' }
+        },
+        include: {
+          reference: true
+        },
+        orderBy: { displayOrder: 'asc' }
+      },
     },
   });
 
@@ -131,6 +140,15 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
           },
           subcultureAssets: {
             include: { asset: true },
+          },
+          subcultureReferences: {
+            where: {
+              reference: { status: 'PUBLISHED' }
+            },
+            include: {
+              reference: true
+            },
+            orderBy: { displayOrder: 'asc' }
           },
         },
       });
@@ -235,6 +253,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
         region: subculture.culture?.cityRegion || 'Unknown Region',
       },
       subcultureAssets: subculture.subcultureAssets, // Add subcultureAssets for frontend gallery handling
+      subcultureReferences: (subculture as any).subcultureReferences || [], // Add subcultureReferences
       searchResults: lexicon, // Return filtered results as searchResults
     };
   }
@@ -254,6 +273,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
       region: subculture.culture?.cityRegion || 'Unknown Region',
     },
     subcultureAssets: subculture.subcultureAssets, // Add subcultureAssets for frontend gallery handling
+    subcultureReferences: (subculture as any).subcultureReferences || [], // Add subcultureReferences
   };
 };
 

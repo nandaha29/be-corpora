@@ -18,10 +18,18 @@ export const getPublishedReferences = async () => {
       status: true,
       createdAt: true,
       updatedAt: true,
+      _count: {
+        select: {
+          lexiconReferences: true,
+          subcultureReferences: true,
+          cultureReferences: true,
+        },
+      },
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: [
+      { publicationYear: 'desc' },
+      { authors: 'asc' },
+    ],
   });
 };
 
@@ -62,6 +70,7 @@ export const searchPublishedReferences = async (keyword: string, page = 1, limit
       { description: { contains: keyword, mode: 'insensitive' } },
       { authors: { contains: keyword, mode: 'insensitive' } },
       { publicationYear: { contains: keyword, mode: 'insensitive' } },
+      { topicCategory: { contains: keyword, mode: 'insensitive' } },
     ],
   };
 
@@ -86,8 +95,18 @@ export const searchPublishedReferences = async (keyword: string, page = 1, limit
         status: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            lexiconReferences: true,
+            subcultureReferences: true,
+            cultureReferences: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { publicationYear: 'desc' },
+        { authors: 'asc' },
+      ],
     }),
     prisma.reference.count({
       where: whereClause,

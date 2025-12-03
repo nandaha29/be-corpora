@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, SubcultureAssetRole } from "@prisma/client";
+import { Prisma, PrismaClient, SubcultureAssetRole, CitationNoteType } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
@@ -384,7 +384,7 @@ export const getReferenceUsage = async (referenceId: number) => {
   });
 };
 
-export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number) => {
+export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number, citationNote?: CitationNoteType) => {
   // Verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
   if (!subculture) {
@@ -422,10 +422,15 @@ export const addReferenceToSubculture = async (subcultureId: number, referenceId
       throw err;
     }
 
-    return prisma.lexiconReference.create({
-      data: { lexiconId, referenceId },
+    const result = await prisma.lexiconReference.create({
+      data: { lexiconId, referenceId, citationNote },
       include: { reference: true, lexicon: true },
     });
+
+    return {
+      data: result,
+      message: "Reference added to specific lexicon",
+    };
   } else {
     // Assign to all lexicons in subculture
     const domainIds = await prisma.codificationDomain.findMany({
@@ -442,12 +447,20 @@ export const addReferenceToSubculture = async (subcultureId: number, referenceId
     const assignments = lexicons.map(lexicon => ({
       lexiconId: lexicon.lexiconId,
       referenceId,
+      citationNote,
     }));
 
-    return prisma.lexiconReference.createMany({
+    const result = await prisma.lexiconReference.createMany({
       data: assignments,
       skipDuplicates: true,
     });
+
+    return {
+      count: result.count,
+      message: result.count > 0 
+        ? `Reference added to ${result.count} lexicons` 
+        : `No new references added (possibly duplicates or no lexicons found)`,
+    };
   }
 };
 
@@ -611,5 +624,79 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
       },
     },
   };
+};
+
+// Assign reference directly to SubcultureReference (for subculture page)
+export const addReferenceToSubcultureDirect = async (
+  subcultureId: number,
+  referenceId: number,
+  citationNote?: string,
+  displayOrder?: number
+) => {
+  // Verify subculture exists
+  const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
+  if (!subculture) {
+    const err = new Error('Subculture not found');
+    (err as any).code = 'SUBCULTURE_NOT_FOUND';
+    throw err;
+  }
+
+  // Verify reference exists
+  const reference = await prisma.reference.findUnique({ where: { referenceId } });
+  if (!reference) {
+    const err = new Error('Reference not found');
+    (err as any).code = 'REFERENCE_NOT_FOUND';
+    throw err;
+  }
+
+  // Use upsert to avoid duplicates
+  return prisma.subcultureReference.upsert({
+    where: {
+      subcultureId_referenceId: {
+        subcultureId,
+        referenceId,
+      },
+    },
+    update: {
+      citationNote: citationNote as any,
+      displayOrder: displayOrder ?? 0,
+    },
+    create: {
+      subcultureId,
+      referenceId,
+      citationNote: citationNote as any,
+      displayOrder: displayOrder ?? 0,
+    },
+    include: {
+      reference: true,
+      subculture: true,
+    },
+  });
+};
+
+// Remove reference from SubcultureReference
+export const removeReferenceFromSubcultureDirect = async (
+  subcultureId: number,
+  referenceId: number
+) => {
+  return prisma.subcultureReference.delete({
+    where: {
+      subcultureId_referenceId: {
+        subcultureId,
+        referenceId,
+      },
+    },
+  });
+};
+
+// Get all references assigned directly to subculture
+export const getSubcultureReferencesDirect = async (subcultureId: number) => {
+  return prisma.subcultureReference.findMany({
+    where: { subcultureId },
+    include: {
+      reference: true,
+    },
+    orderBy: { displayOrder: 'asc' },
+  });
 };
 

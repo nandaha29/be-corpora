@@ -21,6 +21,7 @@ import regionRoutes from "./routes/public/region.routes.js";
 import referencePublicRoutes from "./routes/public/reference.routes.js";
 import contributorPublicRoutes from "./routes/public/contributor.routes.js";
 import assetPublicRoutes from "./routes/public/asset.routes.js";
+import aboutRoutes from "./routes/public/about.routes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -61,6 +62,7 @@ app.use("/api/v1/public/regions", regionRoutes);
 app.use("/api/v1/public/references", referencePublicRoutes);
 app.use("/api/v1/public/contributors", contributorPublicRoutes);
 app.use("/api/v1/public/assets", assetPublicRoutes);
+app.use("/api/v1/public/about", aboutRoutes);
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

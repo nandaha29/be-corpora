@@ -64,6 +64,22 @@ router.get("/:id/assigned-references", authenticateAdmin, subcultureController.g
 // Digunakan untuk: Menambahkan referensi ke subculture
 router.post("/:id/references", authenticateAdmin, subcultureController.addReferenceToSubculture);
 
+// POST /api/v1/admin/subcultures/:id/references-direct
+// Assign reference directly to SubcultureReference (for subculture page)
+// Body: referenceId, citationNote (optional), displayOrder (optional)
+// Digunakan untuk: Menambahkan referensi langsung ke subculture page
+router.post("/:id/references-direct", authenticateAdmin, subcultureController.addReferenceToSubcultureDirect);
+
+// GET /api/v1/admin/subcultures/:id/references-direct
+// Get all references assigned directly to subculture
+// Digunakan untuk: Melihat daftar referensi yang di-assign langsung ke subculture
+router.get("/:id/references-direct", authenticateAdmin, subcultureController.getSubcultureReferencesDirect);
+
+// DELETE /api/v1/admin/subcultures/:id/references-direct/:referenceId
+// Remove reference from SubcultureReference
+// Digunakan untuk: Menghapus referensi dari subculture page
+router.delete("/:id/references-direct/:referenceId", authenticateAdmin, subcultureController.removeReferenceFromSubcultureDirect);
+
 // GET /api/v1/admin/subcultures/:id/filter-assets
 // Filter asset subculture by Type, Role, Status (kombinasi)
 // Query params: type, assetRole, status, page, limit

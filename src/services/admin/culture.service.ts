@@ -209,3 +209,77 @@ export const filterCultures = async (
     totalPages: Math.ceil(totalCount / limit),
   };
 };
+
+// Assign reference directly to CultureReference (for about page)
+export const addReferenceToCulture = async (
+  cultureId: number,
+  referenceId: number,
+  citationNote?: string,
+  displayOrder?: number
+) => {
+  // Verify culture exists
+  const culture = await prisma.culture.findUnique({ where: { cultureId } });
+  if (!culture) {
+    const err = new Error('Culture not found');
+    (err as any).code = 'CULTURE_NOT_FOUND';
+    throw err;
+  }
+
+  // Verify reference exists
+  const reference = await prisma.reference.findUnique({ where: { referenceId } });
+  if (!reference) {
+    const err = new Error('Reference not found');
+    (err as any).code = 'REFERENCE_NOT_FOUND';
+    throw err;
+  }
+
+  // Use upsert to avoid duplicates
+  return prisma.cultureReference.upsert({
+    where: {
+      cultureId_referenceId: {
+        cultureId,
+        referenceId,
+      },
+    },
+    update: {
+      citationNote: citationNote as any,
+      displayOrder: displayOrder ?? 0,
+    },
+    create: {
+      cultureId,
+      referenceId,
+      citationNote: citationNote as any,
+      displayOrder: displayOrder ?? 0,
+    },
+    include: {
+      reference: true,
+      culture: true,
+    },
+  });
+};
+
+// Remove reference from CultureReference
+export const removeReferenceFromCulture = async (
+  cultureId: number,
+  referenceId: number
+) => {
+  return prisma.cultureReference.delete({
+    where: {
+      cultureId_referenceId: {
+        cultureId,
+        referenceId,
+      },
+    },
+  });
+};
+
+// Get all references assigned directly to culture
+export const getCultureReferences = async (cultureId: number) => {
+  return prisma.cultureReference.findMany({
+    where: { cultureId },
+    include: {
+      reference: true,
+    },
+    orderBy: { displayOrder: 'asc' },
+  });
+};

@@ -63,7 +63,15 @@ export const getAllLexicons = async (regionFilter: string = 'all', searchQuery: 
         }
       },
       lexiconAssets: { include: { asset: true } },
-      lexiconReferences: { include: { reference: true } },
+      lexiconReferences: {
+        where: {
+          reference: { status: 'PUBLISHED' }
+        },
+        include: { 
+          reference: true 
+        },
+        orderBy: { displayOrder: 'asc' }
+      },
     },
     orderBy: {
       lexiconWord: 'asc'

@@ -115,3 +115,33 @@ export const getCultureDetail = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Get about page data (culture with references)
+// This endpoint is used for the /about page
+export const getAboutPage = async (req: Request, res: Response) => {
+  try {
+    const identifier = req.query.slug as string | undefined;
+
+    const data = await cultureService.getAboutPageData(identifier);
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: 'About page data not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'About page data retrieved successfully',
+      data,
+    });
+  } catch (error) {
+    console.error('About page error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve about page data',
+      details: error instanceof Error ? error.message : error,
+    });
+  }
+};

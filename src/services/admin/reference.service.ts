@@ -4,12 +4,39 @@ import { Prisma } from "@prisma/client";
 import { CreateReferenceInput, UpdateReferenceInput } from '../../lib/validators.js';
 
 export const getAllReferences = async () => {
-  return prisma.reference.findMany();
+  return prisma.reference.findMany({
+    select: {
+      referenceId: true,
+      title: true,
+      referenceType: true,
+      description: true,
+      url: true,
+      authors: true,
+      publicationYear: true,
+      topicCategory: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
 };
 
 export const getReferenceById = async (id: number) => {
   return prisma.reference.findUnique({
     where: { referenceId: id },
+    select: {
+      referenceId: true,
+      title: true,
+      referenceType: true,
+      description: true,
+      url: true,
+      authors: true,
+      publicationYear: true,
+      topicCategory: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 };
 
@@ -50,6 +77,19 @@ export const getAllReferensiPaginated = async (page = 1, limit = 10, type?: stri
       orderBy: {
         referenceId: 'asc',
       },
+      select: {
+        referenceId: true,
+        title: true,
+        referenceType: true,
+        description: true,
+        url: true,
+        authors: true,
+        publicationYear: true,
+        topicCategory: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     prisma.reference.count(),
   ]);
@@ -84,6 +124,7 @@ export const searchReferensi = async (keyword: string, page = 1, limit = 20) => 
       { description: { contains: keyword, mode: 'insensitive' } },
       { authors: { contains: keyword, mode: 'insensitive' } },
       { publicationYear: { contains: keyword, mode: 'insensitive' } },
+      { topicCategory: { contains: keyword, mode: 'insensitive' } },
     ],
   };
 
@@ -97,6 +138,19 @@ export const searchReferensi = async (keyword: string, page = 1, limit = 20) => 
       skip,
       take: limit,
       orderBy: { createdAt: 'desc' },
+      select: {
+        referenceId: true,
+        title: true,
+        referenceType: true,
+        description: true,
+        url: true,
+        authors: true,
+        publicationYear: true,
+        topicCategory: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     prisma.reference.count({
       where: whereClause,
@@ -175,6 +229,19 @@ export const filterReferences = async (filters: {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
+      select: {
+        referenceId: true,
+        title: true,
+        referenceType: true,
+        description: true,
+        url: true,
+        authors: true,
+        publicationYear: true,
+        topicCategory: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     prisma.reference.count({ where: whereCondition }),
   ]);

@@ -138,6 +138,113 @@ export const getCultureDetail = async (cultureId: number) => {
         },
       },
       cultureAssets: { include: { asset: true } },
+      cultureReferences: {
+        where: {
+          reference: { status: 'PUBLISHED' }
+        },
+        include: {
+          reference: true
+        },
+        orderBy: { displayOrder: 'asc' }
+      },
     },
   });
+};
+
+// Get about page data (culture with references)
+// This is used for the /about page that displays culture information with references
+export const getAboutPageData = async (identifier?: string) => {
+  // If identifier is provided, try to find by slug or ID
+  // Otherwise, get the first published culture (or a default one)
+  let culture = null;
+
+  if (identifier) {
+    // Try by slug first
+    culture = await prisma.culture.findFirst({
+      where: {
+        OR: [
+          { slug: identifier, status: 'PUBLISHED' },
+          { cultureId: isNaN(Number(identifier)) ? -1 : Number(identifier), status: 'PUBLISHED' }
+        ]
+      },
+      include: {
+        subcultures: {
+          where: { status: 'PUBLISHED' },
+          include: {
+            _count: {
+              select: { codificationDomains: true }
+            }
+          }
+        },
+        cultureReferences: {
+          where: {
+            reference: { status: 'PUBLISHED' }
+          },
+          include: {
+            reference: true
+          },
+          orderBy: { displayOrder: 'asc' }
+        },
+        cultureAssets: {
+          include: { asset: true }
+        }
+      }
+    });
+  }
+
+  // If not found or no identifier, get first published culture
+  if (!culture) {
+    culture = await prisma.culture.findFirst({
+      where: { status: 'PUBLISHED' },
+      include: {
+        subcultures: {
+          where: { status: 'PUBLISHED' },
+          include: {
+            _count: {
+              select: { codificationDomains: true }
+            }
+          }
+        },
+        cultureReferences: {
+          where: {
+            reference: { status: 'PUBLISHED' }
+          },
+          include: {
+            reference: true
+          },
+          orderBy: { displayOrder: 'asc' }
+        },
+        cultureAssets: {
+          include: { asset: true }
+        }
+      },
+      orderBy: { cultureId: 'asc' }
+    });
+  }
+
+  if (!culture) {
+    return null;
+  }
+
+  return {
+    cultureId: culture.cultureId,
+    slug: culture.slug,
+    cultureName: culture.cultureName,
+    originIsland: culture.originIsland,
+    province: culture.province,
+    cityRegion: culture.cityRegion,
+    classification: culture.classification,
+    characteristics: culture.characteristics,
+    conservationStatus: culture.conservationStatus,
+    latitude: culture.latitude,
+    longitude: culture.longitude,
+    subcultures: culture.subcultures.map(sub => ({
+      subcultureId: sub.subcultureId,
+      slug: sub.slug,
+      subcultureName: sub.subcultureName,
+      domainCount: sub._count.codificationDomains
+    })),
+    cultureReferences: culture.cultureReferences || [],
+    cultureAssets: culture.cultureAssets || []
+  };
 };

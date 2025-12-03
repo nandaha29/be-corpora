@@ -104,4 +104,32 @@ router
  */
 router.get("/cultures/:cultureId", authenticateAdmin, cultureController.getCultureWithAssets);
 
+/**
+ * @route POST /api/admin/cultures/:id/references
+ * @desc Assign reference directly to CultureReference (for about page)
+ * @access Admin only
+ * @param {number} id - Culture ID
+ * @body {number} referenceId - Reference ID (required)
+ * @body {string} citationNote - Citation note type (optional)
+ * @body {number} displayOrder - Display order (optional, default: 0)
+ */
+router.post("/:id/references", authenticateAdmin, cultureController.addReferenceToCulture);
+
+/**
+ * @route GET /api/admin/cultures/:id/references
+ * @desc Get all references assigned directly to culture
+ * @access Admin only
+ * @param {number} id - Culture ID
+ */
+router.get("/:id/references", authenticateAdmin, cultureController.getCultureReferences);
+
+/**
+ * @route DELETE /api/admin/cultures/:id/references/:referenceId
+ * @desc Remove reference from CultureReference
+ * @access Admin only
+ * @param {number} id - Culture ID
+ * @param {number} referenceId - Reference ID
+ */
+router.delete("/:id/references/:referenceId", authenticateAdmin, cultureController.removeReferenceFromCulture);
+
 export default router;

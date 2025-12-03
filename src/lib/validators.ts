@@ -188,6 +188,12 @@ export const createLexiconReferenceSchema = z.object({
   referenceId: z.number().min(1, { message: "Reference ID is required" }),
   citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: DIRECT_QUOTE, PARAPHRASE, INTERPRETATION, FIELD_OBSERVATION, ORAL_TRADITION, SECONDARY_SOURCE, GENERAL_REFERENCE" }),
 });
+export const createSubcultureReferenceSchema = z.object({
+  subcultureId: z.number().min(1, { message: "Subculture ID is required" }),
+  referenceId: z.number().min(1, { message: "Reference ID is required" }),
+  citationNote: z.nativeEnum(CitationNoteType, { message: "Citation note must be one of: DIRECT_QUOTE, PARAPHRASE, INTERPRETATION, FIELD_OBSERVATION, ORAL_TRADITION, SECONDARY_SOURCE, GENERAL_REFERENCE" }),
+  lexiconId: z.number().optional(),
+});
 export const createContributorAssetSchema = z.object({
   contributorId: z.number().min(1, { message: "Contributor ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
@@ -201,6 +207,7 @@ export type CreateLexiconAssetInput = z.infer<typeof createLexiconAssetSchema>;
 export type CreateSubcultureAssetInput = z.infer<typeof createSubcultureAssetSchema>;
 export type CreateCultureAssetInput = z.infer<typeof createCultureAssetSchema>;
 export type CreateLexiconReferenceInput = z.infer<typeof createLexiconReferenceSchema>;
+export type CreateSubcultureReferenceInput = z.infer<typeof createSubcultureReferenceSchema>;
 export type CreateContributorAssetInput = z.infer<typeof createContributorAssetSchema>;
 export type UpdateCitationNoteInput = z.infer<typeof updateCitationNoteSchema>;
 

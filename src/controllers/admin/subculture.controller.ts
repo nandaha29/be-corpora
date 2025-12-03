@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as subcultureService from "../../services/admin/subculture.service.js";
-import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema } from "../../lib/validators.js";
+import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema, createSubcultureReferenceSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
@@ -402,18 +402,30 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
 export const addReferenceToSubculture = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
-    const { referenceId, lexiconId } = req.body;
+    if (Number.isNaN(subcultureId))
+      return res.status(400).json({ message: 'Invalid subculture ID' });
 
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
-    if (!referenceId) return res.status(400).json({ message: 'referenceId is required' });
+    const { referenceId, lexiconId, citationNote } = req.body;
+    const validated = createSubcultureReferenceSchema.parse({
+      subcultureId,
+      referenceId,
+      citationNote,
+      lexiconId,
+    });
 
-    const result = await subcultureService.addReferenceToSubculture(subcultureId, referenceId, lexiconId);
+    const result = await subcultureService.addReferenceToSubculture(subcultureId, validated.referenceId, validated.lexiconId, validated.citationNote);
     return res.status(201).json({
       status: "success",
-      message: 'Add references successfully',
+      message: result.message || 'Add references successfully',
       data: result,
     });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: error,
+      });
+    }
     console.error('Failed to add reference to subculture:', error);
     return res.status(500).json({ message: 'Failed to add reference' });
   }
@@ -480,5 +492,85 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
   } catch (error) {
     console.error('Failed to filter subculture references:', error);
     return res.status(500).json({ message: 'Failed to filter references' });
+  }
+};
+
+// POST /api/v1/admin/subcultures/:id/references-direct
+// Assign reference directly to SubcultureReference (for subculture page)
+export const addReferenceToSubcultureDirect = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const { referenceId, citationNote, displayOrder } = req.body;
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (!referenceId) return res.status(400).json({ message: 'referenceId is required' });
+
+    const result = await subcultureService.addReferenceToSubcultureDirect(
+      subcultureId,
+      referenceId,
+      citationNote,
+      displayOrder
+    );
+
+    return res.status(201).json({
+      status: "success",
+      message: 'Reference assigned to subculture successfully',
+      data: result,
+    });
+  } catch (error: any) {
+    console.error('Failed to add reference to subculture:', error);
+    if (error.code === 'SUBCULTURE_NOT_FOUND') {
+      return res.status(404).json({ message: 'Subculture not found' });
+    }
+    if (error.code === 'REFERENCE_NOT_FOUND') {
+      return res.status(404).json({ message: 'Reference not found' });
+    }
+    return res.status(500).json({ message: 'Failed to add reference' });
+  }
+};
+
+// GET /api/v1/admin/subcultures/:id/references-direct
+// Get all references assigned directly to subculture
+export const getSubcultureReferencesDirect = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+
+    const result = await subcultureService.getSubcultureReferencesDirect(subcultureId);
+
+    return res.status(200).json({
+      status: "success",
+      message: 'Subculture references retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Failed to get subculture references:', error);
+    return res.status(500).json({ message: 'Failed to retrieve references' });
+  }
+};
+
+// DELETE /api/v1/admin/subcultures/:id/references-direct/:referenceId
+// Remove reference from SubcultureReference
+export const removeReferenceFromSubcultureDirect = async (req: Request, res: Response) => {
+  try {
+    const subcultureId = Number(req.params.id);
+    const referenceId = Number(req.params.referenceId);
+
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (Number.isNaN(referenceId)) return res.status(400).json({ message: 'Invalid reference ID' });
+
+    await subcultureService.removeReferenceFromSubcultureDirect(subcultureId, referenceId);
+
+    return res.status(200).json({
+      status: "success",
+      message: 'Reference removed from subculture successfully',
+    });
+  } catch (error: any) {
+    console.error('Failed to remove reference from subculture:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'Reference assignment not found' });
+    }
+    return res.status(500).json({ message: 'Failed to remove reference' });
   }
 };
