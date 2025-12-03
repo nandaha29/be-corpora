@@ -65,9 +65,9 @@ export const getLandingPageData = async () => {
   )[0] || null; // Take the first BANNER as hero image (prefer culture banner, fallback to subculture banner)
 
   const heroSection = {
-    cultureName: heroCulture?.cultureName || 'Default Culture',
-    heroImage: heroImageAsset, // 1 BANNER image for hero (from culture or subculture)
-    highlightImages: highlightAssets.slice(0, 2), // 2 images for highlight rotation
+    cultureName: heroCulture?.cultureName || 'Indonesia Culture',
+    // heroImage: heroImageAsset, // 1 BANNER image for hero (from culture or subculture)
+    // highlightImages: highlightAssets.slice(0, 2), // 2 images for highlight rotation
   };
 
   // SUBCULTURE SECTION: Get 4 published subcultures ordered by priority status (HIGH first)

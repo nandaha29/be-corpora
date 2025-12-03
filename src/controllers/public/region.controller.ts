@@ -31,7 +31,7 @@ export const getRegionData = async (req: Request, res: Response) => {
         heroImage: subcultureData.heroImage,
         galleryImages: subcultureData.galleryImages?.slice(0, 3) || [],
         lexiconCount: subcultureData.lexicon?.length || 0,
-        highlights: subcultureData.profile?.highlights || [],
+        // highlights: subcultureData.profile?.highlights || [],
         type: 'subculture',
       };
     } else {
@@ -128,7 +128,7 @@ export const getRegionData = async (req: Request, res: Response) => {
           heroImage: culture.cultureAssets?.[0]?.asset?.url || null,
           galleryImages: culture.cultureAssets?.slice(0, 3).map(ca => ca.asset?.url).filter(Boolean) || [],
           lexiconCount: 0, // Culture doesn't have direct lexicons
-          highlights: [], // Could add some highlights if needed
+          // highlights: [], // Could add some highlights if needed
           type: 'culture',
           subcultureCount: culture.subcultures.length,
         };

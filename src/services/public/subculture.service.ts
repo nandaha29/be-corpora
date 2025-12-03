@@ -161,9 +161,9 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   const salamKhas = (subculture as any).traditionalGreeting || subculture.explanation;
     // (subculture.explanation && subculture.explanation.includes('Hong hulun Basuki Langgeng') ? 'Hong hulun Basuki Langgeng' : null);
 
-  const highlights = subculture.subcultureAssets
-    .filter(sa => sa.assetRole === 'HIGHLIGHT' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE')
-    .map(sa => ({ url: sa.asset.url }));
+  // const highlights = subculture.subcultureAssets
+  //   .filter(sa => sa.assetRole === 'HIGHLIGHT' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE')
+  //   .map(sa => ({ url: sa.asset.url }));
 
   const heroImageAsset = subculture.subcultureAssets
     .find(sa => sa.assetRole === 'THUMBNAIL' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE');
@@ -173,31 +173,21 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     history: subculture.explanation || 'No description available',
     salamKhas: salamKhas,
     artiSalamKhas: (subculture as any).greetingMeaning || null,
-    highlights,
+    // highlights,
   };
 
-  const galleryImages = subculture.subcultureAssets
-    .filter(sa => sa.assetRole === 'GALLERY' && sa.asset.fileType === 'PHOTO' && sa.asset.status === 'ACTIVE')
-    .map(sa => ({
-      url: sa.asset.url,
-      description: sa.asset.description || `${subculture.subcultureName} Gallery Image`,
-      caption: sa.asset.fileName || 'Cultural heritage image'
-    }));
-
-  // Include galleries from lexicons
-  const lexiconGalleryImages = subculture.codificationDomains
+  // Gallery images from lexicons only (photos with assetRole 'GALLERY')
+  const galleryImages = subculture.codificationDomains
     .flatMap(dk => dk.lexicons)
     .flatMap(l => l.lexiconAssets
-      .filter(la => la.assetRole === 'GALLERY' && la.asset.fileType === 'PHOTO')
+      .filter(la => la.assetRole === 'GALLERY' && la.asset.fileType === 'PHOTO' && la.asset.status === 'ACTIVE')
       .map(la => ({
         url: la.asset.url,
         description: la.asset.description || `${l.lexiconWord} Gallery Image`,
-        caption: la.asset.fileName || 'Cultural heritage image'
+        caption: la.asset.fileName || 'Cultural heritage image',
+        lexiconTerm: l.lexiconWord || 'Unknown Term'
       }))
     );
-
-  // Combine subculture and lexicon galleries
-  const allGalleryImages = [...galleryImages, ...lexiconGalleryImages];
 
   const model3dArray = subculture.subcultureAssets
     .filter((sa: { asset: { fileType: string; }; }) => sa.asset.fileType === 'MODEL_3D')
@@ -206,7 +196,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
       title: sa.asset.fileName || 'Untitled Model',
       description: sa.asset.description || '',
       artifactType: 'Cultural Artifact',
-      tags: [],
+      // tags: [],
     }));
 
   const lexicon = subculture.codificationDomains.flatMap((dk: { lexicons: any[]; domainName: any; }) => {
@@ -242,7 +232,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
     return {
       subcultureId: subculture.subcultureId || 0,
       profile,
-      galleryImages: allGalleryImages,
+      galleryImages: galleryImages,
       model3dArray,
       lexicon: [], // Don't return full lexicon when searching
       heroImage,
@@ -262,7 +252,7 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
   return {
     subcultureId: subculture.subcultureId || 0,
     profile,
-    galleryImages: allGalleryImages,
+    galleryImages: galleryImages,
     model3dArray,
     lexicon,
     heroImage,
