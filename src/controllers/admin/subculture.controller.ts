@@ -3,6 +3,7 @@ import * as subcultureService from "../../services/admin/subculture.service.js";
 import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema, createSubcultureReferenceSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { ReferenceRole } from "@prisma/client";
 
 // export const getAllSubcultures = async (req: Request, res: Response) => {
 //   try {
@@ -398,22 +399,21 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
   }
 };
 
-// POST /api/v1/admin/subcultures/:id/references
+// // POST /api/v1/admin/subcultures/:id/references
 export const addReferenceToSubculture = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
     if (Number.isNaN(subcultureId))
       return res.status(400).json({ message: 'Invalid subculture ID' });
 
-    const { referenceId, lexiconId, citationNote } = req.body;
+    const { referenceId, lexiconId } = req.body;
     const validated = createSubcultureReferenceSchema.parse({
       subcultureId,
       referenceId,
-      citationNote,
       lexiconId,
     });
 
-    const result = await subcultureService.addReferenceToSubculture(subcultureId, validated.referenceId, validated.lexiconId, validated.citationNote);
+    const result = await subcultureService.addReferenceToSubculture(subcultureId, validated.referenceId, validated.lexiconId);
     return res.status(201).json({
       status: "success",
       message: result.message || 'Add references successfully',
@@ -423,7 +423,10 @@ export const addReferenceToSubculture = async (req: Request, res: Response) => {
     if (error instanceof ZodError) {
       return res.status(400).json({
         message: 'Validation failed',
-        errors: error,
+        errors: {
+          name: "ZodError",
+          message: JSON.stringify(error.issues, null, 2)
+        },
       });
     }
     console.error('Failed to add reference to subculture:', error);
@@ -469,7 +472,6 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
     const referenceType = req.query.referenceType as string | undefined;
     const publicationYear = req.query.publicationYear as string | undefined;
     const status = req.query.status as string | undefined;
-    const citationNote = req.query.citationNote as string | undefined;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
@@ -479,7 +481,6 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
       referenceType,
       publicationYear,
       status,
-      citationNote,
       page,
       limit,
     });
@@ -500,22 +501,60 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
 export const addReferenceToSubcultureDirect = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
-    const { referenceId, citationNote, displayOrder } = req.body;
+    const { referenceId, displayOrder, referenceRole } = req.body;
 
     if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
     if (!referenceId) return res.status(400).json({ message: 'referenceId is required' });
 
+    // Validate referenceRole - required for linking reference
+    if (!referenceRole || referenceRole === '') {
+      const issues = [{
+        code: 'invalid_value',
+        values: Object.values(ReferenceRole),
+        path: ['referenceRole'],
+        message: `Reference role is required when linking reference. Must be one of: ${Object.values(ReferenceRole).join(', ')}`
+      }];
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: {
+          name: "ZodError",
+          message: JSON.stringify(issues, null, 2)
+        },
+      });
+    }
+
+    // Validate referenceRole enum
+    if (!Object.values(ReferenceRole).includes(referenceRole)) {
+      const issues = [{
+        code: 'invalid_enum_value',
+        options: Object.values(ReferenceRole),
+        path: ['referenceRole'],
+        message: `Reference role must be one of: ${Object.values(ReferenceRole).join(', ')}`
+      }];
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: {
+          name: "ZodError",
+          message: JSON.stringify(issues, null, 2)
+        },
+      });
+    }
+
+
     const result = await subcultureService.addReferenceToSubcultureDirect(
       subcultureId,
       referenceId,
-      citationNote,
-      displayOrder
+      displayOrder,
+      referenceRole
     );
 
     return res.status(201).json({
       status: "success",
       message: 'Reference assigned to subculture successfully',
-      data: result,
+      data: {
+        count: 1,
+        message: 'Reference assigned to subculture successfully'
+      },
     });
   } catch (error: any) {
     console.error('Failed to add reference to subculture:', error);

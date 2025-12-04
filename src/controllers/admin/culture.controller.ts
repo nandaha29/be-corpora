@@ -219,7 +219,7 @@ export const filterCultures = async (req: Request, res: Response) => {
 export const addReferenceToCulture = async (req: Request, res: Response) => {
   try {
     const cultureId = Number(req.params.id);
-    const { referenceId, citationNote, displayOrder } = req.body;
+    const { referenceId, referenceRole, displayOrder } = req.body;
 
     if (Number.isNaN(cultureId)) {
       return res.status(400).json({ success: false, message: 'Invalid culture ID' });
@@ -231,8 +231,8 @@ export const addReferenceToCulture = async (req: Request, res: Response) => {
     const result = await cultureService.addReferenceToCulture(
       cultureId,
       referenceId,
-      citationNote,
-      displayOrder
+      displayOrder,
+      referenceRole
     );
 
     return res.status(201).json({

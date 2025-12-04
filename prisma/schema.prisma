@@ -159,6 +159,7 @@ model Reference {
   authors              String?               @map("authors")
   publicationYear      String?               @map("publication_year")
   topicCategory        String?               @map("topic_category")
+  citationNote         CitationNoteType?     @map("citation_note")
   status               StatusPublish         @default(DRAFT)
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
@@ -226,39 +227,39 @@ model ContributorAsset {
 // ============================================
 
 model LexiconReference {
-  lexiconId    Int               @map("lexicon_id")
-  referenceId  Int               @map("reference_id")
-  citationNote CitationNoteType? @map("citation_note")
-  displayOrder Int?              @default(0) @map("display_order")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  lexicon      Lexicon           @relation(fields: [lexiconId], references: [lexiconId])
-  reference    Reference         @relation(fields: [referenceId], references: [referenceId])
+  lexiconId     Int            @map("lexicon_id")
+  referenceId   Int            @map("reference_id")
+  referenceRole ReferenceRole? @map("reference_role")
+  displayOrder  Int?           @default(0) @map("display_order")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  lexicon       Lexicon        @relation(fields: [lexiconId], references: [lexiconId])
+  reference     Reference      @relation(fields: [referenceId], references: [referenceId])
 
   @@id([lexiconId, referenceId])
   @@map("LEXICON_REFERENCE")
 }
 
 model SubcultureReference {
-  subcultureId Int               @map("subculture_id")
-  referenceId  Int               @map("reference_id")
-  citationNote CitationNoteType? @map("citation_note")
-  displayOrder Int?              @default(0) @map("display_order")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  subculture   Subculture        @relation(fields: [subcultureId], references: [subcultureId])
-  reference    Reference         @relation(fields: [referenceId], references: [referenceId])
+  subcultureId  Int            @map("subculture_id")
+  referenceId   Int            @map("reference_id")
+  referenceRole ReferenceRole? @map("reference_role")
+  displayOrder  Int?           @default(0) @map("display_order")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  subculture    Subculture     @relation(fields: [subcultureId], references: [subcultureId])
+  reference     Reference      @relation(fields: [referenceId], references: [referenceId])
 
   @@id([subcultureId, referenceId])
   @@map("SUBCULTURE_REFERENCE")
 }
 
 model CultureReference {
-  cultureId    Int               @map("culture_id")
-  referenceId  Int               @map("reference_id")
-  citationNote CitationNoteType? @map("citation_note")
-  displayOrder Int?              @default(0) @map("display_order")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  culture      Culture           @relation(fields: [cultureId], references: [cultureId])
-  reference    Reference         @relation(fields: [referenceId], references: [referenceId])
+  cultureId    Int            @map("culture_id")
+  referenceId  Int            @map("reference_id")
+  referenceRole ReferenceRole? @map("reference_role")
+  displayOrder Int?           @default(0) @map("display_order")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  culture      Culture        @relation(fields: [cultureId], references: [cultureId])
+  reference    Reference      @relation(fields: [referenceId], references: [referenceId])
 
   @@id([cultureId, referenceId])
   @@map("CULTURE_REFERENCE")
@@ -321,12 +322,20 @@ enum StatusKonservasi {
 
 enum CitationNoteType {
   DIRECT_QUOTE
-  PARAPHRASE //tak guna
-  INTERPRETATION //tak guna
-  FIELD_OBSERVATION //tak guna
-  ORAL_TRADITION //tak guna
+  PARAPHRASE 
+  INTERPRETATION 
+  FIELD_OBSERVATION 
+  ORAL_TRADITION 
   SECONDARY_SOURCE
   GENERAL_REFERENCE
+}
+
+enum ReferenceRole {
+  PRIMARY_SOURCE
+  SECONDARY_SOURCE
+  ILLUSTRATIVE
+  BACKGROUND
+  SUPPORTING
 }
 
 enum StatusPriority {

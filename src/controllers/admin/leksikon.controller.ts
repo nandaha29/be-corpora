@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
-import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, createLexiconReferenceSchema, updateCitationNoteSchema } from '../../lib/validators.js';
+import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, createLexiconReferenceSchema, updateReferenceRoleSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { LeksikonAssetRole } from '@prisma/client';
@@ -294,17 +294,17 @@ export const addReferenceToLeksikon = async (req: Request, res: Response) => {
     if (Number.isNaN(leksikonId))
       return res.status(400).json({ message: 'Invalid leksikon ID' });
 
-    const { referenceId, citationNote } = req.body;
+    const { referenceId, referenceRole } = req.body;
     const validated = createLexiconReferenceSchema.parse({
       lexiconId: leksikonId,
       referenceId,
-      citationNote,
+      referenceRole,
     });
 
     const result = await leksikonService.addReferenceToLeksikon(
       validated.lexiconId,
       validated.referenceId,
-      validated.citationNote
+      validated.referenceRole
     );
 
     return res.status(201).json({
@@ -389,7 +389,7 @@ export const updateAssetRole = async (req: Request, res: Response) => {
 };
 
 // PUT /api/v1/leksikons/:id/references/:referenceId
-export const updateCitationNote = async (req: Request, res: Response) => {
+export const updateReferenceRole = async (req: Request, res: Response) => {
   try {
     const leksikonId = Number(req.params.id);
     const referenceId = Number(req.params.referenceId);
@@ -397,16 +397,16 @@ export const updateCitationNote = async (req: Request, res: Response) => {
     if (Number.isNaN(leksikonId) || Number.isNaN(referenceId))
       return res.status(400).json({ message: 'Invalid IDs' });
 
-    const validated = updateCitationNoteSchema.parse(req.body);
-    const result = await leksikonService.updateCitationNote(
+    const validated = updateReferenceRoleSchema.parse(req.body);
+    const result = await leksikonService.updateReferenceRole(
       leksikonId,
       referenceId,
-      validated.citationNote
+      validated.referenceRole
     );
 
     return res.status(200).json({
       success: true,
-      message: 'Citation note updated successfully',
+      message: 'Reference role updated successfully',
       data: result,
     });
   } catch (error) {
@@ -416,7 +416,7 @@ export const updateCitationNote = async (req: Request, res: Response) => {
     if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND')
       return res.status(404).json({ message: 'Reference relation not found' });
 
-    console.error('Failed to update citation note:', error);
+    console.error('Failed to update reference role:', error);
     return res
       .status(500)
       .json({ message: 'Failed to update citation note', details: error });

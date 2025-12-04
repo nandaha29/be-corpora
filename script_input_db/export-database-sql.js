@@ -38,8 +38,8 @@ async function exportDatabaseToSQL() {
     const cultureData = await prisma.culture.findMany();
     sqlContent += `-- CULTURE TABLE (${cultureData.length} records)\n`;
     cultureData.forEach(culture => {
-      sqlContent += `INSERT INTO "CULTURE" ("culture_id", "slug", "nama_budaya", "pulau_asal", "provinsi", "kota_daerah", "klasifikasi", "karakteristik", "status_konservasi", "latitude", "longitude", "status", "created_at", "updated_at") VALUES `;
-      sqlContent += `(${culture.cultureId}, '${culture.slug.replace(/'/g, "''")}', '${culture.namaBudaya.replace(/'/g, "''")}', '${culture.pulauAsal.replace(/'/g, "''")}', '${culture.provinsi.replace(/'/g, "''")}', '${culture.kotaDaerah.replace(/'/g, "''")}', ${culture.klasifikasi ? `'${culture.klasifikasi.replace(/'/g, "''")}'` : 'NULL'}, ${culture.karakteristik ? `'${culture.karakteristik.replace(/'/g, "''")}'` : 'NULL'}, '${culture.statusKonservasi}', ${culture.latitude || 'NULL'}, ${culture.longitude || 'NULL'}, '${culture.status}', '${culture.createdAt.toISOString()}', '${culture.updatedAt.toISOString()}');\n`;
+      sqlContent += `INSERT INTO "CULTURE" ("culture_id", "slug", "culture_name", "origin_island", "province", "city_region", "classification", "characteristics", "conservation_status", "latitude", "longitude", "status", "created_at", "updated_at") VALUES `;
+      sqlContent += `(${culture.cultureId}, '${culture.slug.replace(/'/g, "''")}', '${culture.cultureName.replace(/'/g, "''")}', '${culture.originIsland.replace(/'/g, "''")}', '${culture.province.replace(/'/g, "''")}', '${culture.cityRegion.replace(/'/g, "''")}', ${culture.classification ? `'${culture.classification.replace(/'/g, "''")}'` : 'NULL'}, ${culture.characteristics ? `'${culture.characteristics.replace(/'/g, "''")}'` : 'NULL'}, '${culture.conservationStatus}', ${culture.latitude || 'NULL'}, ${culture.longitude || 'NULL'}, '${culture.status}', '${culture.createdAt.toISOString()}', '${culture.updatedAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
@@ -48,18 +48,18 @@ async function exportDatabaseToSQL() {
     const subcultureData = await prisma.subculture.findMany();
     sqlContent += `-- SUBCULTURE TABLE (${subcultureData.length} records)\n`;
     subcultureData.forEach(subculture => {
-      sqlContent += `INSERT INTO "SUBCULTURE" ("subculture_id", "nama_subkultur", "slug", "salam_khas", "penjelasan", "culture_id", "status", "status_konservasi", "created_at", "updated_at", "arti_salam_khas", "status_priority_display") VALUES `;
-      sqlContent += `(${subculture.subcultureId}, '${subculture.namaSubculture.replace(/'/g, "''")}', '${subculture.slug.replace(/'/g, "''")}', '${subculture.salamKhas.replace(/'/g, "''")}', '${subculture.penjelasan.replace(/'/g, "''")}', ${subculture.cultureId}, '${subculture.status}', '${subculture.statusKonservasi}', '${subculture.createdAt.toISOString()}', '${subculture.updatedAt.toISOString()}', ${subculture.artiSalamKhas ? `'${subculture.artiSalamKhas.replace(/'/g, "''")}'` : 'NULL'}, ${subculture.statusPriorityDisplay ? `'${subculture.statusPriorityDisplay}'` : 'NULL'});\n`;
+      sqlContent += `INSERT INTO "SUBCULTURE" ("subculture_id", "slug", "subculture_name", "traditional_greeting", "greeting_meaning", "explanation", "culture_id", "status", "display_priority_status", "conservation_status", "created_at", "updated_at") VALUES `;
+      sqlContent += `(${subculture.subcultureId}, '${subculture.slug.replace(/'/g, "''")}', '${subculture.subcultureName.replace(/'/g, "''")}', '${subculture.traditionalGreeting.replace(/'/g, "''")}', ${subculture.greetingMeaning ? `'${subculture.greetingMeaning.replace(/'/g, "''")}'` : 'NULL'}, '${subculture.explanation.replace(/'/g, "''")}', ${subculture.cultureId}, '${subculture.status}', ${subculture.displayPriorityStatus ? `'${subculture.displayPriorityStatus}'` : 'NULL'}, '${subculture.conservationStatus}', '${subculture.createdAt.toISOString()}', '${subculture.updatedAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
-    // Export DomainKodifikasi data
-    console.log('📊 Exporting DomainKodifikasi data...');
-    const domainData = await prisma.domainKodifikasi.findMany();
-    sqlContent += `-- DOMAIN_KODIFIKASI TABLE (${domainData.length} records)\n`;
+    // Export CodificationDomain data
+    console.log('📊 Exporting CodificationDomain data...');
+    const domainData = await prisma.codificationDomain.findMany();
+    sqlContent += `-- CODIFICATION_DOMAIN TABLE (${domainData.length} records)\n`;
     domainData.forEach(domain => {
-      sqlContent += `INSERT INTO "DOMAIN_KODIFIKASI" ("dk_id", "kode", "nama_domain", "penjelasan", "subculture_id", "status", "created_at", "updated_at") VALUES `;
-      sqlContent += `(${domain.domainKodifikasiId}, '${domain.kode.replace(/'/g, "''")}', '${domain.namaDomain.replace(/'/g, "''")}', '${domain.penjelasan.replace(/'/g, "''")}', ${domain.subcultureId}, '${domain.status}', '${domain.createdAt.toISOString()}', '${domain.updatedAt.toISOString()}');\n`;
+      sqlContent += `INSERT INTO "CODIFICATION_DOMAIN" ("domain_id", "code", "domain_name", "explanation", "subculture_id", "status", "created_at", "updated_at") VALUES `;
+      sqlContent += `(${domain.domainId}, '${domain.code.replace(/'/g, "''")}', '${domain.domainName.replace(/'/g, "''")}', '${domain.explanation.replace(/'/g, "''")}', ${domain.subcultureId}, '${domain.status}', '${domain.createdAt.toISOString()}', '${domain.updatedAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
@@ -68,18 +68,18 @@ async function exportDatabaseToSQL() {
     const contributorData = await prisma.contributor.findMany();
     sqlContent += `-- CONTRIBUTOR TABLE (${contributorData.length} records)\n`;
     contributorData.forEach(contributor => {
-      sqlContent += `INSERT INTO "CONTRIBUTOR" ("contributor_id", "nama_contributor", "institusi", "email", "expertise_area", "contact_info", "is_coordinator", "status_coordinator", "registered_at", "status_priority_display") VALUES `;
-      sqlContent += `(${contributor.contributorId}, '${contributor.namaContributor.replace(/'/g, "''")}', '${contributor.institusi.replace(/'/g, "''")}', '${contributor.email.replace(/'/g, "''")}', '${contributor.expertiseArea.replace(/'/g, "''")}', '${contributor.contactInfo.replace(/'/g, "''")}', ${contributor.isCoordinator}, '${contributor.statusCoordinator}', '${contributor.registeredAt.toISOString()}', ${contributor.statusPriorityDisplay ? `'${contributor.statusPriorityDisplay}'` : 'NULL'});\n`;
+      sqlContent += `INSERT INTO "CONTRIBUTOR" ("contributor_id", "contributor_name", "institution", "email", "expertise_area", "contact_info", "display_priority_status", "is_coordinator", "coordinator_status", "registered_at") VALUES `;
+      sqlContent += `(${contributor.contributorId}, '${contributor.contributorName.replace(/'/g, "''")}', '${contributor.institution.replace(/'/g, "''")}', '${contributor.email.replace(/'/g, "''")}', '${contributor.expertiseArea.replace(/'/g, "''")}', '${contributor.contactInfo.replace(/'/g, "''")}', ${contributor.displayPriorityStatus ? `'${contributor.displayPriorityStatus}'` : 'NULL'}, ${contributor.isCoordinator}, '${contributor.coordinatorStatus}', '${contributor.registeredAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
-    // Export Leksikon data
-    console.log('📊 Exporting Leksikon data...');
-    const leksikonData = await prisma.leksikon.findMany();
-    sqlContent += `-- LEKSIKON TABLE (${leksikonData.length} records)\n`;
-    leksikonData.forEach(leksikon => {
-      sqlContent += `INSERT INTO "LEKSIKON" ("leksikon_id", "slug", "kata_leksikon", "ipa_international_phonetic_alphabet", "transliterasi", "makna_etimologi", "makna_kultural", "common_meaning", "translation", "varian", "translation_varians", "deskripsi_lain", "dk_id", "status_preservasi", "contributor_id", "status", "created_at", "updated_at") VALUES `;
-      sqlContent += `(${leksikon.leksikonId}, '${leksikon.slug.replace(/'/g, "''")}', '${leksikon.kataLeksikon.replace(/'/g, "''")}', '${leksikon.ipa.replace(/'/g, "''")}', '${leksikon.transliterasi.replace(/'/g, "''")}', '${leksikon.maknaEtimologi.replace(/'/g, "''")}', '${leksikon.maknaKultural.replace(/'/g, "''")}', '${leksikon.commonMeaning.replace(/'/g, "''")}', '${leksikon.translation.replace(/'/g, "''")}', ${leksikon.varian ? `'${leksikon.varian.replace(/'/g, "''")}'` : 'NULL'}, ${leksikon.translationVarians ? `'${leksikon.translationVarians.replace(/'/g, "''")}'` : 'NULL'}, ${leksikon.deskripsiLain ? `'${leksikon.deskripsiLain.replace(/'/g, "''")}'` : 'NULL'}, ${leksikon.domainKodifikasiId}, '${leksikon.statusPreservasi}', ${leksikon.contributorId}, '${leksikon.status}', '${leksikon.createdAt.toISOString()}', '${leksikon.updatedAt.toISOString()}');\n`;
+    // Export Lexicon data
+    console.log('📊 Exporting Lexicon data...');
+    const lexiconData = await prisma.lexicon.findMany();
+    sqlContent += `-- LEXICON TABLE (${lexiconData.length} records)\n`;
+    lexiconData.forEach(lexicon => {
+      sqlContent += `INSERT INTO "LEXICON" ("lexicon_id", "slug", "lexicon_word", "ipa_international_phonetic_alphabet", "transliteration", "etymological_meaning", "cultural_meaning", "common_meaning", "translation", "variant", "variant_translations", "domain_id", "conservation_status", "contributor_id", "status", "created_at", "updated_at") VALUES `;
+      sqlContent += `(${lexicon.lexiconId}, '${lexicon.slug.replace(/'/g, "''")}', '${lexicon.lexiconWord.replace(/'/g, "''")}', ${lexicon.ipaInternationalPhoneticAlphabet ? `'${lexicon.ipaInternationalPhoneticAlphabet.replace(/'/g, "''")}'` : 'NULL'}, '${lexicon.transliteration.replace(/'/g, "''")}', '${lexicon.etymologicalMeaning.replace(/'/g, "''")}', '${lexicon.culturalMeaning.replace(/'/g, "''")}', '${lexicon.commonMeaning.replace(/'/g, "''")}', '${lexicon.translation.replace(/'/g, "''")}', ${lexicon.variant ? `'${lexicon.variant.replace(/'/g, "''")}'` : 'NULL'}, ${lexicon.variantTranslations ? `'${lexicon.variantTranslations.replace(/'/g, "''")}'` : 'NULL'}, ${lexicon.codificationDomainId}, '${lexicon.conservationStatus}', ${lexicon.contributorId}, '${lexicon.status}', '${lexicon.createdAt.toISOString()}', '${lexicon.updatedAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
@@ -88,29 +88,29 @@ async function exportDatabaseToSQL() {
     const assetData = await prisma.asset.findMany();
     sqlContent += `-- ASSET TABLE (${assetData.length} records)\n`;
     assetData.forEach(asset => {
-      sqlContent += `INSERT INTO "ASSET" ("asset_id", "nama_file", "tipe", "penjelasan", "url", "file_size", "hash_checksum", "metadata_json", "status", "created_at", "updated_at") VALUES `;
-      sqlContent += `(${asset.assetId}, '${asset.namaFile.replace(/'/g, "''")}', '${asset.tipe}', ${asset.penjelasan ? `'${asset.penjelasan.replace(/'/g, "''")}'` : 'NULL'}, '${asset.url.replace(/'/g, "''")}', ${asset.fileSize ? `'${asset.fileSize.replace(/'/g, "''")}'` : 'NULL'}, ${asset.hashChecksum ? `'${asset.hashChecksum.replace(/'/g, "''")}'` : 'NULL'}, ${asset.metadataJson ? `'${asset.metadataJson.replace(/'/g, "''")}'` : 'NULL'}, '${asset.status}', '${asset.createdAt.toISOString()}', '${asset.updatedAt.toISOString()}');\n`;
+      sqlContent += `INSERT INTO "ASSET" ("asset_id", "file_name", "type", "description", "url", "file_size", "hash_checksum", "metadata_json", "status", "created_at", "updated_at") VALUES `;
+      sqlContent += `(${asset.assetId}, '${asset.fileName.replace(/'/g, "''")}', '${asset.type}', ${asset.description ? `'${asset.description.replace(/'/g, "''")}'` : 'NULL'}, '${asset.url.replace(/'/g, "''")}', ${asset.fileSize || 'NULL'}, ${asset.hashChecksum ? `'${asset.hashChecksum.replace(/'/g, "''")}'` : 'NULL'}, ${asset.metadataJson ? `'${asset.metadataJson.replace(/'/g, "''")}'` : 'NULL'}, '${asset.status}', '${asset.createdAt.toISOString()}', '${asset.updatedAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
-    // Export Referensi data
-    console.log('📊 Exporting Referensi data...');
-    const referensiData = await prisma.referensi.findMany();
-    sqlContent += `-- REFERENSI TABLE (${referensiData.length} records)\n`;
-    referensiData.forEach(referensi => {
-      sqlContent += `INSERT INTO "REFERENSI" ("referensi_id", "judul", "tipe_referensi", "penjelasan", "url", "penulis", "tahun_terbit", "status", "created_at", "updated_at") VALUES `;
-      sqlContent += `(${referensi.referensiId}, '${referensi.judul.replace(/'/g, "''")}', '${referensi.tipeReferensi}', ${referensi.penjelasan ? `'${referensi.penjelasan.replace(/'/g, "''")}'` : 'NULL'}, ${referensi.url ? `'${referensi.url.replace(/'/g, "''")}'` : 'NULL'}, ${referensi.penulis ? `'${referensi.penulis.replace(/'/g, "''")}'` : 'NULL'}, ${referensi.tahunTerbit ? `'${referensi.tahunTerbit.replace(/'/g, "''")}'` : 'NULL'}, '${referensi.status}', '${referensi.createdAt.toISOString()}', '${referensi.updatedAt.toISOString()}');\n`;
+    // Export Reference data
+    console.log('📊 Exporting Reference data...');
+    const referenceData = await prisma.reference.findMany();
+    sqlContent += `-- REFERENCE TABLE (${referenceData.length} records)\n`;
+    referenceData.forEach(reference => {
+      sqlContent += `INSERT INTO "REFERENCE" ("reference_id", "title", "reference_type", "description", "url", "author", "publication_year", "status", "created_at", "updated_at") VALUES `;
+      sqlContent += `(${reference.referenceId}, '${reference.title.replace(/'/g, "''")}', '${reference.referenceType}', ${reference.description ? `'${reference.description.replace(/'/g, "''")}'` : 'NULL'}, ${reference.url ? `'${reference.url.replace(/'/g, "''")}'` : 'NULL'}, ${reference.author ? `'${reference.author.replace(/'/g, "''")}'` : 'NULL'}, ${reference.publicationYear ? `'${reference.publicationYear.replace(/'/g, "''")}'` : 'NULL'}, '${reference.status}', '${reference.createdAt.toISOString()}', '${reference.updatedAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
     // Export junction tables
     console.log('📊 Exporting junction tables...');
 
-    const leksikonAssetsData = await prisma.leksikonAsset.findMany();
-    sqlContent += `-- LEKSIKON_ASSETS TABLE (${leksikonAssetsData.length} records)\n`;
-    leksikonAssetsData.forEach(item => {
-      sqlContent += `INSERT INTO "LEKSIKON_ASSETS" ("leksikon_id", "asset_id", "asset_role", "created_at") VALUES `;
-      sqlContent += `(${item.leksikonId}, ${item.assetId}, '${item.assetRole}', '${item.createdAt.toISOString()}');\n`;
+    const lexiconAssetsData = await prisma.lexiconAsset.findMany();
+    sqlContent += `-- LEXICON_ASSETS TABLE (${lexiconAssetsData.length} records)\n`;
+    lexiconAssetsData.forEach(item => {
+      sqlContent += `INSERT INTO "LEXICON_ASSETS" ("lexicon_id", "asset_id", "asset_role", "created_at") VALUES `;
+      sqlContent += `(${item.lexiconId}, ${item.assetId}, '${item.assetRole}', '${item.createdAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 
@@ -138,11 +138,27 @@ async function exportDatabaseToSQL() {
     });
     sqlContent += '\n';
 
-    const leksikonReferensiData = await prisma.leksikonReferensi.findMany();
-    sqlContent += `-- LEKSIKON_REFERENSI TABLE (${leksikonReferensiData.length} records)\n`;
-    leksikonReferensiData.forEach(item => {
-      sqlContent += `INSERT INTO "LEKSIKON_REFERENSI" ("leksikon_id", "referensi_id", "citation_note", "created_at") VALUES `;
-      sqlContent += `(${item.leksikonId}, ${item.referensiId}, ${item.citationNote ? `'${item.citationNote}'` : 'NULL'}, '${item.createdAt.toISOString()}');\n`;
+    const lexiconReferenceData = await prisma.lexiconReference.findMany();
+    sqlContent += `-- LEXICON_REFERENCE TABLE (${lexiconReferenceData.length} records)\n`;
+    lexiconReferenceData.forEach(item => {
+      sqlContent += `INSERT INTO "LEXICON_REFERENCE" ("lexicon_id", "reference_id", "reference_role", "created_at") VALUES `;
+      sqlContent += `(${item.lexiconId}, ${item.referenceId}, '${item.referenceRole}', '${item.createdAt.toISOString()}');\n`;
+    });
+    sqlContent += '\n';
+
+    const subcultureReferenceData = await prisma.subcultureReference.findMany();
+    sqlContent += `-- SUBCULTURE_REFERENCE TABLE (${subcultureReferenceData.length} records)\n`;
+    subcultureReferenceData.forEach(item => {
+      sqlContent += `INSERT INTO "SUBCULTURE_REFERENCE" ("subculture_id", "reference_id", "reference_role", "created_at") VALUES `;
+      sqlContent += `(${item.subcultureId}, ${item.referenceId}, '${item.referenceRole}', '${item.createdAt.toISOString()}');\n`;
+    });
+    sqlContent += '\n';
+
+    const cultureReferenceData = await prisma.cultureReference.findMany();
+    sqlContent += `-- CULTURE_REFERENCE TABLE (${cultureReferenceData.length} records)\n`;
+    cultureReferenceData.forEach(item => {
+      sqlContent += `INSERT INTO "CULTURE_REFERENCE" ("culture_id", "reference_id", "reference_role", "created_at") VALUES `;
+      sqlContent += `(${item.cultureId}, ${item.referenceId}, '${item.referenceRole}', '${item.createdAt.toISOString()}');\n`;
     });
     sqlContent += '\n';
 

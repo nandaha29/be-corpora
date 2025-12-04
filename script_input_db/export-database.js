@@ -31,25 +31,25 @@ async function exportAllData() {
     exportData.tables['SUBCULTURE'] = await prisma.subculture.findMany({
       include: {
         culture: true,
-        domainKodifikasis: true,
+        codificationDomains: true,
         subcultureAssets: true
       }
     });
 
     // Export DomainKodifikasi data
-    console.log('📊 Exporting DomainKodifikasi data...');
-    exportData.tables['DOMAIN_KODIFIKASI'] = await prisma.domainKodifikasi.findMany({
+    console.log('📊 Exporting CodificationDomain data...');
+    exportData.tables['CODIFICATION_DOMAIN'] = await prisma.codificationDomain.findMany({
       include: {
         subculture: true,
-        leksikons: true
+        lexicons: true
       }
     });
 
     // Export Leksikon data
-    console.log('📊 Exporting Leksikon data...');
-    exportData.tables['LEKSIKON'] = await prisma.leksikon.findMany({
+    console.log('📊 Exporting Lexicon data...');
+    exportData.tables['LEXICON'] = await prisma.lexicon.findMany({
       include: {
-        domainKodifikasi: {
+        codificationDomain: {
           include: {
             subculture: {
               include: {
@@ -59,14 +59,14 @@ async function exportAllData() {
           }
         },
         contributor: true,
-        leksikonAssets: {
+        lexiconAssets: {
           include: {
             asset: true
           }
         },
-        leksikonReferensis: {
+        lexiconReferences: {
           include: {
-            referensi: true
+            reference: true
           }
         }
       }
@@ -81,7 +81,7 @@ async function exportAllData() {
             asset: true
           }
         },
-        leksikons: true
+        lexicons: true
       }
     });
 
@@ -89,15 +89,15 @@ async function exportAllData() {
     console.log('📊 Exporting Asset data...');
     exportData.tables['ASSET'] = await prisma.asset.findMany();
 
-    // Export Referensi data
-    console.log('📊 Exporting Referensi data...');
-    exportData.tables['REFERENSI'] = await prisma.referensi.findMany();
+    // Export Reference data
+    console.log('📊 Exporting Reference data...');
+    exportData.tables['REFERENCE'] = await prisma.reference.findMany();
 
     // Export junction tables
     console.log('📊 Exporting junction tables...');
-    exportData.tables['LEKSIKON_ASSETS'] = await prisma.leksikonAsset.findMany({
+    exportData.tables['LEXICON_ASSETS'] = await prisma.lexiconAsset.findMany({
       include: {
-        leksikon: true,
+        lexicon: true,
         asset: true
       }
     });
@@ -123,10 +123,24 @@ async function exportAllData() {
       }
     });
 
-    exportData.tables['LEKSIKON_REFERENSI'] = await prisma.leksikonReferensi.findMany({
+    exportData.tables['LEXICON_REFERENCE'] = await prisma.lexiconReference.findMany({
       include: {
-        leksikon: true,
-        referensi: true
+        lexicon: true,
+        reference: true
+      }
+    });
+
+    exportData.tables['SUBCULTURE_REFERENCE'] = await prisma.subcultureReference.findMany({
+      include: {
+        subculture: true,
+        reference: true
+      }
+    });
+
+    exportData.tables['CULTURE_REFERENCE'] = await prisma.cultureReference.findMany({
+      include: {
+        culture: true,
+        reference: true
       }
     });
 

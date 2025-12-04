@@ -214,8 +214,8 @@ export const filterCultures = async (
 export const addReferenceToCulture = async (
   cultureId: number,
   referenceId: number,
-  citationNote?: string,
-  displayOrder?: number
+  displayOrder?: number,
+  referenceRole?: string
 ) => {
   // Verify culture exists
   const culture = await prisma.culture.findUnique({ where: { cultureId } });
@@ -242,13 +242,13 @@ export const addReferenceToCulture = async (
       },
     },
     update: {
-      citationNote: citationNote as any,
+      referenceRole: referenceRole as any,
       displayOrder: displayOrder ?? 0,
     },
     create: {
       cultureId,
       referenceId,
-      citationNote: citationNote as any,
+      referenceRole: referenceRole as any,
       displayOrder: displayOrder ?? 0,
     },
     include: {

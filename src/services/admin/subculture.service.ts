@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, SubcultureAssetRole, CitationNoteType } from "@prisma/client";
+import { Prisma, PrismaClient, SubcultureAssetRole, ReferenceRole } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
@@ -384,7 +384,7 @@ export const getReferenceUsage = async (referenceId: number) => {
   });
 };
 
-export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number, citationNote?: CitationNoteType) => {
+export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number, referenceRole?: ReferenceRole) => {
   // Verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
   if (!subculture) {
@@ -423,7 +423,7 @@ export const addReferenceToSubculture = async (subcultureId: number, referenceId
     }
 
     const result = await prisma.lexiconReference.create({
-      data: { lexiconId, referenceId, citationNote },
+      data: { lexiconId, referenceId, referenceRole },
       include: { reference: true, lexicon: true },
     });
 
@@ -447,7 +447,7 @@ export const addReferenceToSubculture = async (subcultureId: number, referenceId
     const assignments = lexicons.map(lexicon => ({
       lexiconId: lexicon.lexiconId,
       referenceId,
-      citationNote,
+      referenceRole,
     }));
 
     const result = await prisma.lexiconReference.createMany({
@@ -535,7 +535,7 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
   referenceType?: string;
   publicationYear?: string;
   status?: string;
-  citationNote?: string;
+  referenceRole?: string;
   page?: number;
   limit?: number;
 }) => {
@@ -579,11 +579,12 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
     }
   }
 
-  // Add citationNote filter
-  if (filters.citationNote) {
-    const normalized = filters.citationNote.toUpperCase();
-    if (normalized === "RESOURCE") {
-      where.citationNote = "RESOURCE" as any;
+  // Add referenceRole filter
+  if (filters.referenceRole) {
+    const normalized = filters.referenceRole.toUpperCase();
+    const allowed = ["PRIMARY_SOURCE", "SECONDARY_SOURCE", "ILLUSTRATIVE", "BACKGROUND", "SUPPORTING"];
+    if (allowed.includes(normalized)) {
+      where.referenceRole = normalized as any;
     }
   }
 
@@ -620,7 +621,7 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
         referenceType: filters.referenceType || null,
         publicationYear: filters.publicationYear || null,
         status: filters.status || null,
-        citationNote: filters.citationNote || null,
+        referenceRole: filters.referenceRole || null,
       },
     },
   };
@@ -630,8 +631,8 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
 export const addReferenceToSubcultureDirect = async (
   subcultureId: number,
   referenceId: number,
-  citationNote?: string,
-  displayOrder?: number
+  displayOrder?: number,
+  referenceRole?: ReferenceRole
 ) => {
   // Verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
@@ -658,14 +659,14 @@ export const addReferenceToSubcultureDirect = async (
       },
     },
     update: {
-      citationNote: citationNote as any,
       displayOrder: displayOrder ?? 0,
+      referenceRole: referenceRole,
     },
     create: {
       subcultureId,
       referenceId,
-      citationNote: citationNote as any,
       displayOrder: displayOrder ?? 0,
+      referenceRole: referenceRole,
     },
     include: {
       reference: true,

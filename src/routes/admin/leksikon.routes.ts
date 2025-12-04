@@ -181,8 +181,8 @@ router
 // DUPLICATE: Same as line 151 with /role, prefer the /role version for clarity
 // router.put('/:id/assets/:assetId', authenticateAdmin, leksikonController.updateAssetRole);
 
-// Citation note update
-router.put('/:id/references/:referenceId', authenticateAdmin, leksikonController.updateCitationNote);
+// Reference role update
+router.put('/:id/references/:referenceId', authenticateAdmin, leksikonController.updateReferenceRole);
 
 // ============================================
 // 🔍 SEARCH & FILTERING

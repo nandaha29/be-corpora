@@ -58,15 +58,16 @@ router.get("/:id/assigned-assets", authenticateAdmin, subcultureController.getAs
 // Digunakan untuk: Menampilkan daftar referensi yang terkait dengan subculture
 router.get("/:id/assigned-references", authenticateAdmin, subcultureController.getAssignedReferences);
 
-// POST /api/v1/admin/subcultures/:id/references
-// Menambahkan referensi ke subculture (assign ke leksikon dalam subculture)
-// Body: referenceId, lexiconId (opsional, jika tidak ada akan assign ke semua leksikon)
-// Digunakan untuk: Menambahkan referensi ke subculture
-router.post("/:id/references", authenticateAdmin, subcultureController.addReferenceToSubculture);
+// // POST /api/v1/admin/subcultures/:id/references
+// // Menambahkan referensi ke subculture (assign ke leksikon dalam subculture)
+// // Body: referenceId, lexiconId (opsional, jika tidak ada akan assign ke semua leksikon)
+// // Digunakan untuk: Menambahkan referensi ke subculture
+//  TIDAK DIGUNAKAN: karena referensi sekarang di-assign langsung ke SubcultureReference secara bersamaan dengan  semua leksikon
+// router.post("/:id/references", authenticateAdmin, subcultureController.addReferenceToSubculture);
 
 // POST /api/v1/admin/subcultures/:id/references-direct
 // Assign reference directly to SubcultureReference (for subculture page)
-// Body: referenceId, citationNote (optional), displayOrder (optional)
+// Body: referenceId, displayOrder (optional), referenceRole (optional)
 // Digunakan untuk: Menambahkan referensi langsung ke subculture page
 router.post("/:id/references-direct", authenticateAdmin, subcultureController.addReferenceToSubcultureDirect);
 
@@ -87,8 +88,8 @@ router.delete("/:id/references-direct/:referenceId", authenticateAdmin, subcultu
 router.get("/:id/filter-assets", authenticateAdmin, subcultureController.filterSubcultureAssets);
 
 // GET /api/v1/admin/subcultures/:id/filter-references
-// Filter referensi subculture by Type, Year, Status, Citation (kombinasi)
-// Query params: referenceType, publicationYear, status, citationNote, page, limit
+// Filter referensi subculture by Type, Year, Status, ReferenceRole (kombinasi)
+// Query params: referenceType, publicationYear, status, referenceRole, page, limit
 // Digunakan untuk: Advanced filtering referensi dalam subculture
 router.get("/:id/filter-references", authenticateAdmin, subcultureController.filterSubcultureReferences);
 

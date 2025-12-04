@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateLexiconInput, UpdateLexiconInput } from '../../lib/validators.js';
-import { Prisma, LeksikonAssetRole, CitationNoteType } from '@prisma/client';
+import { Prisma, LeksikonAssetRole, ReferenceRole } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import fs from 'fs';
 import csv from 'csv-parser';
@@ -293,7 +293,7 @@ export const getLeksikonAssets = async (id: number) => {
 //   });
 // };
 
-export const addReferenceToLeksikon = async  (leksikonId: number, referenceId: number, citationNote?: CitationNoteType) => {
+export const addReferenceToLeksikon = async  (leksikonId: number, referenceId: number, referenceRole?: ReferenceRole) => {
   const leksikon = await prisma.lexicon.findUnique({ where: { lexiconId: leksikonId } });
   if (!leksikon) {
     const err = new Error('Leksikon not found');
@@ -317,12 +317,12 @@ export const addReferenceToLeksikon = async  (leksikonId: number, referenceId: n
       },
     },
     update: {
-      citationNote,
+      referenceRole,
     },
     create: {
       lexiconId: leksikonId,
       referenceId,
-      citationNote,
+      referenceRole,
     },
   });
 };
@@ -365,11 +365,11 @@ export const updateAssetRole = async (
   });
 };
 
-// UPDATE citationNote di relasi leksikonReferensi
-export const updateCitationNote = async (
+// UPDATE referenceRole di relasi leksikonReferensi
+export const updateReferenceRole = async (
   leksikonId: number,
   referenceId: number,
-  citationNote?: CitationNoteType
+  referenceRole?: ReferenceRole
 ) => {
   const existing = await prisma.lexiconReference.findUnique({
     where: { lexiconId_referenceId: { lexiconId: leksikonId, referenceId: referenceId } },
@@ -383,7 +383,7 @@ export const updateCitationNote = async (
 
   return prisma.lexiconReference.update({
     where: { lexiconId_referenceId: { lexiconId: leksikonId, referenceId: referenceId } },
-    data: { citationNote },
+    data: { referenceRole },
     include: { reference: true },
   });
 };
