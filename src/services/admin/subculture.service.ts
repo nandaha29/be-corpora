@@ -35,6 +35,9 @@ export const getSubcultureById = async (id: number) => {
       subcultureAssets: {
         include: { asset: true },
       },
+      subcultureReferences: {
+        include: { reference: true },
+      },
     },
   });
 };
