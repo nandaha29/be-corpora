@@ -180,7 +180,7 @@ export const getSubculturesByCulture = async (cultureId: number) => {
 export const getFilteredSubcultures = async (filters: {
   status?: string;
   statusPriorityDisplay?: string;
-  statusKonservasi?: string;
+  conservationStatus?: string;
   cultureId?: number;
   search?: string;
   page?: number;
@@ -191,29 +191,51 @@ export const getFilteredSubcultures = async (filters: {
   const skip = (page - 1) * limit;
 
   const where: any = {};
+  const andConditions: any[] = [];
 
-  // Status filters
+  // Status filters - add directly to where with enum validation
   if (filters.status) {
-    where.status = filters.status;
+    const validStatus = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
+    const normalized = filters.status.toUpperCase();
+    if (validStatus.includes(normalized)) {
+      where.status = normalized;
+    }
   }
   if (filters.statusPriorityDisplay) {
-    where.priorityDisplayStatus = filters.statusPriorityDisplay;
+    const validPriority = ['HIGH', 'MEDIUM', 'LOW', 'HIDDEN'];
+    const normalized = filters.statusPriorityDisplay.toUpperCase();
+    if (validPriority.includes(normalized)) {
+      where.displayPriorityStatus = normalized;
+    }
   }
-  if (filters.statusKonservasi) {
-    where.conservationStatus = filters.statusKonservasi;
+  if (filters.conservationStatus) {
+    const validConservation = ['MAINTAINED', 'TREATED', 'CRITICAL', 'ARCHIVED'];
+    const normalized = filters.conservationStatus.toUpperCase();
+    if (validConservation.includes(normalized)) {
+      where.conservationStatus = normalized;
+    }
   }
   if (filters.cultureId) {
     where.cultureId = filters.cultureId;
   }
 
-  // Search filter
+  console.log('Prisma where query:', JSON.stringify(where, null, 2));
+
+  // Search filter - use AND condition if other filters exist
   if (filters.search) {
-    where.OR = [
-      { subcultureName: { contains: filters.search, mode: 'insensitive' } },
-      { traditionalGreeting: { contains: filters.search, mode: 'insensitive' } },
-      { explanation: { contains: filters.search, mode: 'insensitive' } },
-      { culture: { cultureName: { contains: filters.search, mode: 'insensitive' } } },
-    ];
+    andConditions.push({
+      OR: [
+        { subcultureName: { contains: filters.search, mode: 'insensitive' } },
+        { traditionalGreeting: { contains: filters.search, mode: 'insensitive' } },
+        { explanation: { contains: filters.search, mode: 'insensitive' } },
+        { culture: { cultureName: { contains: filters.search, mode: 'insensitive' } } },
+      ],
+    });
+  }
+
+  // Combine where conditions with AND if search is present
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
   }
 
   const [data, total] = await Promise.all([
@@ -244,7 +266,7 @@ export const getFilteredSubcultures = async (filters: {
       filters: {
         status: filters.status || null,
         statusPriorityDisplay: filters.statusPriorityDisplay || null,
-        statusKonservasi: filters.statusKonservasi || null,
+        conservationStatus: filters.conservationStatus || null,
         cultureId: filters.cultureId || null,
         search: filters.search || null,
       },

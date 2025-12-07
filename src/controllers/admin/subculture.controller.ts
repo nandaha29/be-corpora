@@ -261,12 +261,14 @@ export const getFilteredSubcultures = async (req: Request, res: Response) => {
     const filters = {
       status: req.query.status as string,
       statusPriorityDisplay: req.query.statusPriorityDisplay as string,
-      statusKonservasi: req.query.statusKonservasi as string,
+      conservationStatus: req.query.conservationStatus as string,
       cultureId: req.query.cultureId ? parseInt(req.query.cultureId as string) : undefined,
       search: req.query.search as string,
       page: req.query.page ? parseInt(req.query.page as string) : 1,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
     };
+
+    // console.log('Filter params received:', filters);
 
     const result = await subcultureService.getFilteredSubcultures(filters);
 
@@ -276,8 +278,12 @@ export const getFilteredSubcultures = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (error) {
-    console.error("Error fetching filtered subcultures:", error);
-    res.status(500).json({ error: "Failed to fetch filtered subcultures" });
+    // console.error("Error fetching filtered subcultures:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fetch filtered subcultures",
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 };
 
