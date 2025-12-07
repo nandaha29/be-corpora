@@ -285,6 +285,15 @@ export const getAssignedAssets = async (subcultureId: number) => {
 };
 
 export const getAssignedReferences = async (subcultureId: number) => {
+  // Get references assigned directly to subculture (SubcultureReference table)
+  const directReferences = await prisma.subcultureReference.findMany({
+    where: { subcultureId },
+    include: {
+      reference: true,
+    },
+    orderBy: { displayOrder: 'asc' },
+  });
+
   // Get all leksikon that belong to this subculture's codificationDomains
   const domainIds = await prisma.codificationDomain.findMany({
     where: { subcultureId },
@@ -293,8 +302,8 @@ export const getAssignedReferences = async (subcultureId: number) => {
 
   const domainIdList = domainIds.map(d => d.domainId);
 
-  // Get all references used by lexicons in those domains
-  return prisma.lexiconReference.findMany({
+  // Get all references used by lexicons in those domains (LexiconReference table)
+  const lexiconReferences = await prisma.lexiconReference.findMany({
     where: {
       lexicon: {
         domainId: { in: domainIdList },
@@ -314,6 +323,14 @@ export const getAssignedReferences = async (subcultureId: number) => {
     },
     orderBy: { createdAt: 'desc' },
   });
+
+  // Combine both results
+  return {
+    directReferences,       // References assigned directly to subculture
+    lexiconReferences,      // References assigned via lexicons
+    totalDirect: directReferences.length,
+    totalViaLexicon: lexiconReferences.length,
+  };
 };
 
 export const searchAssetsInSubculture = async (subcultureId: number, searchQuery: string) => {
