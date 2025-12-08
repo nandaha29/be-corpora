@@ -121,7 +121,7 @@ export const filterDomainKodifikasis = async (filters: {
   if (filters.code) {
     whereCondition.code = {
       contains: filters.code,
-      // mode: 'insensitive'
+      mode: 'insensitive'
     };
   }
 
@@ -170,9 +170,9 @@ export const searchDomainKodifikasis = async (query: string, page = 1, limit = 2
     prisma.codificationDomain.findMany({
       where: {
         OR: [
-          { code: { contains: query } },
-          { domainName: { contains: query } },
-          { explanation: { contains: query } },
+          { code: { contains: query, mode: 'insensitive' } },
+          { domainName: { contains: query, mode: 'insensitive' } },
+          { explanation: { contains: query, mode: 'insensitive' } },
         ],
       },
       // include: {
@@ -185,9 +185,9 @@ export const searchDomainKodifikasis = async (query: string, page = 1, limit = 2
     prisma.codificationDomain.count({
       where: {
         OR: [
-          { code: { contains: query } },
-          { domainName: { contains: query } },
-          { explanation: { contains: query } },
+          { code: { contains: query, mode: 'insensitive' } },
+          { domainName: { contains: query, mode: 'insensitive' } },
+          { explanation: { contains: query, mode: 'insensitive' } },
         ],
       },
     }),
