@@ -1,5 +1,7 @@
 # Dokumentasi Proyek Leksikon Backend untuk Skripsi
 
+*Last Updated: December 8, 2025*
+
 ## 📋 Daftar Isi
 
 1. [Deskripsi Pengguna](#41-deskripsi-pengguna)
@@ -8,6 +10,16 @@
 4. [Arsitektur Sistem](#44-arsitektur-sistem)
 5. [Dokumentasi API](#45-dokumentasi-api)
 6. [Analisis Endpoint](#analisis-endpoint)
+
+---
+
+## 📝 Recent Updates (December 2025)
+
+- ✅ **Complete API Documentation**: Comprehensive documentation for all admin and public endpoints
+- ✅ **Enhanced Asset Filtering**: Combined search and filter capabilities in asset endpoints
+- ✅ **Geographic Coordinates**: Support for latitude/longitude coordinates in cultures (not PostGIS)
+- ✅ **Public API Integration**: Detailed documentation with frontend usage notes
+- ✅ **Database Optimization**: Improved query performance and data relationships
 
 ---
 
@@ -102,7 +114,7 @@ Sistem Leksikon Backend memiliki 3 kategori pengguna utama:
 - [x] Search cultures (`GET /api/v1/search/culture`)
 - [x] Filter by status (DRAFT, PUBLISHED, ARCHIVED)
 - [x] Filter by domain kodifikasi
-- [x] Filter by geographic location (PostGIS)
+- [x] Filter by geographic location (latitude/longitude coordinates)
 - [x] Filter by conservation status
 - [x] Filter by reference type
 - [x] Filter by asset type
@@ -222,7 +234,7 @@ Return Asset Info → End
 │      DATABASE LAYER                     │
 │  - Prisma ORM                           │
 │  - PostgreSQL Database                  │
-│  - PostGIS Extension                    │
+│  - PostgreSQL Database                  │
 └─────────────────┬───────────────────────┘
                   │
 ┌─────────────────▼───────────────────────┐
@@ -237,7 +249,7 @@ Return Asset Info → End
 - **Runtime**: Node.js dengan TypeScript
 - **Framework**: Express.js v5.1.0
 - **ORM**: Prisma v6.16.2
-- **Database**: PostgreSQL dengan PostGIS
+- **Database**: PostgreSQL
 - **Authentication**: JWT (jsonwebtoken) + bcrypt
 - **File Storage**: Vercel Blob Storage
 - **File Upload**: Multer
@@ -634,7 +646,7 @@ Return Asset Info → End
 #### 5.1.1 Framework & Technology Stack
 - **Node.js** + **Express.js** + **TypeScript**
 - **Prisma ORM** untuk database abstraction
-- **PostgreSQL** + **PostGIS** untuk data geografis
+- **PostgreSQL** untuk penyimpanan data
 
 #### 5.1.2 Web Service Architecture
 - **RESTful API design principles**
@@ -839,7 +851,16 @@ ERD lengkap dengan:
 1. **Cleanup**: Hapus atau document sebagai deprecated endpoint yang tidak digunakan
 2. **Documentation**: Lengkapi dokumentasi API dengan contoh request/response
 3. **Testing**: Tambahkan unit tests dan integration tests
-4. **Monitoring**: Implementasi logging dan monitoring untuk production
+3. **Monitoring**: Implementasi logging dan monitoring untuk production
+
+---
+
+## 👤 Author
+
+**Nanda Ha**
+- **GitHub**: [@nandaha29](https://github.com/nandaha29)
+- **Repository**: [be-corpora](https://github.com/nandaha29/be-corpora)
+- **Project**: Leksikon Backend API for Cultural Lexicon Management System
 
 ---
 
