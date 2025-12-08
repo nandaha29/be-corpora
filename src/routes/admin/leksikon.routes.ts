@@ -187,7 +187,7 @@ router.put('/:id/assets/:assetId/role', authenticateAdmin, leksikonController.up
  * @desc Get assets by role in leksikon
  * @access Admin only
  * @param {number} id - Leksikon ID
- * @param {string} assetRole - Asset role (PRIMARY, SUPPORTING, THUMBNAIL)
+ * @param {string} assetRole - Asset role (GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D)
  */
 router.get('/:id/assets/role/:assetRole', authenticateAdmin, leksikonController.getAssetsByRole);
 
