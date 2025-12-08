@@ -29,35 +29,49 @@ Semua endpoint memerlukan JWT authentication dengan header `Authorization: Beare
   "message": "Leksikons retrieved successfully",
   "data": [
     {
-      "id": 1,
-      "term": "Tari Legong",
-      "definition": "Traditional Balinese dance performed by young girls",
-      "etymology": "From Balinese 'legong' meaning 'dance'",
-      "pronunciation": "LEH-gong",
+      "lexiconId": 1,
+      "lexiconWord": "Tari Legong",
+      "ipaInternationalPhoneticAlphabet": "ˈtari ˈləgɔŋ",
+      "transliteration": "LEH-gong",
+      "etymologicalMeaning": "Dari kata Bali 'legong' yang berarti tari",
+      "culturalMeaning": "Tari tradisional Bali yang dilakukan oleh gadis remaja",
+      "commonMeaning": "Tari Legong",
+      "translation": "Legong Dance",
+      "variant": "Tari Legong Kraton",
+      "variantTranslations": "Legong Palace Dance",
+      "otherDescription": "Tari ini biasanya ditampilkan dalam upacara keagamaan",
       "domainId": 1,
+      "contributorId": 2,
       "status": "PUBLISHED",
       "slug": "tari-legong",
       "createdAt": "2024-01-15T10:30:00Z",
       "updatedAt": "2024-01-15T10:30:00Z",
-      "domain": {
-        "id": 1,
+      "codificationDomain": {
+        "domainId": 1,
         "domainName": "Traditional Dance",
         "code": "DA001",
         "subculture": {
-          "id": 1,
+          "subcultureId": 1,
           "subcultureName": "Balinese Traditional Arts",
           "culture": {
-            "id": 1,
+            "cultureId": 1,
             "cultureName": "Balinese Culture"
           }
         }
+      },
+      "contributor": {
+        "contributorId": 2,
+        "contributorName": "Dr. Made Suastika"
       }
     }
   ],
-  "total": 1,
-  "pagination": {
+  "meta": {
+    "total": 1,
     "page": 1,
     "limit": 20,
+    "totalPages": 1
+  }
+}
     "totalPages": 1,
     "hasNext": false,
     "hasPrev": false
@@ -73,21 +87,35 @@ Semua endpoint memerlukan JWT authentication dengan header `Authorization: Beare
 **Request Body**:
 ```json
 {
-  "term": "Tari Legong",
-  "definition": "Traditional Balinese dance performed by young girls",
-  "etymology": "From Balinese 'legong' meaning 'dance'",
-  "pronunciation": "LEH-gong",
+  "lexiconWord": "Tari Legong",
+  "ipaInternationalPhoneticAlphabet": "ˈtari ˈləgɔŋ",
+  "transliteration": "LEH-gong",
+  "etymologicalMeaning": "Dari kata Bali 'legong' yang berarti tari",
+  "culturalMeaning": "Tari tradisional Bali yang dilakukan oleh gadis remaja",
+  "commonMeaning": "Tari Legong",
+  "translation": "Legong Dance",
+  "variant": "Tari Legong Kraton",
+  "variantTranslations": "Legong Palace Dance",
+  "otherDescription": "Tari ini biasanya ditampilkan dalam upacara keagamaan",
   "domainId": 1,
+  "contributorId": 2,
   "status": "DRAFT"
 }
 ```
 
 **Field Descriptions**:
-- `term`: Istilah/kata dalam bahasa asli (required)
-- `definition`: Definisi/artian dalam bahasa Indonesia (required)
-- `etymology`: Asal-usul etimologi kata (optional)
-- `pronunciation`: Cara pelafalan (optional)
+- `lexiconWord`: Kata leksikon utama (required)
+- `ipaInternationalPhoneticAlphabet`: Pelafalan IPA (optional)
+- `transliteration`: Transliteration (required)
+- `etymologicalMeaning`: Makna etimologi (required)
+- `culturalMeaning`: Makna kultural (required)
+- `commonMeaning`: Makna umum (required)
+- `translation`: Terjemahan (required)
+- `variant`: Varian kata (optional)
+- `variantTranslations`: Terjemahan varian (optional)
+- `otherDescription`: Deskripsi tambahan (optional)
 - `domainId`: ID domain kodifikasi (required)
+- `contributorId`: ID kontributor (required)
 - `status`: Status publikasi (DRAFT, PUBLISHED, ARCHIVED)
 
 **Response**:
@@ -96,16 +124,32 @@ Semua endpoint memerlukan JWT authentication dengan header `Authorization: Beare
   "success": true,
   "message": "Leksikon created successfully",
   "data": {
-    "id": 1,
-    "term": "Tari Legong",
-    "definition": "Traditional Balinese dance performed by young girls",
-    "etymology": "From Balinese 'legong' meaning 'dance'",
-    "pronunciation": "LEH-gong",
+    "lexiconId": 1,
+    "lexiconWord": "Tari Legong",
+    "ipaInternationalPhoneticAlphabet": "ˈtari ˈləgɔŋ",
+    "transliteration": "LEH-gong",
+    "etymologicalMeaning": "Dari kata Bali 'legong' yang berarti tari",
+    "culturalMeaning": "Tari tradisional Bali yang dilakukan oleh gadis remaja",
+    "commonMeaning": "Tari Legong",
+    "translation": "Legong Dance",
+    "variant": "Tari Legong Kraton",
+    "variantTranslations": "Legong Palace Dance",
+    "otherDescription": "Tari ini biasanya ditampilkan dalam upacara keagamaan",
     "domainId": 1,
+    "contributorId": 2,
     "status": "DRAFT",
     "slug": "tari-legong",
     "createdAt": "2024-01-15T10:30:00Z",
-    "updatedAt": "2024-01-15T10:30:00Z"
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "codificationDomain": {
+      "domainId": 1,
+      "domainName": "Traditional Dance",
+      "code": "DA001"
+    },
+    "contributor": {
+      "contributorId": 2,
+      "contributorName": "Dr. Made Suastika"
+    }
   }
 }
 ```
@@ -116,12 +160,14 @@ curl -X POST http://localhost:3000/api/v1/admin/leksikons \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "term": "Tari Legong",
-    "definition": "Traditional Balinese dance performed by young girls",
-    "etymology": "From Balinese 'legong' meaning 'dance'",
-    "pronunciation": "LEH-gong",
+    "lexiconWord": "Tari Legong",
+    "transliteration": "LEH-gong",
+    "etymologicalMeaning": "Dari kata Bali '\''legong'\'' yang berarti tari",
+    "culturalMeaning": "Tari tradisional Bali yang dilakukan oleh gadis remaja",
+    "commonMeaning": "Tari Legong",
+    "translation": "Legong Dance",
     "domainId": 1,
-    "status": "DRAFT"
+    "contributorId": 2
   }'
 ```
 
@@ -139,32 +185,43 @@ curl -X POST http://localhost:3000/api/v1/admin/leksikons \
   "success": true,
   "message": "Leksikon retrieved successfully",
   "data": {
-    "id": 1,
-    "term": "Tari Legong",
-    "definition": "Traditional Balinese dance performed by young girls",
-    "etymology": "From Balinese 'legong' meaning 'dance'",
-    "pronunciation": "LEH-gong",
+    "lexiconId": 1,
+    "lexiconWord": "Tari Legong",
+    "ipaInternationalPhoneticAlphabet": "ˈtari ˈləgɔŋ",
+    "transliteration": "LEH-gong",
+    "etymologicalMeaning": "Dari kata Bali 'legong' yang berarti tari",
+    "culturalMeaning": "Tari tradisional Bali yang dilakukan oleh gadis remaja",
+    "commonMeaning": "Tari Legong",
+    "translation": "Legong Dance",
+    "variant": "Tari Legong Kraton",
+    "variantTranslations": "Legong Palace Dance",
+    "otherDescription": "Tari ini biasanya ditampilkan dalam upacara keagamaan",
     "domainId": 1,
+    "contributorId": 2,
     "status": "PUBLISHED",
     "slug": "tari-legong",
     "createdAt": "2024-01-15T10:30:00Z",
     "updatedAt": "2024-01-15T10:30:00Z",
-    "domain": {
-      "id": 1,
+    "codificationDomain": {
+      "domainId": 1,
       "domainName": "Traditional Dance",
       "code": "DA001",
       "subculture": {
-        "id": 1,
+        "subcultureId": 1,
         "subcultureName": "Balinese Traditional Arts",
         "culture": {
-          "id": 1,
+          "cultureId": 1,
           "cultureName": "Balinese Culture"
         }
       }
     },
+    "contributor": {
+      "contributorId": 2,
+      "contributorName": "Dr. Made Suastika"
+    },
     "assets": [
       {
-        "id": 1,
+        "assetId": 1,
         "fileName": "legong_dance.jpg",
         "fileType": "PHOTO",
         "assetRole": "GALLERY",
@@ -173,7 +230,7 @@ curl -X POST http://localhost:3000/api/v1/admin/leksikons \
     ],
     "references": [
       {
-        "id": 1,
+        "referenceId": 1,
         "title": "Balinese Dance Traditions",
         "referenceType": "BOOK",
         "referenceRole": "PRIMARY_SOURCE",
@@ -637,37 +694,79 @@ curl -X POST http://localhost:3000/api/v1/admin/leksikons \
 ### 8.1 Bulk Import Leksikons
 **Endpoint**: `POST /api/v1/admin/leksikons/import`
 
-**Deskripsi**: Bulk import leksikon dari file CSV
+**Deskripsi**: Bulk import leksikon dari file CSV dengan validasi komprehensif dan error handling
 
 **Content-Type**: `multipart/form-data`
 
 **Request Body**:
 - `file`: CSV file containing leksikon data
 
-**CSV Format**:
+**CSV Format** (Header Mapping Flexible):
 ```csv
-term,definition,etymology,pronunciation,domainCode
-Tari Legong,Traditional Balinese dance performed by young girls,From Balinese 'legong' meaning 'dance',LEH-gong,DA001
-Gamelan,Traditional Indonesian musical ensemble,From Javanese 'gamel' meaning 'to handle',GAH-meh-lan,MU001
+Leksikon,Transliterasi,Makna Etimologi,Makna Kultural,Common Meaning,Translation,Varian,Translation varians,Deskripsi Lain,Domain ID,Contributor ID,Slug
+Tari Legong,LEH-gong,Dari kata Bali 'legong' yang berarti tari,Tari tradisional Bali yang dilakukan oleh gadis remaja,Tari Legong,Tari Legong,,,-,1,1,tari-legong
+Gamelan,GAH-meh-lan,Dari kata Jawa 'gamel' yang berarti pegang,Ensambel musik tradisional Indonesia,Gamelan,Gamelan,,,-,2,2,gamelan
 ```
 
-**Response**:
+**Header Mapping Support**:
+- Headers dapat menggunakan format Indonesia atau English
+- Case-insensitive matching
+- Auto-mapping untuk variasi penulisan header
+
+**Validation Rules**:
+- `lexiconWord` (Leksikon): Required, string min 1 char
+- `transliteration` (Transliterasi): Required, string min 1 char
+- `etymologicalMeaning` (Makna Etimologi): Required, string min 1 char
+- `culturalMeaning` (Makna Kultural): Required, string min 1 char
+- `commonMeaning` (Common Meaning): Required, string min 1 char
+- `translation` (Translation): Required, string min 1 char
+- `domainId` (Domain ID): Required, valid number, must exist in database
+- `contributorId` (Contributor ID): Required, valid number, must exist in database
+- `slug`: Optional, auto-generated from lexiconWord if empty
+
+**Response Success**:
 ```json
 {
   "success": true,
-  "message": "Bulk import completed successfully",
+  "message": "Bulk import completed",
   "data": {
-    "imported": 150,
-    "skipped": 5,
+    "imported": 147,
+    "skipped": 3,
     "errors": [
-      {
-        "row": 12,
-        "error": "Invalid domain code"
-      }
+      "Contributor ID 999 tidak ditemukan. Pastikan import contributor terlebih dahulu.",
+      "Domain ID 888 tidak ditemukan. Pastikan import domain kodifikasi terlebih dahulu.",
+      "Slug 'tari-legong' sudah ada. Slug di-generate dari lexiconWord 'Tari Legong'. Gunakan lexiconWord yang berbeda atau slug manual."
+    ],
+    "importedLexicons": [
+      "Tari Legong",
+      "Gamelan",
+      "Kecak"
+    ],
+    "skippedLexicons": [
+      "Tari Kecak",
+      "Tari Pendet"
     ]
   }
 }
 ```
+
+**Response Error**:
+```json
+{
+  "success": false,
+  "message": "Bulk import failed",
+  "details": "Error message",
+  "stack": "Error stack (development only)"
+}
+```
+
+**Error Scenarios**:
+- File tidak di-upload
+- File bukan CSV
+- CSV parsing error
+- Database validation errors
+- Duplicate slug errors
+- Missing required fields
 
 ---
 
@@ -676,16 +775,54 @@ Gamelan,Traditional Indonesian musical ensemble,From Javanese 'gamel' meaning 't
 ### Leksikon Schema
 ```typescript
 {
-  id: number;
-  term: string; // Required
-  definition: string; // Required
-  etymology: string; // Optional
-  pronunciation: string; // Optional
-  domainId: number; // Required (foreign key)
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-  slug: string; // Auto-generated from term
+  lexiconId: number; // Primary key
+  lexiconWord: string; // Required - Kata leksikon utama
+  ipaInternationalPhoneticAlphabet?: string; // Optional - IPA pronunciation
+  transliteration: string; // Required - Transliteration
+  etymologicalMeaning: string; // Required - Makna etimologi
+  culturalMeaning: string; // Required - Makna kultural
+  commonMeaning: string; // Required - Makna umum
+  translation: string; // Required - Terjemahan
+  variant?: string; // Optional - Varian kata
+  variantTranslations?: string; // Optional - Terjemahan varian
+  otherDescription?: string; // Optional - Deskripsi tambahan
+  domainId: number; // Required - Foreign key ke CodificationDomain
+  contributorId: number; // Required - Foreign key ke Contributor
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'; // Default: DRAFT
+  slug: string; // Auto-generated from lexiconWord
   createdAt: Date;
   updatedAt: Date;
+
+  // Relations (included in full response)
+  codificationDomain?: {
+    domainId: number;
+    domainName: string;
+    code: string;
+    // ... other domain fields
+  };
+  contributor?: {
+    contributorId: number;
+    contributorName: string;
+    // ... other contributor fields
+  };
+  lexiconAssets?: Array<{
+    assetId: number;
+    assetRole: string;
+    asset: {
+      fileName: string;
+      fileType: string;
+      // ... other asset fields
+    };
+  }>;
+  lexiconReferences?: Array<{
+    referenceId: number;
+    referenceRole?: string;
+    reference: {
+      title: string;
+      authors: string;
+      // ... other reference fields
+    };
+  }>;
 }
 ```
 
@@ -714,9 +851,9 @@ Gamelan,Traditional Indonesian musical ensemble,From Javanese 'gamel' meaning 't
 ## 10. BUSINESS RULES
 
 ### 10.1 Leksikon Creation
-- `term` dan `definition` wajib diisi
-- `domainId` harus valid dan merujuk ke domain yang ada
-- `slug` auto-generated dari term (lowercase, hyphen-separated)
+- `lexiconWord`, `transliteration`, `etymologicalMeaning`, `culturalMeaning`, `commonMeaning`, dan `translation` wajib diisi
+- `domainId` dan `contributorId` harus valid dan merujuk ke domain dan kontributor yang ada
+- `slug` auto-generated dari lexiconWord (lowercase, hyphen-separated)
 - Status default adalah `DRAFT`
 
 ### 10.2 Asset Management
@@ -797,14 +934,29 @@ Gamelan,Traditional Indonesian musical ensemble,From Javanese 'gamel' meaning 't
 {
   "success": false,
   "message": "Bulk import failed",
-  "data": {
-    "errors": [
-      {
-        "row": 5,
-        "field": "domainCode",
-        "message": "Domain code DA999 does not exist"
-      },
-      {
+  "details": "Error parsing CSV file: Invalid CSV format",
+  "stack": "Error stack trace (development mode only)"
+}
+```
+
+**Common Bulk Import Errors**:
+- **File Upload Errors**:
+  - `"No file uploaded. Please upload a CSV file."`
+  - `"Only CSV files are allowed"`
+
+- **CSV Parsing Errors**:
+  - `"Error parsing CSV file: Invalid CSV format"`
+  - `"CSV file is empty"`
+
+- **Validation Errors**:
+  - `"Baris data tidak valid: lexiconWord: Lexicon word is required"`
+  - `"Contributor ID 999 tidak ditemukan. Pastikan import contributor terlebih dahulu."`
+  - `"Domain ID 888 tidak ditemukan. Pastikan import domain kodifikasi terlebih dahulu."`
+  - `"Slug 'example-slug' sudah ada. Slug di-generate dari lexiconWord 'Example'. Gunakan lexiconWord yang berbeda atau slug manual."`
+
+- **Database Errors**:
+  - `"Gagal insert batch 1: Connection timeout"`
+  - `"Failed to cleanup temp file: EPERM operation not permitted"`
         "row": 12,
         "field": "term",
         "message": "Term is required"
@@ -826,11 +978,14 @@ curl -X POST http://localhost:3000/api/v1/admin/leksikons \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "term": "Tari Legong",
-    "definition": "Traditional Balinese dance performed by young girls",
-    "etymology": "From Balinese 'legong' meaning 'dance'",
-    "pronunciation": "LEH-gong",
+    "lexiconWord": "Tari Legong",
+    "transliteration": "LEH-gong",
+    "etymologicalMeaning": "Dari kata Bali '\''legong'\'' yang berarti tari",
+    "culturalMeaning": "Tari tradisional Bali yang dilakukan oleh gadis remaja",
+    "commonMeaning": "Tari Legong",
+    "translation": "Legong Dance",
     "domainId": 1,
+    "contributorId": 2,
     "status": "DRAFT"
   }'
 
