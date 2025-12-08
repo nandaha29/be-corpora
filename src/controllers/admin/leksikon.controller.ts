@@ -143,7 +143,12 @@ export const getLeksikonAssets = async (req: Request, res: Response) => {
     if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
 
     const assets = await leksikonService.getLeksikonAssets(id);
-    return res.status(200).json(assets);
+    return res.status(200).json({
+      success: true,
+      message: 'Leksikon assets retrieved successfully',
+      total: assets.length,
+      data: assets,
+    });
   } catch (error) {
     console.error('Failed to get leksikon assets:', error);
     return res.status(500).json({ message: 'Failed to retrieve assets', details: error });
@@ -254,7 +259,12 @@ export const getLeksikonReferences = async (req: Request, res: Response) => {
     if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
 
     const references = await leksikonService.getLeksikonReferences(id);
-    return res.status(200).json(references);
+    return res.status(200).json({
+      success: true,
+      message: 'Leksikon references retrieved successfully',
+      total: references.length,
+      data: references,
+    });
   } catch (error) {
     console.error('Failed to get leksikon references:', error);
     return res.status(500).json({ message: 'Failed to retrieve references', details: error });
@@ -582,8 +592,10 @@ export const getAssetsByRole = async (req: Request, res: Response) => {
 
     const assets = await leksikonService.getAssetsByRole(leksikonId, assetRole as LeksikonAssetRole);
     return res.status(200).json({
-      message: 'Assets retrieved successfully',
-      data: assets
+      success: true,
+      message: `Assets with role ${assetRole} retrieved successfully`,
+      total: assets.length,
+      data: assets,
     });
   } catch (error) {
     console.error('Failed to get assets by role:', error);
