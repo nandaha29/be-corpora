@@ -31,10 +31,11 @@ router.get('/search', authenticateAdmin, assetController.searchAssets);
 
 /**
  * @route GET /api/admin/assets/filter
- * @desc Filter assets by type and/or status with pagination
+ * @desc Filter assets by type and/or status with pagination and search
  * @access Admin only
  * @query {string} fileType - Filter by type (PHOTO, AUDIO, VIDEO, MODEL_3D)
  * @query {string} status - Filter by status (ACTIVE, PROCESSING, ARCHIVED, CORRUPTED, PUBLISHED)
+ * @query {string} search - Search in fileName and description (case-insensitive)
  * @query {string} sortBy - Sort by field (createdAt, fileName, etc.) (default: createdAt)
  * @query {string} order - Sort order (asc, desc) (default: desc)
  * @query {number} page - Page number (default: 1)

@@ -118,6 +118,7 @@ export const getAllAssetsPaginated = async (page = 1, limit = 10) => {
 export const filterAssets = async (filters: {
   fileType?: string;
   status?: string;
+  search?: string;
   sortBy?: string;
   order?: string;
   page?: number;
@@ -129,6 +130,7 @@ export const filterAssets = async (filters: {
 
   // Build where condition dynamically
   const whereCondition: any = {};
+  const andConditions: any[] = [];
 
   // Add fileType filter if provided
   if (filters.fileType) {
@@ -146,6 +148,21 @@ export const filterAssets = async (filters: {
     if (allowed.includes(normalized)) {
       whereCondition.status = normalized as StatusFile;
     }
+  }
+
+  // Add search filter if provided
+  if (filters.search) {
+    andConditions.push({
+      OR: [
+        { fileName: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  // Combine where conditions with AND if search is present
+  if (andConditions.length > 0) {
+    whereCondition.AND = andConditions;
   }
 
   // Build orderBy
@@ -178,6 +195,7 @@ export const filterAssets = async (filters: {
       filters: {
         fileType: filters.fileType || null,
         status: filters.status || null,
+        search: filters.search || null,
         sortBy: filters.sortBy || 'createdAt',
         order: filters.order || 'desc',
       },
