@@ -710,7 +710,7 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
 export const filterLeksikonAssets = async (req: Request, res: Response) => {
   try {
     const filters = {
-      tipe: req.query.tipe as string,
+      fileType: req.query.fileType as string,
       status: req.query.status as string,
       createdAt: req.query.createdAt as string,
       page: parseInt(req.query.page as string) || 1,
@@ -732,8 +732,8 @@ export const filterLeksikonAssets = async (req: Request, res: Response) => {
 export const filterLeksikonReferences = async (req: Request, res: Response) => {
   try {
     const filters = {
-      tipeReferensi: req.query.tipeReferensi as string,
-      tahunTerbit: req.query.tahunTerbit as string,
+      referenceType: req.query.referenceType as string,
+      publicationYear: req.query.publicationYear as string,
       status: req.query.status as string,
       page: parseInt(req.query.page as string) || 1,
       limit: parseInt(req.query.limit as string) || 20,

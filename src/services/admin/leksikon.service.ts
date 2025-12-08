@@ -864,15 +864,15 @@ export const filterLeksikonReferences = async (filters: {
   // Add referenceType filter
   if (filters.referenceType) {
     const normalized = filters.referenceType.toUpperCase();
-    const allowed = ['JURNAL', 'BUKU', 'ARTIKEL', 'WEBSITE', 'LAPORAN'];
+    const allowed = ['JOURNAL', 'BOOK', 'ARTICLE', 'WEBSITE', 'REPORT'];
     if (allowed.includes(normalized)) {
-      where.referensi = { ...where.referensi, referenceType: normalized as any };
+      where.reference = { ...where.reference, referenceType: normalized as any };
     }
   }
 
   // Add publicationYear filter
   if (filters.publicationYear) {
-    where.referensi = { ...where.referensi, publicationYear: { contains: filters.publicationYear, mode: 'insensitive' } };
+    where.reference = { ...where.reference, publicationYear: { contains: filters.publicationYear, mode: 'insensitive' } };
   }
 
   // Add status filter
@@ -880,7 +880,7 @@ export const filterLeksikonReferences = async (filters: {
     const normalized = filters.status.toUpperCase();
     const allowed = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
     if (allowed.includes(normalized)) {
-      where.referensi = { ...where.referensi, status: normalized as any };
+      where.reference = { ...where.reference, status: normalized as any };
     }
   }
 
