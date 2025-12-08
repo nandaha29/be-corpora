@@ -10,7 +10,9 @@ import path from 'path';
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), 'temp-uploads'));
+    // Use /tmp for serverless environments like Vercel
+    const uploadPath = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'temp-uploads');
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
