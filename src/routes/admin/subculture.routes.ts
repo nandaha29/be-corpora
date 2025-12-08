@@ -88,9 +88,11 @@ router.delete("/:id/references-direct/:referenceId", authenticateAdmin, subcultu
 router.get("/:id/filter-assets", authenticateAdmin, subcultureController.filterSubcultureAssets);
 
 // GET /api/v1/admin/subcultures/:id/filter-references
-// Filter referensi subculture by Type, Year, Status, ReferenceRole (kombinasi)
-// Query params: referenceType, publicationYear, status, referenceRole, page, limit
-// Digunakan untuk: Advanced filtering referensi dalam subculture
+// Filter dan search referensi subculture by Type, Year, Status, ReferenceRole, dan Search Query (kombinasi)
+// Query params: referenceType, publicationYear, status, referenceRole, q (search), page, limit
+// Digunakan untuk: Advanced filtering dan searching referensi dalam subculture
+// SUPPORTS COMBINATION: Can search and filter at the same time
+// Example: /api/v1/admin/subcultures/1/filter-references?referenceType=JOURNAL&q=anthropology&status=PUBLISHED&page=1&limit=20
 router.get("/:id/filter-references", authenticateAdmin, subcultureController.filterSubcultureReferences);
 
 // GET /api/v1/admin/subcultures/:id/search-assets
@@ -103,7 +105,8 @@ router.get("/:id/search-assets", authenticateAdmin, subcultureController.searchA
 // Mencari referensi yang digunakan di subculture berdasarkan judul, deskripsi, atau penulis
 // Query params: q (search query)
 // Digunakan untuk: Pencarian cepat referensi dalam subculture tertentu
-router.get("/:id/search-references", authenticateAdmin, subcultureController.searchReferencesInSubculture);
+// NOTE: This endpoint is now combined with filter-references endpoint above
+// router.get("/:id/search-references", authenticateAdmin, subcultureController.searchReferencesInSubculture);
 
 // ============================================
 // ORPHAN DATA DETECTION ENDPOINTS

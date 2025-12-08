@@ -351,44 +351,9 @@ export const searchAssetsInSubculture = async (subcultureId: number, searchQuery
   });
 };
 
-export const searchReferencesInSubculture = async (subcultureId: number, searchQuery: string) => {
-  // Get all lexicons that belong to this subculture's codificationDomains
-  const domainIds = await prisma.codificationDomain.findMany({
-    where: { subcultureId },
-    select: { domainId: true },
-  });
-
-  const domainIdList = domainIds.map(d => d.domainId);
-
-  // Search references used by lexicons in those domains
-  return prisma.lexiconReference.findMany({
-    where: {
-      lexicon: {
-        domainId: { in: domainIdList },
-      },
-      reference: {
-        OR: [
-          { title: { contains: searchQuery, mode: 'insensitive' } },
-          { description: { contains: searchQuery, mode: 'insensitive' } },
-          { authors: { contains: searchQuery, mode: 'insensitive' } },
-        ],
-      },
-    },
-    include: {
-      reference: true,
-      lexicon: {
-        include: {
-          codificationDomain: {
-            include: {
-              subculture: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-};
+// NOTE: searchReferencesInSubculture function has been merged into filterSubcultureReferences
+// Keeping this commented for reference
+// export const searchReferencesInSubculture = async (subcultureId: number, searchQuery: string) => {
 
 export const getAssetUsage = async (assetId: number) => {
   return prisma.subcultureAsset.findMany({
@@ -578,6 +543,7 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
   publicationYear?: string;
   status?: string;
   referenceRole?: string;
+  searchQuery?: string;
   page?: number;
   limit?: number;
 }) => {
@@ -598,12 +564,24 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
     },
   };
 
+  // Add search query filter for lexicon references
+  if (filters.searchQuery) {
+    where.reference = {
+      ...where.reference,
+      OR: [
+        { title: { contains: filters.searchQuery, mode: 'insensitive' } },
+        { description: { contains: filters.searchQuery, mode: 'insensitive' } },
+        { authors: { contains: filters.searchQuery, mode: 'insensitive' } },
+      ],
+    };
+  }
+
   // Add referenceType filter
   if (filters.referenceType) {
     const normalized = filters.referenceType.toUpperCase();
-    const allowed = ["JOURNAL", "BOOK", "ARTICLE", "WEBSITE", "REPORT"];
+    const allowed = ["JOURNAL", "BOOK", "ARTICLE", "WEBSITE", "REPORT", "THESIS", "DISSERTATION", "FIELD_NOTE"];
     if (allowed.includes(normalized)) {
-      where.reference = { referenceType: normalized as any };
+      where.reference = { ...where.reference, referenceType: normalized as any };
     }
   }
 
@@ -630,7 +608,8 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
     }
   }
 
-  const [data, total] = await Promise.all([
+  // Get lexicon references with filters
+  const [lexiconData, lexiconTotal] = await Promise.all([
     prisma.lexiconReference.findMany({
       where,
       include: {
@@ -652,8 +631,80 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
     prisma.lexiconReference.count({ where }),
   ]);
 
+  // Build where clause for direct references
+  const directWhere: any = { subcultureId };
+
+  // Add search query filter for direct references
+  if (filters.searchQuery) {
+    directWhere.reference = {
+      ...directWhere.reference,
+      OR: [
+        { title: { contains: filters.searchQuery, mode: 'insensitive' } },
+        { description: { contains: filters.searchQuery, mode: 'insensitive' } },
+        { authors: { contains: filters.searchQuery, mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  // Add referenceType filter for direct references
+  if (filters.referenceType) {
+    const normalized = filters.referenceType.toUpperCase();
+    const allowed = ["JOURNAL", "BOOK", "ARTICLE", "WEBSITE", "REPORT", "THESIS", "DISSERTATION", "FIELD_NOTE"];
+    if (allowed.includes(normalized)) {
+      directWhere.reference = { ...directWhere.reference, referenceType: normalized as any };
+    }
+  }
+
+  // Add publicationYear filter for direct references
+  if (filters.publicationYear) {
+    directWhere.reference = { ...directWhere.reference, publicationYear: { contains: filters.publicationYear, mode: 'insensitive' } };
+  }
+
+  // Add status filter for direct references
+  if (filters.status) {
+    const normalized = filters.status.toUpperCase();
+    const allowed = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+    if (allowed.includes(normalized)) {
+      directWhere.reference = { ...directWhere.reference, status: normalized as any };
+    }
+  }
+
+  // Add referenceRole filter for direct references
+  if (filters.referenceRole) {
+    const normalized = filters.referenceRole.toUpperCase();
+    const allowed = ["PRIMARY_SOURCE", "SECONDARY_SOURCE", "ILLUSTRATIVE", "BACKGROUND", "SUPPORTING"];
+    if (allowed.includes(normalized)) {
+      directWhere.referenceRole = normalized as any;
+    }
+  }
+
+  // Get direct references with filters
+  const [directData, directTotal] = await Promise.all([
+    prisma.subcultureReference.findMany({
+      where: directWhere,
+      include: {
+        reference: true,
+        subculture: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.subcultureReference.count({ where: directWhere }),
+  ]);
+
+  // Combine results and remove duplicates
+  const combinedData = [...lexiconData, ...directData];
+  const uniqueData = combinedData.filter((item, index, self) =>
+    index === self.findIndex(t => t.reference.referenceId === item.reference.referenceId)
+  );
+
+  // Apply pagination to combined results
+  const paginatedData = uniqueData.slice(skip, skip + limit);
+  const total = lexiconTotal + directTotal;
+
   return {
-    data,
+    data: paginatedData,
     meta: {
       total,
       page,
@@ -664,6 +715,7 @@ export const filterSubcultureReferences = async (subcultureId: number, filters: 
         publicationYear: filters.publicationYear || null,
         status: filters.status || null,
         referenceRole: filters.referenceRole || null,
+        searchQuery: filters.searchQuery || null,
       },
     },
   };

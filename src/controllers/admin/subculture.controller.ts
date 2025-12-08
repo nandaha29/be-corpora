@@ -409,37 +409,9 @@ export const searchAssetsInSubculture = async (req: Request, res: Response) => {
   }
 };
 
-// GET /api/v1/admin/subcultures/:id/search-references
-export const searchReferencesInSubculture = async (req: Request, res: Response) => {
-  try {
-    const subcultureId = Number(req.params.id);
-    const searchQuery = req.query.q as string;
-
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
-      success: false,
-      message: 'Invalid subculture ID' 
-    });
-    if (!searchQuery || searchQuery.trim().length === 0) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Search query is required' 
-      });
-    }
-
-    const references = await subcultureService.searchReferencesInSubculture(subcultureId, searchQuery.trim());
-    return res.status(200).json({
-      success: true,
-      message: "References searched successfully",
-      data: references,
-    });
-  } catch (error) {
-    console.error('Failed to search references in subculture:', error);
-    return res.status(500).json({ 
-      success: false,
-      message: 'Failed to search references' 
-    });
-  }
-};
+// NOTE: searchReferencesInSubculture controller has been merged into filterSubcultureReferences
+// Keeping this commented for reference
+// export const searchReferencesInSubculture = async (req: Request, res: Response) => {
 
 // GET /api/v1/admin/assets/:assetId/usage
 export const getAssetUsage = async (req: Request, res: Response) => {
@@ -563,6 +535,8 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
     const referenceType = req.query.referenceType as string | undefined;
     const publicationYear = req.query.publicationYear as string | undefined;
     const status = req.query.status as string | undefined;
+    const referenceRole = req.query.referenceRole as string | undefined;
+    const searchQuery = req.query.q as string | undefined;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
@@ -572,6 +546,8 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
       referenceType,
       publicationYear,
       status,
+      referenceRole,
+      searchQuery,
       page,
       limit,
     });
@@ -583,9 +559,9 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
     });
   } catch (error) {
     console.error('Failed to filter subculture references:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: 'Failed to filter references' 
+      message: 'Failed to filter references'
     });
   }
 };
