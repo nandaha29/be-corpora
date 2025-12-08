@@ -908,7 +908,27 @@ export const filterLeksikonReferences = async (req: Request, res: Response) => {
 
 // POST /api/admin/leksikons/import - Bulk import leksikons from CSV
 export const bulkImportLeksikons = [
-  upload.single('file'),
+  (req: Request, res: Response, next: any) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) {
+        console.error('Multer error:', err);
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+              success: false,
+              message: 'File too large. Maximum size is 10MB.',
+            });
+          }
+        }
+        return res.status(400).json({
+          success: false,
+          message: err.message || 'File upload failed',
+        });
+      }
+      next();
+      return; // Ensure all code paths return a value
+    });
+  },
   async (req: Request, res: Response) => {
     try {
       console.log('Uploaded file info:', req.file); // Debug log

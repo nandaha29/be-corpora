@@ -928,6 +928,9 @@ export const filterLeksikonReferences = async (filters: {
 
 // Bulk import lexicons from CSV file
 export const bulkImportLeksikonsFromCSV = async (filePath: string) => {
+  console.log('=== SERVICE: bulkImportLeksikonsFromCSV START ===');
+  console.log('File path:', filePath);
+
   const results = {
     imported: 0,
     skipped: 0,
@@ -955,13 +958,19 @@ export const bulkImportLeksikonsFromCSV = async (filePath: string) => {
     'slug': 'slug', // Support lowercase format
   };
 
+  console.log('Starting CSV parsing...');
+
   return new Promise<typeof results>((resolve, reject) => {
     const data: any[] = [];
 
     fs.createReadStream(filePath)
       .pipe(csv())
-      .on('data', (row) => data.push(row))
+      .on('data', (row) => {
+        console.log('CSV row received:', row);
+        data.push(row);
+      })
       .on('end', async () => {
+        console.log('CSV parsing completed. Total rows:', data.length);
         try {
           const validData: any[] = [];
           const batchSize = 100;
@@ -1119,17 +1128,24 @@ export const bulkImportLeksikonsFromCSV = async (filePath: string) => {
           try {
             if (fs.existsSync(filePath)) {
               fs.unlinkSync(filePath);
+              console.log('Temp file cleaned up');
             }
           } catch (cleanupError) {
-            // console.warn('Failed to cleanup temp file:', cleanupError);
+            console.warn('Failed to cleanup temp file:', cleanupError);
           }
 
+          console.log('=== SERVICE: bulkImportLeksikonsFromCSV COMPLETED ===');
+          console.log('Final results:', results);
           resolve(results);
         } catch (error) {
+          console.error('=== SERVICE: bulkImportLeksikonsFromCSV ERROR ===');
+          console.error('Error:', error);
           reject(error);
         }
       })
       .on('error', (error) => {
+        console.error('=== CSV PARSING ERROR ===');
+        console.error('Error:', error);
         reject(error);
       });
   });
