@@ -162,25 +162,46 @@ export const getSubcultureAssets = async (req: Request, res: Response) => {
 export const addAssetToSubculture = async (req: Request, res: Response) => {
   try {
     const subcultureId = Number(req.params.id);
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid subculture ID' 
+    });
 
     const { assetId, assetRole } = req.body;
     const validated = createSubcultureAssetSchema.parse({ subcultureId, assetId, assetRole });
 
     const result = await subcultureService.addAssetToSubculture(subcultureId, assetId, assetRole);
-    return res.status(201).json(result);
+    return res.status(201).json({
+      success: true,
+      message: 'Asset added to subculture successfully',
+      data: result
+    });
   } catch (error) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation failed', 
+        errors: error 
+      });
     }
     if ((error as any)?.code === 'SUBCULTURE_NOT_FOUND') {
-      return res.status(404).json({ message: 'Subculture not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Subculture not found' 
+      });
     }
     if ((error as any)?.code === 'ASSET_NOT_FOUND') {
-      return res.status(404).json({ message: 'Asset not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Asset not found' 
+      });
     }
     console.error('Failed to add asset to subculture:', error);
-    return res.status(500).json({ message: 'Failed to add asset', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to add asset', 
+      details: error 
+    });
   }
 };
 
@@ -190,17 +211,32 @@ export const removeAssetFromSubculture = async (req: Request, res: Response) => 
     const subcultureId = Number(req.params.id);
     const assetId = Number(req.params.assetId);
     const assetRole = req.query.assetRole as string;
-    if (Number.isNaN(subcultureId) || Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid IDs' });
-    if (!assetRole) return res.status(400).json({ message: 'Asset role is required as query parameter' });
+    if (Number.isNaN(subcultureId) || Number.isNaN(assetId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid IDs' 
+    });
+    if (!assetRole) return res.status(400).json({ 
+      success: false,
+      message: 'Asset role is required as query parameter' 
+    });
 
     await subcultureService.removeAssetFromSubculture(subcultureId, assetId, assetRole as any);
-    return res.status(200).json({ message: 'Asset removed from subculture' });
+    return res.status(200).json({ 
+      success: true,
+      message: 'Asset removed from subculture' 
+    });
   } catch (error) {
     if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND') {
-      return res.status(404).json({ message: 'Association not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Association not found' 
+      });
     }
     console.error('Failed to remove asset from subculture:', error);
-    return res.status(500).json({ message: 'Failed to remove asset' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to remove asset' 
+    });
   }
 };
 
@@ -226,7 +262,10 @@ export const getAllSubculturesPaginated = async (req: Request, res: Response) =>
     });
   } catch (error) {
     console.error("Error fetching paginated subcultures:", error);
-    res.status(500).json({ error: "Failed to fetch subcultures (paginated)" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch subcultures (paginated)" 
+    });
   }
 };
 
@@ -236,12 +275,18 @@ export const getSubculturesByCulture = async (req: Request, res: Response) => {
     // Accept either `culture_id` (snake_case) or `cultureId` (camelCase) depending on route
     const raw = req.params.culture_id ?? req.params.cultureId ?? req.params.cultureId;
     const cultureId = Number(raw);
-    if (Number.isNaN(cultureId)) return res.status(400).json({ error: "Invalid culture_id" });
+    if (Number.isNaN(cultureId)) return res.status(400).json({ 
+      success: false,
+      message: "Invalid culture_id" 
+    });
 
     const subcultures = await subcultureService.getSubculturesByCulture(cultureId);
 
     if (!subcultures || subcultures.length === 0) {
-      return res.status(404).json({ message: "No subcultures found for this culture" });
+      return res.status(404).json({ 
+        success: false,
+        message: "No subcultures found for this culture" 
+      });
     }
 
     return res.status(200).json({
@@ -251,7 +296,10 @@ export const getSubculturesByCulture = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching subcultures by culture:", error);
-    return res.status(500).json({ error: "Failed to fetch subcultures by culture" });
+    return res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch subcultures by culture" 
+    });
   }
 };
 
@@ -281,7 +329,7 @@ export const getFilteredSubcultures = async (req: Request, res: Response) => {
     // console.error("Error fetching filtered subcultures:", error);
     res.status(500).json({ 
       success: false,
-      error: "Failed to fetch filtered subcultures",
+      message: "Failed to fetch filtered subcultures",
       details: error instanceof Error ? error.message : String(error)
     });
   }
@@ -301,7 +349,10 @@ export const getAssignedAssets = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get assigned assets:', error);
-    return res.status(500).json({ message: 'Failed to retrieve assigned assets' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve assigned assets' 
+    });
   }
 };
 
@@ -319,7 +370,10 @@ export const getAssignedReferences = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get assigned references:', error);
-    return res.status(500).json({ message: 'Failed to retrieve assigned references' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve assigned references' 
+    });
   }
 };
 
@@ -329,9 +383,15 @@ export const searchAssetsInSubculture = async (req: Request, res: Response) => {
     const subcultureId = Number(req.params.id);
     const searchQuery = req.query.q as string;
 
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid subculture ID' 
+    });
     if (!searchQuery || searchQuery.trim().length === 0) {
-      return res.status(400).json({ message: 'Search query is required' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Search query is required' 
+      });
     }
 
     const assets = await subcultureService.searchAssetsInSubculture(subcultureId, searchQuery.trim());
@@ -342,7 +402,10 @@ export const searchAssetsInSubculture = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to search assets in subculture:', error);
-    return res.status(500).json({ message: 'Failed to search assets' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to search assets' 
+    });
   }
 };
 
@@ -352,9 +415,15 @@ export const searchReferencesInSubculture = async (req: Request, res: Response) 
     const subcultureId = Number(req.params.id);
     const searchQuery = req.query.q as string;
 
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid subculture ID' 
+    });
     if (!searchQuery || searchQuery.trim().length === 0) {
-      return res.status(400).json({ message: 'Search query is required' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Search query is required' 
+      });
     }
 
     const references = await subcultureService.searchReferencesInSubculture(subcultureId, searchQuery.trim());
@@ -365,7 +434,10 @@ export const searchReferencesInSubculture = async (req: Request, res: Response) 
     });
   } catch (error) {
     console.error('Failed to search references in subculture:', error);
-    return res.status(500).json({ message: 'Failed to search references' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to search references' 
+    });
   }
 };
 
@@ -383,7 +455,10 @@ export const getAssetUsage = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get asset usage:', error);
-    return res.status(500).json({ message: 'Failed to retrieve asset usage' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve asset usage' 
+    });
   }
 };
 
@@ -401,7 +476,10 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get reference usage:', error);
-    return res.status(500).json({ message: 'Failed to retrieve reference usage' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve reference usage' 
+    });
   }
 };
 
@@ -421,13 +499,14 @@ export const addReferenceToSubculture = async (req: Request, res: Response) => {
 
     const result = await subcultureService.addReferenceToSubculture(subcultureId, validated.referenceId, validated.lexiconId);
     return res.status(201).json({
-      status: "success",
+      success: true,
       message: result.message || 'Add references successfully',
       data: result,
     });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: {
           name: "ZodError",
@@ -436,7 +515,10 @@ export const addReferenceToSubculture = async (req: Request, res: Response) => {
       });
     }
     console.error('Failed to add reference to subculture:', error);
-    return res.status(500).json({ message: 'Failed to add reference' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to add reference' 
+    });
   }
 };
 
@@ -467,7 +549,10 @@ export const filterSubcultureAssets = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to filter subculture assets:', error);
-    return res.status(500).json({ message: 'Failed to filter assets' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to filter assets' 
+    });
   }
 };
 
@@ -498,7 +583,10 @@ export const filterSubcultureReferences = async (req: Request, res: Response) =>
     });
   } catch (error) {
     console.error('Failed to filter subculture references:', error);
-    return res.status(500).json({ message: 'Failed to filter references' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to filter references' 
+    });
   }
 };
 
@@ -509,8 +597,14 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
     const subcultureId = Number(req.params.id);
     const { referenceId, displayOrder, referenceRole } = req.body;
 
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
-    if (!referenceId) return res.status(400).json({ message: 'referenceId is required' });
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid subculture ID' 
+    });
+    if (!referenceId) return res.status(400).json({ 
+      success: false,
+      message: 'referenceId is required' 
+    });
 
     // Validate referenceRole - required for linking reference
     if (!referenceRole || referenceRole === '') {
@@ -521,6 +615,7 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
         message: `Reference role is required when linking reference. Must be one of: ${Object.values(ReferenceRole).join(', ')}`
       }];
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: {
           name: "ZodError",
@@ -538,6 +633,7 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
         message: `Reference role must be one of: ${Object.values(ReferenceRole).join(', ')}`
       }];
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: {
           name: "ZodError",
@@ -555,7 +651,7 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
     );
 
     return res.status(201).json({
-      status: "success",
+      success: true,
       message: 'Reference assigned to subculture successfully',
       data: {
         count: 1,
@@ -565,12 +661,21 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
   } catch (error: any) {
     console.error('Failed to add reference to subculture:', error);
     if (error.code === 'SUBCULTURE_NOT_FOUND') {
-      return res.status(404).json({ message: 'Subculture not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Subculture not found' 
+      });
     }
     if (error.code === 'REFERENCE_NOT_FOUND') {
-      return res.status(404).json({ message: 'Reference not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Reference not found' 
+      });
     }
-    return res.status(500).json({ message: 'Failed to add reference' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to add reference' 
+    });
   }
 };
 
@@ -580,18 +685,24 @@ export const getSubcultureReferencesDirect = async (req: Request, res: Response)
   try {
     const subcultureId = Number(req.params.id);
 
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid subculture ID' 
+    });
 
     const result = await subcultureService.getSubcultureReferencesDirect(subcultureId);
 
     return res.status(200).json({
-      status: "success",
+      success: true,
       message: 'Subculture references retrieved successfully',
       data: result,
     });
   } catch (error) {
     console.error('Failed to get subculture references:', error);
-    return res.status(500).json({ message: 'Failed to retrieve references' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve references' 
+    });
   }
 };
 
@@ -602,20 +713,32 @@ export const removeReferenceFromSubcultureDirect = async (req: Request, res: Res
     const subcultureId = Number(req.params.id);
     const referenceId = Number(req.params.referenceId);
 
-    if (Number.isNaN(subcultureId)) return res.status(400).json({ message: 'Invalid subculture ID' });
-    if (Number.isNaN(referenceId)) return res.status(400).json({ message: 'Invalid reference ID' });
+    if (Number.isNaN(subcultureId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid subculture ID' 
+    });
+    if (Number.isNaN(referenceId)) return res.status(400).json({ 
+      success: false,
+      message: 'Invalid reference ID' 
+    });
 
     await subcultureService.removeReferenceFromSubcultureDirect(subcultureId, referenceId);
 
     return res.status(200).json({
-      status: "success",
+      success: true,
       message: 'Reference removed from subculture successfully',
     });
   } catch (error: any) {
     console.error('Failed to remove reference from subculture:', error);
     if (error.code === 'P2025') {
-      return res.status(404).json({ message: 'Reference assignment not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Reference assignment not found' 
+      });
     }
-    return res.status(500).json({ message: 'Failed to remove reference' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to remove reference' 
+    });
   }
 };

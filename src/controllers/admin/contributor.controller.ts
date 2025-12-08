@@ -149,6 +149,7 @@ export const searchContributors = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: `Found ${results.length} contributors matching "${q}"`,
+      total: results.length,
       data: results,
     });
     return;
@@ -170,6 +171,7 @@ export const getContributorAssets = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: 'Contributor assets retrieved successfully',
+      total: assets.length,
       data: assets,
     });
     return;
@@ -193,7 +195,11 @@ export const addAssetToContributor = async (req: Request, res: Response) => {
     const validated = createContributorAssetSchema.parse({ contributorId, assetId, assetNote });
 
     const result = await contributorService.addAssetToContributor(contributorId, assetId, assetNote);
-    return res.status(201).json(result);
+    return res.status(201).json({
+      success: true,
+      message: 'Asset successfully linked to contributor',
+      data: result,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({ message: 'Validation failed', errors: error });
@@ -205,7 +211,10 @@ export const addAssetToContributor = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Asset not found' });
     }
     console.error('Failed to add asset to contributor:', error);
-    return res.status(500).json({ message: 'Failed to add asset', details: error });
+    return res.status(500).json({
+      message: 'Failed to add asset to contributor',
+      details: error instanceof Error ? error.message : error,
+    });
   }
 };
 
@@ -217,13 +226,19 @@ export const removeAssetFromContributor = async (req: Request, res: Response) =>
     if (Number.isNaN(contributorId) || Number.isNaN(assetId)) return res.status(400).json({ message: 'Invalid IDs' });
 
     await contributorService.removeAssetFromContributor(contributorId, assetId);
-    return res.status(200).json({ message: 'Asset removed from contributor' });
+    return res.status(200).json({
+      success: true,
+      message: 'Asset removed from contributor successfully',
+    });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ message: 'Association not found' });
     }
     console.error('Failed to remove asset from contributor:', error);
-    return res.status(500).json({ message: 'Failed to remove asset' });
+    return res.status(500).json({
+      message: 'Failed to remove asset',
+      details: error instanceof Error ? error.message : error,
+    });
   }
 };
 

@@ -23,7 +23,10 @@ export const getReferenceById = async (req: Request, res: Response) => {
     const reference = await referenceService.getReferenceById(Number(id));
 
     if (!reference) {
-      return res.status(404).json({ message: "Reference not found" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Reference not found" 
+      });
     }
 
     res.status(200).json({
@@ -33,7 +36,10 @@ export const getReferenceById = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to retrieve reference" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to retrieve reference" 
+    });
     return;
   }
 };
@@ -53,13 +59,18 @@ export const createReference = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: "Validation failed",
         errors: error.issues,
       });
     }
 
     // console.error('Create reference error:', error);
-    res.status(500).json({ message: "Failed to create reference", error:error});
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to create reference", 
+      error:error
+    });
     return;
   }
 };
@@ -80,16 +91,23 @@ export const updateReference = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: "Validation failed",
         errors: error.issues,
       });
     }
 
     if (error instanceof Error && error.message.includes("Record to update not found")) {
-      return res.status(404).json({ message: "Reference not found" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Reference not found" 
+      });
     }
 
-    res.status(500).json({ message: "Failed to update reference" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to update reference" 
+    });
     return;
   }
 };
@@ -107,10 +125,16 @@ export const deleteReference = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     if (error instanceof Error && error.message.includes("Record to delete not found")) {
-      return res.status(404).json({ message: "Reference not found" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Reference not found" 
+      });
     }
 
-    res.status(500).json({ message: "Failed to delete reference" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to delete reference" 
+    });
     return;
   }
 };
@@ -130,7 +154,10 @@ export const getAllReferensiPaginated = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to retrieve referensi' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve referensi' 
+    });
     return;
   }
 };
@@ -152,7 +179,10 @@ export const searchReferensi = async (req: Request, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
-    if (!keyword) return res.status(400).json({ message: 'Query parameter "q" is required' });
+    if (!keyword) return res.status(400).json({ 
+      success: false,
+      message: 'Query parameter "q" is required' 
+    });
 
     const result = await referenceService.searchReferensi(keyword, page, limit);
 
@@ -164,7 +194,11 @@ export const searchReferensi = async (req: Request, res: Response) => {
     return;
 
   } catch (error) {
-    res.status(500).json({ message: 'Failed to search references', error: (error as Error).message });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to search references', 
+      error: (error as Error).message 
+    });
     return;
   }
 };
@@ -198,7 +232,11 @@ export const filterReferences = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error('Filter error:', error);
-    res.status(500).json({ message: 'Failed to filter references', error: (error as Error).message });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to filter references', 
+      error: (error as Error).message 
+    });
     return;
   }
 };

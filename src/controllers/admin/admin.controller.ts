@@ -17,6 +17,7 @@ export const register = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: error.issues
       });
@@ -25,6 +26,7 @@ export const register = async (req: Request, res: Response) => {
     const err = error as any;
     if (err.code === 'EMAIL_EXISTS') {
       return res.status(409).json({
+        success: false,
         message: 'Email already registered',
         code: 'EMAIL_EXISTS'
       });
@@ -32,6 +34,7 @@ export const register = async (req: Request, res: Response) => {
 
     if (err.code === 'USERNAME_EXISTS') {
       return res.status(409).json({
+        success: false,
         message: 'Username already taken',
         code: 'USERNAME_EXISTS'
       });
@@ -39,6 +42,7 @@ export const register = async (req: Request, res: Response) => {
 
     if (err.code === 'DUPLICATE_ENTRY') {
       return res.status(409).json({
+        success: false,
         message: 'Email or username already exists',
         code: 'DUPLICATE_ENTRY'
       });
@@ -46,6 +50,7 @@ export const register = async (req: Request, res: Response) => {
 
     console.error('Registration error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Registration failed',
       details: error
     });
@@ -66,6 +71,7 @@ export const login = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: error.issues
       });
@@ -74,6 +80,7 @@ export const login = async (req: Request, res: Response) => {
     const err = error as any;
     if (err.code === 'INVALID_CREDENTIALS') {
       return res.status(401).json({
+        success: false,
         message: 'Invalid email or password',
         code: 'INVALID_CREDENTIALS'
       });
@@ -81,6 +88,7 @@ export const login = async (req: Request, res: Response) => {
 
     if (err.code === 'ACCOUNT_INACTIVE') {
       return res.status(401).json({
+        success: false,
         message: 'Account is deactivated',
         code: 'ACCOUNT_INACTIVE'
       });
@@ -88,6 +96,7 @@ export const login = async (req: Request, res: Response) => {
 
     console.error('Login error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Login failed',
       details: error
     });
@@ -99,6 +108,7 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     if (!req.admin) {
       return res.status(401).json({
+        success: false,
         message: 'Authentication required',
         code: 'NO_AUTH'
       });
@@ -115,6 +125,7 @@ export const getProfile = async (req: Request, res: Response) => {
     const err = error as any;
     if (err.code === 'ADMIN_NOT_FOUND') {
       return res.status(404).json({
+        success: false,
         message: 'Admin not found',
         code: 'ADMIN_NOT_FOUND'
       });
@@ -122,6 +133,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     console.error('Get profile error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to retrieve profile',
       details: error
     });
@@ -133,6 +145,7 @@ export const changePassword = async (req: Request, res: Response) => {
   try {
     if (!req.admin) {
       return res.status(401).json({
+        success: false,
         message: 'Authentication required',
         code: 'NO_AUTH'
       });
@@ -142,6 +155,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
+        success: false,
         message: 'Current password and new password are required',
         code: 'MISSING_FIELDS'
       });
@@ -149,6 +163,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
     if (newPassword.length < 8) {
       return res.status(400).json({
+        success: false,
         message: 'New password must be at least 8 characters',
         code: 'PASSWORD_TOO_SHORT'
       });
@@ -172,6 +187,7 @@ export const changePassword = async (req: Request, res: Response) => {
     const err = error as any;
     if (err.code === 'INVALID_CREDENTIALS') {
       return res.status(400).json({
+        success: false,
         message: 'Current password is incorrect',
         code: 'INVALID_CURRENT_PASSWORD'
       });
@@ -179,6 +195,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
     console.error('Change password error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to change password',
       details: error
     });
@@ -206,6 +223,7 @@ export const updateProfile = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: error.issues
       });
@@ -214,6 +232,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     const err = error as any;
     if (err.code === 'EMAIL_EXISTS') {
       return res.status(409).json({
+        success: false,
         message: 'Email already registered',
         code: 'EMAIL_EXISTS'
       });
@@ -221,6 +240,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     if (err.code === 'USERNAME_EXISTS') {
       return res.status(409).json({
+        success: false,
         message: 'Username already taken',
         code: 'USERNAME_EXISTS'
       });
@@ -228,6 +248,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     if (err.code === 'DUPLICATE_ENTRY') {
       return res.status(409).json({
+        success: false,
         message: 'Email or username already exists',
         code: 'DUPLICATE_ENTRY'
       });
@@ -235,6 +256,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     console.error('Update profile error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to update profile',
       details: error
     });
@@ -246,6 +268,7 @@ export const updateAdminStatus = async (req: Request, res: Response) => {
   try {
     if (!req.admin) {
       return res.status(401).json({
+        success: false,
         message: 'Authentication required',
         code: 'NO_AUTH'
       });
@@ -256,6 +279,7 @@ export const updateAdminStatus = async (req: Request, res: Response) => {
 
     if (typeof isActive !== 'boolean') {
       return res.status(400).json({
+        success: false,
         message: 'isActive must be a boolean',
         code: 'INVALID_INPUT'
       });
@@ -271,6 +295,7 @@ export const updateAdminStatus = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Update admin status error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to update admin status',
       details: error
     });

@@ -139,21 +139,31 @@ export async function getCultureWithAssets(req: Request, res: Response) {
   const cultureId = Number(req.params.cultureId);
   try {
     const data = await cultureService.getCultureWithAssets(cultureId);
-    if (!data) return res.status(404).json({ message: "Culture not found" });
+    if (!data) return res.status(404).json({
+      success: false,
+      message: "Culture not found"
+    });
 
     const assetsSubculture = data.subcultures
       .flatMap((sub: { subcultureAssets: any[]; }) => sub.subcultureAssets.map((sa) => sa.asset))
       .slice(0, 4); // ambil maksimal 4 foto
 
     res.json({
-      cultureId: data.cultureId,
-      cultureName: data.cultureName,
-      assetsSubculture,
+      success: true,
+      message: "Culture with assets retrieved successfully",
+      data: {
+        cultureId: data.cultureId,
+        cultureName: data.cultureName,
+        assetsSubculture,
+      }
     });
     return;
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
     return;
   }
 }
@@ -267,6 +277,7 @@ export const getCultureReferences = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: 'Culture references retrieved successfully',
+      total: result.length,
       data: result,
     });
   } catch (error) {

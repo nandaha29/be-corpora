@@ -22,7 +22,10 @@ export const getDomains = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to retrieve domain kodifikasi" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to retrieve domain kodifikasi" 
+    });
     return;
   }
 };
@@ -33,7 +36,10 @@ export const getDomainById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const item = await domainService.getDomainKodifikasiById(Number(id));
-    if (!item) return res.status(404).json({ message: 'Domain not found' });
+    if (!item) return res.status(404).json({ 
+      success: false,
+      message: 'Domain not found' 
+    });
     res.status(200).json({
       success: true,
       message: 'Domain retrieved successfully',
@@ -42,7 +48,11 @@ export const getDomainById = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     // console.error('❌ GET DOMAIN BY ID ERROR:', error);
-    res.status(500).json({ message: 'Failed to retrieve domain', errors: error });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve domain', 
+      errors: error 
+    });
     return;
   }
 };
@@ -60,12 +70,22 @@ export const createDomain = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation failed', 
+        errors: error 
+      });
     }
     if (error instanceof Error && error.message === 'Subculture not found') {
-      return res.status(400).json({ message: 'Referenced subculture does not exist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Referenced subculture does not exist' 
+      });
     }
-    res.status(500).json({ message: 'Failed to create domain' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to create domain' 
+    });
     return;
   }
 };
@@ -84,15 +104,28 @@ export const updateDomain = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation failed', 
+        errors: error 
+      });
     }
     if (error instanceof Error && error.message === 'Subculture not found') {
-      return res.status(400).json({ message: 'Referenced subculture does not exist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Referenced subculture does not exist' 
+      });
     }
     if (error instanceof Error && error.message.includes('Record to update not found')) {
-      return res.status(404).json({ message: 'Domain not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Domain not found' 
+      });
     }
-    res.status(500).json({ message: 'Failed to update domain' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to update domain' 
+    });
     return;
   }
 };
@@ -109,9 +142,15 @@ export const deleteDomain = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     if (error instanceof Error && error.message.includes('Record to delete not found')) {
-      return res.status(404).json({ message: 'Domain not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Domain not found' 
+      });
     }
-    res.status(500).json({ message: 'Failed to delete domain' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to delete domain' 
+    });
     return;
   }
 };
@@ -135,11 +174,20 @@ export const filterDomainKodifikasis = async (req: Request, res: Response) => {
     });
 
     console.log('Filter result:', result);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'Domain kodifikasi filtered successfully',
+      data: result.data,
+      pagination: result.meta,
+    });
     return;
   } catch (error) {
     // console.error('❌ FILTER CONTROLLER ERROR:', error);
-    res.status(500).json({ message: "Failed to filter domain kodifikasi", error: (error as Error).message });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to filter domain kodifikasi", 
+      error: (error as Error).message 
+    });
     return;
   }
 };
@@ -153,7 +201,10 @@ export const searchDomainKodifikasis = async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
     if (!query || query.trim() === '') {
-      return res.status(400).json({ message: 'Search query is required' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Search query is required' 
+      });
     }
 
     console.log('Parsed search:', { query: query.trim(), page, limit });
@@ -161,11 +212,20 @@ export const searchDomainKodifikasis = async (req: Request, res: Response) => {
     const result = await domainService.searchDomainKodifikasis(query.trim(), page, limit);
 
     console.log('Search result:', result);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: 'Domain kodifikasi searched successfully',
+      data: result.data,
+      pagination: result.meta,
+    });
     return;
   } catch (error) {
     // console.error('❌ SEARCH CONTROLLER ERROR:', error);
-    res.status(500).json({ message: "Failed to search domain kodifikasi", error: (error as Error).message });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to search domain kodifikasi", 
+      error: (error as Error).message 
+    });
     return;
   }
 };

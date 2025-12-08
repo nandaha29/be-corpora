@@ -47,7 +47,10 @@ export const getLeksikonById = async (req: Request, res: Response) => {
     if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
 
     const item = await leksikonService.getLeksikonById(id);
-    if (!item) return res.status(404).json({ message: 'Leksikon not found' });
+    if (!item) return res.status(404).json({ 
+      success: false,
+      message: 'Leksikon not found' 
+    });
     return res.status(200).json({
       success: true,
       message: 'Leksikon retrieved successfully',
@@ -55,7 +58,11 @@ export const getLeksikonById = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get leksikon by id:', error);
-    return res.status(500).json({ message: 'Failed to retrieve leksikon', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve leksikon', 
+      details: error 
+    });
   }
 };
 
@@ -71,16 +78,30 @@ export const createLeksikon = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation failed', 
+        errors: error 
+      });
     }
     if ((error as any)?.code === 'DOMAIN_NOT_FOUND') {
-      return res.status(400).json({ message: 'Referenced domain (domainKodifikasiId) does not exist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Referenced domain (domainKodifikasiId) does not exist' 
+      });
     }
     if ((error as any)?.code === 'CONTRIBUTOR_NOT_FOUND') {
-      return res.status(400).json({ message: 'Referenced contributor does not exist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Referenced contributor does not exist' 
+      });
     }
     console.error('Failed to create leksikon:', error);
-    return res.status(500).json({ message: 'Failed to create leksikon', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to create leksikon', 
+      details: error 
+    });
   }
 };
 
@@ -99,19 +120,36 @@ export const updateLeksikon = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation failed', 
+        errors: error 
+      });
     }
     if ((error as any)?.code === 'DOMAIN_NOT_FOUND') {
-      return res.status(400).json({ message: 'Referenced domain (domainKodifikasiId) does not exist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Referenced domain (domainKodifikasiId) does not exist' 
+      });
     }
     if ((error as any)?.code === 'CONTRIBUTOR_NOT_FOUND') {
-      return res.status(400).json({ message: 'Referenced contributor does not exist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Referenced contributor does not exist' 
+      });
     }
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
-      return res.status(404).json({ message: 'Leksikon not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Leksikon not found' 
+      });
     }
     console.error('Failed to update leksikon:', error);
-    return res.status(500).json({ message: 'Failed to update leksikon',details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to update leksikon',
+      details: error 
+    });
   }
 };
 
@@ -129,10 +167,17 @@ export const deleteLeksikon = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
-      return res.status(404).json({ message: 'Leksikon not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Leksikon not found' 
+      });
     }
     console.error('Failed to delete leksikon:', error);
-    return res.status(500).json({ message: 'Failed to delete leksikon', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to delete leksikon', 
+      details: error 
+    });
   }
 };
 
@@ -151,7 +196,11 @@ export const getLeksikonAssets = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get leksikon assets:', error);
-    return res.status(500).json({ message: 'Failed to retrieve assets', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve assets', 
+      details: error 
+    });
   }
 };
 
@@ -213,20 +262,28 @@ export const addAssetToLeksikon = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: error,
       });
     }
 
     if ((error as any)?.code === 'LEKSIKON_NOT_FOUND') {
-      return res.status(404).json({ message: 'Leksikon not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Leksikon not found' 
+      });
     }
     if ((error as any)?.code === 'ASSET_NOT_FOUND') {
-      return res.status(404).json({ message: 'Asset not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Asset not found' 
+      });
     }
 
     console.error('Failed to add asset to leksikon:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to add asset to leksikon',
       details: error instanceof Error ? error.message : error,
     });
@@ -248,10 +305,17 @@ export const removeAssetFromLeksikon = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
-      return res.status(404).json({ message: 'Association not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Association not found' 
+      });
     }
     console.error('Failed to remove asset from leksikon:', error);
-    return res.status(500).json({ message: 'Failed to remove asset', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to remove asset', 
+      details: error 
+    });
   }
 };
 
@@ -270,7 +334,11 @@ export const getLeksikonReferences = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Failed to get leksikon references:', error);
-    return res.status(500).json({ message: 'Failed to retrieve references', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to retrieve references', 
+      details: error 
+    });
   }
 };
 
@@ -328,19 +396,27 @@ export const addReferenceToLeksikon = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
+        success: false,
         message: 'Validation failed',
         errors: error,
       });
     }
     if ((error as any)?.code === 'LEKSIKON_NOT_FOUND') {
-      return res.status(404).json({ message: 'Leksikon not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Leksikon not found' 
+      });
     }
     if ((error as any)?.code === 'REFERENSI_NOT_FOUND') {
-      return res.status(404).json({ message: 'Referensi not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Referensi not found' 
+      });
     }
 
     console.error('Failed to add reference to leksikon:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to add reference to leksikon',
       details: error instanceof Error ? error.message : error,
     });
@@ -362,10 +438,17 @@ export const removeReferenceFromLeksikon = async (req: Request, res: Response) =
     });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
-      return res.status(404).json({ message: 'Association not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Association not found' 
+      });
     }
     console.error('Failed to remove reference from leksikon:', error);
-    return res.status(500).json({ message: 'Failed to remove reference', details: error });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to remove reference', 
+      details: error 
+    });
   }
 };
 
@@ -395,12 +478,19 @@ export const updateAssetRole = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND')
-      return res.status(404).json({ message: 'Asset relation not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Asset relation not found' 
+      });
 
     console.error('Failed to update asset role:', error);
     return res
       .status(500)
-      .json({ message: 'Failed to update asset role', details: error });
+      .json({ 
+        success: false,
+        message: 'Failed to update asset role', 
+        details: error 
+      });
   }
 };
 
@@ -427,15 +517,26 @@ export const updateReferenceRole = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation failed', 
+        errors: error 
+      });
     }
     if ((error as any)?.code === 'ASSOCIATION_NOT_FOUND')
-      return res.status(404).json({ message: 'Reference relation not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Reference relation not found' 
+      });
 
     console.error('Failed to update reference role:', error);
     return res
       .status(500)
-      .json({ message: 'Failed to update citation note', details: error });
+      .json({ 
+        success: false,
+        message: 'Failed to update citation note', 
+        details: error 
+      });
   }
 };
 
@@ -453,7 +554,11 @@ export const getAllLeksikonsPaginated = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch leksikons", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch leksikons", 
+      error 
+    });
     return;
   }
 };
@@ -462,10 +567,18 @@ export const getLeksikonsByDomain = async (req: Request, res: Response) => {
   const dk_id = parseInt(req.params.dk_id || '0');
   try {
     const data = await leksikonService.getLeksikonsByDomain(dk_id);
-    res.status(200).json(data);
+    res.status(200).json({
+      success: true,
+      message: 'Leksikons retrieved successfully',
+      data: data
+    });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch leksikons by domain", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch leksikons by domain", 
+      error 
+    });
     return;
   }
 };
@@ -474,10 +587,18 @@ export const getLeksikonsByStatus = async (req: Request, res: Response) => {
   const status = req.query.status as string;
   try {
     const data = await leksikonService.getLeksikonsByStatus(status);
-    res.status(200).json(data);
+    res.status(200).json({
+      success: true,
+      message: 'Leksikons retrieved successfully',
+      data: data
+    });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch leksikons by status", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch leksikons by status", 
+      error 
+    });
     return;
   }
 };
@@ -505,7 +626,11 @@ export const filterLeksikons = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to filter leksikons", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to filter leksikons", 
+      error 
+    });
     return;
   }
 };
@@ -515,7 +640,10 @@ export const updateLeksikonStatus = async (req: Request, res: Response) => {
   const { status } = req.body;
 
   if (!["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)) {
-    return res.status(400).json({ message: "Invalid status value" });
+    return res.status(400).json({ 
+      success: false,
+      message: "Invalid status value" 
+    });
   }
 
   try {
@@ -527,7 +655,11 @@ export const updateLeksikonStatus = async (req: Request, res: Response) => {
     });
     return;
   } catch (error) {
-    res.status(500).json({ message: "Failed to update leksikon status", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to update leksikon status", 
+      error 
+    });
     return;
   }
 };
@@ -540,17 +672,24 @@ export const getAssetsByRole = async (req: Request, res: Response) => {
     const assetRole = req.params.assetRole;
 
     if (Number.isNaN(leksikonId)) {
-      return res.status(400).json({ message: 'Invalid leksikon ID' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid leksikon ID' 
+      });
     }
 
     if (!assetRole || typeof assetRole !== 'string') {
-      return res.status(400).json({ message: 'assetRole is required and must be a string' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'assetRole is required and must be a string' 
+      });
     }
 
     // Validate assetRole enum values
     const validRoles = ['GALLERY', 'PRONUNCIATION', 'VIDEO_DEMO', 'MODEL_3D'];
     if (!validRoles.includes(assetRole)) {
       return res.status(400).json({
+        success: false,
         message: 'Invalid assetRole',
         validRoles
       });
@@ -566,6 +705,7 @@ export const getAssetsByRole = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Failed to get assets by role:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to retrieve assets',
       details: error
     });
@@ -584,10 +724,15 @@ export const searchAssetsInLeksikons = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
 
     const result = await leksikonService.searchAssetsInLeksikons(query, page, limit);
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: 'Assets searched successfully',
+      ...result
+    });
   } catch (error) {
     console.error('Failed to search assets in leksikons:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to search assets',
       details: error instanceof Error ? error.message : error
     });
@@ -601,10 +746,15 @@ export const getAssignedAssets = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
 
     const result = await leksikonService.getAssignedAssets(page, limit);
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: 'Assigned assets retrieved successfully',
+      ...result
+    });
   } catch (error) {
     console.error('Failed to get assigned assets:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to retrieve assigned assets',
       details: error instanceof Error ? error.message : error
     });
@@ -616,14 +766,22 @@ export const getAssetUsage = async (req: Request, res: Response) => {
   try {
     const assetId = parseInt(req.params.assetId || '0');
     if (isNaN(assetId)) {
-      return res.status(400).json({ message: 'Invalid asset ID' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid asset ID' 
+      });
     }
 
     const usages = await leksikonService.getAssetUsage(assetId);
-    return res.status(200).json(usages);
+    return res.status(200).json({
+      success: true,
+      message: 'Asset usage retrieved successfully',
+      data: usages
+    });
   } catch (error) {
     console.error('Failed to get asset usage:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to retrieve asset usage',
       details: error instanceof Error ? error.message : error
     });
@@ -638,10 +796,15 @@ export const searchReferencesInLeksikons = async (req: Request, res: Response) =
     const limit = parseInt(req.query.limit as string) || 20;
 
     const result = await leksikonService.searchReferencesInLeksikons(query, page, limit);
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: 'References searched successfully',
+      ...result
+    });
   } catch (error) {
     console.error('Failed to search references in leksikons:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to search references',
       details: error instanceof Error ? error.message : error
     });
@@ -655,10 +818,15 @@ export const getAssignedReferences = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
 
     const result = await leksikonService.getAssignedReferences(page, limit);
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: 'Assigned references retrieved successfully',
+      ...result
+    });
   } catch (error) {
     console.error('Failed to get assigned references:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to retrieve assigned references',
       details: error instanceof Error ? error.message : error
     });
@@ -670,14 +838,22 @@ export const getReferenceUsage = async (req: Request, res: Response) => {
   try {
     const referenceId = parseInt(req.params.referenceId || '0');
     if (isNaN(referenceId)) {
-      return res.status(400).json({ message: 'Invalid reference ID' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid reference ID' 
+      });
     }
 
     const usages = await leksikonService.getReferenceUsage(referenceId);
-    return res.status(200).json(usages);
+    return res.status(200).json({
+      success: true,
+      message: 'Reference usage retrieved successfully',
+      data: usages
+    });
   } catch (error) {
     console.error('Failed to get reference usage:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to retrieve reference usage',
       details: error instanceof Error ? error.message : error
     });
@@ -700,6 +876,7 @@ export const filterLeksikonAssets = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Failed to filter leksikon assets:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to filter leksikon assets',
       details: error instanceof Error ? error.message : error
     });
@@ -722,6 +899,7 @@ export const filterLeksikonReferences = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Failed to filter leksikon references:', error);
     return res.status(500).json({
+      success: false,
       message: 'Failed to filter leksikon references',
       details: error instanceof Error ? error.message : error
     });
