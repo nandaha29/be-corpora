@@ -165,13 +165,20 @@ model Reference {
   lexiconReferences    LexiconReference[]
   subcultureReferences SubcultureReference[]
   cultureReferences    CultureReference[]
+  aboutReferences      AboutReference[]
 
   @@map("REFERENCE")
 }
 
 model AboutReference {
-  aboutReferenceId     Int                   @id @default(autoincrement()) @map("about_reference_id")
-  
+  aboutReferenceId Int        @id @default(autoincrement()) @map("about_reference_id")
+  referenceId      Int        @map("reference_id")
+  displayOrder     Int        @default(0) @map("display_order")
+  isActive         Boolean    @default(true) @map("is_active")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+  reference        Reference  @relation(fields: [referenceId], references: [referenceId])
+
   @@map("ABOUT_REFERENCE")
 }
 

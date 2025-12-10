@@ -72,90 +72,28 @@ export const getAboutPageData = async () => {
     },
   }));
 
-  // Static data for academic references (could be moved to DB later)
-  const academicReferences = [
-    {
-      judul: "Tall Tree, Nest of the Wind - The Javanese Shadow-play Dewa Ruci Performed by Ki Anom Soeroto: A Study in Performance Philology",
-      penulis: "Bernard Arps",
-      tahunTerbit: "2016",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-      topicCategory: "CULTURAL_STUDIES",
-      penjelasan: "Cultural linguistic studies in Central Java",
+  // Get academic references from AboutReference table (admin-managed references for about page)
+  const academicReferences = await prisma.aboutReference.findMany({
+    where: {
+      isActive: true,
     },
-    {
-      judul: "Elements of General Linguistics",
-      penulis: "Andre Martinet",
-      tahunTerbit: "1960",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-      topicCategory: "LINGUISTICS",
-      penjelasan: "A fundamental work on general linguistics",
+    include: {
+      reference: true,
     },
-    {
-      judul: "Corpora in Applied Linguistics",
-      penulis: "Susan Hunston",
-      tahunTerbit: "2002",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-      topicCategory: "LINGUISTICS",
-      penjelasan: "A comprehensive guide to corpus use in applied linguistics",
+    orderBy: {
+      displayOrder: 'asc',
     },
-    {
-      judul: "Pemetaan Kebudayaan di Jawa Timur",
-      penulis: "Sutarto, Ayu",
-      tahunTerbit: "2004",
-      tipeReferensi: "REPORT",
-      citationNote: "GENERAL_REFERENCE",
-        topicCategory: "CULTURAL_STUDIES",
-      penjelasan: "Results of cultural mapping in East Java by Komprawisda Jatim",
-    },
-    {
-      judul: "Theater as Data",
-      penulis: "Miguel Escobar Varela",
-      tahunTerbit: "2021",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-        topicCategory: "PERFORMANCE_STUDIES",
-      penjelasan: "Computational approaches in theatre research using digital data",
-    },
-    {
-      judul: "Serat Wedhatama",
-      penulis: "Mangkunegara IV",
-      tahunTerbit: "1972",
-      tipeReferensi: "JOURNAL",
-      citationNote: "GENERAL_REFERENCE",
-        topicCategory: "LITERATURE",
-      penjelasan: "Didactic poetry sung in the form of macapat by Mangkunegara IV of Surakarta",
-    },
-    {
-      judul: "Javaansch-Nederlandsch Handwoordenboek",
-      penulis: "J.F.C. Gericke and A.C. Vreede",
-      tahunTerbit: "1901",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-        topicCategory: "LINGUISTICS",
-      penjelasan: "Javanese-Dutch dictionary expanded and improved by Dr. A.C. Vreede",
-    },
-    {
-      judul: "Hindu Javanese: Tengger Tradition and Islam",
-      penulis: "Robert W. Hefner",
-      tahunTerbit: "1985",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-        topicCategory: "CULTURAL_STUDIES",
-      penjelasan: "Ethnographic study of the Tengger people in East Java",
-    },
-    {
-      judul: "Mendaras Puja Mengemas Tamasya",
-      penulis: "Sony Sukmawan",
-      tahunTerbit: "2022",
-      tipeReferensi: "BOOK",
-      citationNote: "GENERAL_REFERENCE",
-        topicCategory: "TOURISM_STUDIES",
-      penjelasan: "Analysis of the potential of gastronomy and tourism literature in the context of local culture",
-    },
-  ];
+  });
+
+  // Transform to match the expected interface
+  const transformedReferences = academicReferences.map(ar => ({
+    judul: ar.reference.title,
+    penulis: ar.reference.authors || '',
+    tahunTerbit: ar.reference.publicationYear || '',
+    tipeReferensi: ar.reference.referenceType,
+    topicCategory: ar.reference.topicCategory || 'CULTURAL_STUDIES',
+    penjelasan: ar.reference.description || '',
+  }));
 
   // Static project data
   const projectSteps = [
@@ -300,7 +238,7 @@ export const getAboutPageData = async () => {
     visiMisiSection,
     teamScientis: transformedTeam,
     collaborationAssets: transformedAssets,
-    academicReferences,
+    academicReferences: transformedReferences,
     projectSteps,
     projectProcess,
     projectRoadmap,

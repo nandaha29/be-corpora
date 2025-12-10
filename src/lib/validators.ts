@@ -216,6 +216,18 @@ export const updateCultureReferenceRoleSchema = z.object({
   referenceRole: z.nativeEnum(CultureReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
 });
 
+export const createAboutReferenceSchema = z.object({
+  referenceId: z.number().min(1, { message: "Reference ID is required" }),
+  displayOrder: z.number().min(0, { message: "Display order must be 0 or greater" }).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updateAboutReferenceSchema = z.object({
+  referenceId: z.number().min(1, { message: "Reference ID is required" }).optional(),
+  displayOrder: z.number().min(0, { message: "Display order must be 0 or greater" }).optional(),
+  isActive: z.boolean().optional(),
+});
+
 export type CreateLexiconAssetInput = z.infer<typeof createLexiconAssetSchema>;
 export type CreateSubcultureAssetInput = z.infer<typeof createSubcultureAssetSchema>;
 export type CreateCultureAssetInput = z.infer<typeof createCultureAssetSchema>;
@@ -226,5 +238,7 @@ export type CreateContributorAssetInput = z.infer<typeof createContributorAssetS
 export type UpdateLexiconReferenceRoleInput = z.infer<typeof updateLexiconReferenceRoleSchema>;
 export type UpdateSubcultureReferenceRoleInput = z.infer<typeof updateSubcultureReferenceRoleSchema>;
 export type UpdateCultureReferenceRoleInput = z.infer<typeof updateCultureReferenceRoleSchema>;
+export type CreateAboutReferenceInput = z.infer<typeof createAboutReferenceSchema>;
+export type UpdateAboutReferenceInput = z.infer<typeof updateAboutReferenceSchema>;
 
 

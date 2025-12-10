@@ -10,7 +10,8 @@ async function importContributors() {
     let success = 0;
     for (const record of data.tables.CONTRIBUTOR) {
       try {
-        await prisma.contributor.create({ data: record });
+        const { lexicons, contributorAssets, ...contributorData } = record;
+        await prisma.contributor.create({ data: contributorData });
         success++;
       } catch (error) {
         console.log('Failed:', record.contributorId, error.message);

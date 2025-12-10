@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import csv from 'csv-parser';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -78,10 +83,13 @@ async function resetDatabase() {
 
   // Delete junction tables first
   await prisma.lexiconReference.deleteMany();
+  await prisma.subcultureReference.deleteMany();
+  await prisma.cultureReference.deleteMany();
   await prisma.lexiconAsset.deleteMany();
   await prisma.subcultureAsset.deleteMany();
   await prisma.cultureAsset.deleteMany();
   await prisma.contributorAsset.deleteMany();
+  await prisma.aboutReference.deleteMany();
 
   // Delete main tables
   await prisma.lexicon.deleteMany();
@@ -315,152 +323,183 @@ async function importFromCSV() {
     console.log('📊 Importing Subculture data...');
     const subculturePath = path.join(exportDir, 'subculture.csv');
     if (fs.existsSync(subculturePath)) {
-      const subcultureData = [];
-      const subcultureLines = fs.readFileSync(subculturePath, 'utf8')
-        .split('\n')
-        .slice(1)
-        .filter(line => line.trim());
-
-      for (const line of subcultureLines) {
-        try {
-          const fields = parseSubcultureLine(line);
-          if (fields.length >= 15) {
-            // CSV header order: subcultureId,subcultureName,slug,traditionalGreeting,greetingMeaning,explanation,cultureId,status,conservationStatus,displayPriorityStatus,createdAt,updatedAt,culture,codificationDomains,subcultureAssets
-            const subcultureId = parseInt(fields[0]) || 0;
-            const subcultureName = fields[1];
-            const slug = fields[2];
-            const traditionalGreeting = fields[3];
-            const greetingMeaning = fields[4]; // This is long explanation text
-            const explanation = fields[5]; // This is cultureId (the CSV structure is not matching headers)
-            const cultureId = parseInt(fields[5]) || 0;
-            const status = fields[6];
-            const conservationStatus = fields[7];
-            const createdAtStr = fields[8].replace(/"""|""""/g, '');
-            const updatedAtStr = fields[9].replace(/"""|""""/g, '');
-            const greetingMeaningShort = fields[10]; // Short greeting meaning
-            const displayPriorityStatus = fields[11] || 'LOW';
-
+      await new Promise((resolve, reject) => {
+        const subcultureData = [];
+        fs.createReadStream(subculturePath)
+          .pipe(csv())
+          .on('data', (row) => {
+            // Only take the first 12 fields
+            const fields = Object.keys(row);
+            const limitedRow = {};
+            for (let i = 0; i < Math.min(12, fields.length); i++) {
+              limitedRow[fields[i]] = row[fields[i]];
+            }
+            
             subcultureData.push({
-              subcultureId,
-              subcultureName,
-              slug,
-              traditionalGreeting,
-              greetingMeaning: greetingMeaningShort,
-              explanation: greetingMeaning, // Use the long text as explanation
-              cultureId,
-              status,
-              conservationStatus,
-              displayPriorityStatus,
-              createdAt: parseDate(createdAtStr),
-              updatedAt: parseDate(updatedAtStr)
+              subcultureId: parseInt(limitedRow.subcultureId),
+              slug: limitedRow.slug,
+              subcultureName: limitedRow.subcultureName,
+              traditionalGreeting: limitedRow.traditionalGreeting,
+              greetingMeaning: limitedRow.greetingMeaning,
+              explanation: limitedRow.explanation,
+              cultureId: parseInt(limitedRow.cultureId),
+              status: limitedRow.status,
+              displayPriorityStatus: limitedRow.displayPriorityStatus || 'LOW',
+              conservationStatus: limitedRow.conservationStatus,
+              createdAt: parseDate(limitedRow.createdAt),
+              updatedAt: parseDate(limitedRow.updatedAt)
             });
-          }
-        } catch (error) {
-          console.error('Error parsing subculture line:', error.message);
-          console.error('Line:', line.substring(0, 100) + '...');
-        }
-      }
-
-      for (const subculture of subcultureData) {
-        await prisma.subculture.create({ data: subculture });
-      }
-      console.log(`✅ Imported ${subcultureData.length} subculture records`);
+          })
+          .on('end', async () => {
+            console.log(`Processing ${subcultureData.length} subculture records...`);
+            for (const subculture of subcultureData) {
+              try {
+                await prisma.subculture.create({
+                  data: {
+                    subcultureId: subculture.subcultureId,
+                    slug: subculture.slug,
+                    subcultureName: subculture.subcultureName,
+                    traditionalGreeting: subculture.traditionalGreeting,
+                    greetingMeaning: subculture.greetingMeaning,
+                    explanation: subculture.explanation,
+                    cultureId: subculture.cultureId,
+                    status: subculture.status,
+                    displayPriorityStatus: subculture.displayPriorityStatus,
+                    conservationStatus: subculture.conservationStatus,
+                    createdAt: subculture.createdAt,
+                    updatedAt: subculture.updatedAt
+                  }
+                });
+                console.log(`Imported subculture: ${subculture.subcultureName}`);
+              } catch (error) {
+                console.error(`Failed to import subculture ${subculture.subcultureName}:`, error.message);
+              }
+            }
+            console.log('Subculture import completed.');
+            resolve();
+          })
+          .on('error', reject);
+      });
     }
 
-    // Import Domain Kodifikasi
+      // Import Domain Kodifikasi
     console.log('📊 Importing Domain Kodifikasi data...');
     const domainPath = path.join(exportDir, 'domain_kodifikasi.csv');
     if (fs.existsSync(domainPath)) {
-      const domainData = fs.readFileSync(domainPath, 'utf8')
-        .split('\n')
-        .slice(1)
-        .filter(line => line.trim())
-        .map(line => {
-          const [domainId, code, domainName, explanation, subcultureId, status, createdAt, updatedAt] = line.split(',');
-          return {
-            domainId: parseInt(domainId.replace(/"/g, '')),
-            code: code.replace(/"/g, ''),
-            domainName: domainName.replace(/"/g, ''),
-            explanation: explanation.replace(/"/g, ''),
-            subcultureId: parseInt(subcultureId.replace(/"/g, '')),
-            status: status.replace(/"/g, ''),
-            createdAt: new Date(createdAt.replace(/"/g, '').replace(/"""|""""/g, '')),
-            updatedAt: new Date(updatedAt.replace(/"/g, '').replace(/"""|""""/g, ''))
-          };
+      const domainData = [];
+      fs.createReadStream(domainPath)
+        .pipe(csv())
+        .on('data', (row) => {
+          // Only take the first 8 fields
+          const fields = Object.keys(row);
+          const limitedRow = {};
+          for (let i = 0; i < Math.min(8, fields.length); i++) {
+            limitedRow[fields[i]] = row[fields[i]];
+          }
+          
+          domainData.push({
+            domainId: parseInt(limitedRow.domainId),
+            code: limitedRow.code,
+            domainName: limitedRow.domainName,
+            explanation: limitedRow.explanation,
+            subcultureId: parseInt(limitedRow.subcultureId),
+            status: limitedRow.status,
+            createdAt: parseDate(limitedRow.createdAt),
+            updatedAt: parseDate(limitedRow.updatedAt)
+          });
+        })
+        .on('end', async () => {
+          console.log(`Processing ${domainData.length} domain records...`);
+          for (const domain of domainData) {
+            try {
+              await prisma.codificationDomain.create({ data: domain });
+            } catch (error) {
+              console.warn(`⚠️  Skipped domain: ${error.message}`);
+            }
+          }
+          console.log(`✅ Imported ${domainData.length} domain records`);
+        })
+        .on('error', (error) => {
+          console.error('Error importing domains:', error);
         });
-
-      for (const domain of domainData) {
-        await prisma.codificationDomain.create({ data: domain });
-      }
-      console.log(`✅ Imported ${domainData.length} domain records`);
     }
 
+    console.log('DEBUG: About to start lexicon import');
     // Import Lexicon
     console.log('📊 Importing Lexicon data...');
-    const lexiconPath = path.join(exportDir, 'leksikon.csv');
+    console.log('DEBUG: Lexicon section reached');
+    const lexiconPath = path.join(exportDir, 'leksikon_clean.csv');
     if (fs.existsSync(lexiconPath)) {
-      const lexiconData = [];
-      const lexiconLines = fs.readFileSync(lexiconPath, 'utf8')
-        .split('\n')
-        .slice(1)
-        .filter(line => line.trim());
+      try {
+        const lexiconData = [];
 
-      for (const line of lexiconLines) {
-        try {
-          const fields = parseCSVLine(line);
-          if (fields.length >= 18) {
-            const lexiconId = fields[0].replace(/"/g, '');
-            const slug = fields[1].replace(/"/g, '');
-            const lexiconWord = fields[2].replace(/"/g, '');
-            const ipaInternationalPhoneticAlphabet = fields[3].replace(/"/g, '');
-            const transliteration = fields[4].replace(/"/g, '');
-            const etymologicalMeaning = fields[5].replace(/"/g, '');
-            const culturalMeaning = fields[6].replace(/"/g, '');
-            const commonMeaning = fields[7].replace(/"/g, '');
-            const translation = fields[8].replace(/"/g, '');
-            const variant = fields[9].replace(/"/g, '') || null;
-            const variantTranslations = fields[10].replace(/"/g, '') || null;
-            const otherDescription = fields[11].replace(/"/g, '') || null;
-            const domainId = fields[12].replace(/"/g, '');
-            const preservationStatus = fields[13].replace(/"/g, '');
-            const contributorId = fields[14].replace(/"/g, '');
-            const status = fields[15].replace(/"/g, '');
-            const createdAt = fields[16].replace(/"/g, '').replace(/"""|""""/g, '');
-            const updatedAt = fields[17].replace(/"/g, '').replace(/"""|""""/g, '');
-
+        // Use csv-parser for the cleaned CSV
+        const stream = fs.createReadStream(lexiconPath)
+          .pipe(csv())
+          .on('data', (data) => {
             lexiconData.push({
-              lexiconId: parseInt(lexiconId),
-              slug,
-              lexiconWord,
-              ipaInternationalPhoneticAlphabet,
-              transliteration,
-              etymologicalMeaning,
-              culturalMeaning,
-              commonMeaning,
-              translation,
-              variant,
-              variantTranslations,
-              otherDescription,
-              domainId: parseInt(domainId),
-              preservationStatus,
-              contributorId: parseInt(contributorId),
-              status,
-              createdAt: new Date(createdAt.replace(/Invalid Date/, '2025-01-01T00:00:00.000Z')),
-              updatedAt: new Date(updatedAt.replace(/Invalid Date/, '2025-01-01T00:00:00.000Z'))
+              lexiconId: parseInt(data.lexiconId),
+              slug: data.slug,
+              lexiconWord: data.lexiconWord,
+              ipaInternationalPhoneticAlphabet: data.ipaInternationalPhoneticAlphabet,
+              transliteration: data.transliteration,
+              etymologicalMeaning: data.etymologicalMeaning,
+              culturalMeaning: data.culturalMeaning,
+              commonMeaning: data.commonMeaning,
+              translation: data.translation,
+              variant: data.variant || null,
+              variantTranslations: data.variantTranslations || null,
+              otherDescription: data.otherDescription || null,
+              domainId: parseInt(data.domainId),
+              preservationStatus: data.preservationStatus,
+              contributorId: parseInt(data.contributorId),
+              status: data.status,
+              createdAt: parseDate(data.createdAt),
+              updatedAt: parseDate(data.updatedAt)
             });
+          });
+
+        // Wait for the stream to finish
+        await new Promise((resolve, reject) => {
+          stream.on('end', resolve);
+          stream.on('error', reject);
+        });
+
+        console.log(`Processing ${lexiconData.length} lexicon records...`);
+        for (const lexicon of lexiconData) {
+          try {
+            await prisma.lexicon.create({
+              data: {
+                lexiconId: lexicon.lexiconId,
+                slug: lexicon.slug,
+                lexiconWord: lexicon.lexiconWord,
+                ipaInternationalPhoneticAlphabet: lexicon.ipaInternationalPhoneticAlphabet,
+                transliteration: lexicon.transliteration,
+                etymologicalMeaning: lexicon.etymologicalMeaning,
+                culturalMeaning: lexicon.culturalMeaning,
+                commonMeaning: lexicon.commonMeaning,
+                translation: lexicon.translation,
+                variant: lexicon.variant,
+                variantTranslations: lexicon.variantTranslations,
+                otherDescription: lexicon.otherDescription,
+                domainId: lexicon.domainId,
+                preservationStatus: lexicon.preservationStatus,
+                contributorId: lexicon.contributorId,
+                status: lexicon.status,
+                createdAt: lexicon.createdAt,
+                updatedAt: lexicon.updatedAt
+              }
+            });
+            console.log(`Imported lexicon: ${lexicon.lexiconWord}`);
+          } catch (error) {
+            console.error(`Failed to import lexicon ${lexicon.lexiconWord}:`, error);
           }
-        } catch (error) {
-          console.log(`⚠️  Skipping invalid lexicon line: ${line.substring(0, 50)}...`);
         }
+        console.log('Lexicon import completed.');
+      } catch (error) {
+        console.error('Error in lexicon import:', error);
       }
-
-      for (const lexicon of lexiconData) {
-        await prisma.lexicon.create({ data: lexicon });
-      }
-      console.log(`✅ Imported ${lexiconData.length} lexicon records`);
-    }
-
-    // Import junction tables
+    }    // Import junction tables
     console.log('📊 Importing junction tables...');
 
     // Lexicon Assets
@@ -481,7 +520,11 @@ async function importFromCSV() {
         });
 
       for (const item of lexiconAssetsData) {
-        await prisma.lexiconAsset.create({ data: item });
+        try {
+          await prisma.lexiconAsset.create({ data: item });
+        } catch (error) {
+          console.warn(`⚠️  Skipped lexicon asset: ${error.message}`);
+        }
       }
       console.log(`✅ Imported ${lexiconAssetsData.length} lexicon asset records`);
     }
@@ -504,7 +547,11 @@ async function importFromCSV() {
         });
 
       for (const item of subcultureAssetsData) {
-        await prisma.subcultureAsset.create({ data: item });
+        try {
+          await prisma.subcultureAsset.create({ data: item });
+        } catch (error) {
+          console.warn(`⚠️  Skipped subculture asset: ${error.message}`);
+        }
       }
       console.log(`✅ Imported ${subcultureAssetsData.length} subculture asset records`);
     }
@@ -527,7 +574,11 @@ async function importFromCSV() {
         });
 
       for (const item of cultureAssetsData) {
-        await prisma.cultureAsset.create({ data: item });
+        try {
+          await prisma.cultureAsset.create({ data: item });
+        } catch (error) {
+          console.warn(`⚠️  Skipped culture asset: ${error.message}`);
+        }
       }
       console.log(`✅ Imported ${cultureAssetsData.length} culture asset records`);
     }
@@ -544,13 +595,17 @@ async function importFromCSV() {
           return {
             contributorId: parseInt(contributorId.replace(/"/g, '')),
             assetId: parseInt(assetId.replace(/"/g, '')),
-            assetRole: assetRole.replace(/"/g, ''),
+            assetNote: assetRole.replace(/"/g, ''), // Map assetRole to assetNote
             createdAt: new Date(createdAt.replace(/"/g, '').replace(/"""|""""/g, ''))
           };
         });
 
       for (const item of contributorAssetsData) {
-        await prisma.contributorAsset.create({ data: item });
+        try {
+          await prisma.contributorAsset.create({ data: item });
+        } catch (error) {
+          console.warn(`⚠️  Skipped contributor asset: ${error.message}`);
+        }
       }
       console.log(`✅ Imported ${contributorAssetsData.length} contributor asset records`);
     }
@@ -563,17 +618,22 @@ async function importFromCSV() {
         .slice(1)
         .filter(line => line.trim())
         .map(line => {
-          const [lexiconId, referensiId, citationNote, createdAt] = line.split(',');
+          const [lexiconId, referenceId, referenceRole, displayOrder, createdAt] = line.split(',');
           return {
             lexiconId: parseInt(lexiconId.replace(/"/g, '')),
-            referensiId: parseInt(referensiId.replace(/"/g, '')),
-            citationNote: citationNote.replace(/"/g, '') || null,
+            referenceId: parseInt(referenceId.replace(/"/g, '')),
+            referenceRole: referenceRole.replace(/"/g, '') || null,
+            displayOrder: displayOrder.replace(/"/g, '') ? parseInt(displayOrder.replace(/"/g, '')) : 0,
             createdAt: new Date(createdAt.replace(/"/g, '').replace(/"""|""""/g, ''))
           };
         });
 
       for (const item of lexiconReferencesData) {
-        await prisma.lexiconReference.create({ data: item });
+        try {
+          await prisma.lexiconReference.create({ data: item });
+        } catch (error) {
+          console.warn(`⚠️  Skipped lexicon reference: ${error.message}`);
+        }
       }
       console.log(`✅ Imported ${lexiconReferencesData.length} lexicon reference records`);
     }

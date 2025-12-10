@@ -60,7 +60,8 @@ async function importFromJSON() {
               await prisma.subculture.create({ data: subcultureData });
               break;
             case 'CODIFICATION_DOMAIN':
-              await prisma.codificationDomain.create({ data: record });
+              const { subculture, lexicons, ...domainData } = record;
+              await prisma.codificationDomain.create({ data: domainData });
               break;
             case 'CONTRIBUTOR':
               await prisma.contributor.create({ data: record });
@@ -73,6 +74,22 @@ async function importFromJSON() {
               break;
             case 'LEXICON':
               const { codificationDomain, contributor, lexiconAssets, lexiconReferences, ...lexiconData } = record;
+              // Check if contributor exists, if not set to 1
+              if (lexiconData.contributorId) {
+                const existingContributor = await prisma.contributor.findUnique({ where: { contributorId: lexiconData.contributorId } });
+                if (!existingContributor) {
+                  console.warn(`⚠️  Contributor ${lexiconData.contributorId} not found, setting to 1`);
+                  lexiconData.contributorId = 1;
+                }
+              }
+              // Check if domain exists, if not set to 2
+              if (lexiconData.domainId) {
+                const existingDomain = await prisma.codificationDomain.findUnique({ where: { domainId: lexiconData.domainId } });
+                if (!existingDomain) {
+                  console.warn(`⚠️  Domain ${lexiconData.domainId} not found, setting to 2`);
+                  lexiconData.domainId = 2;
+                }
+              }
               try {
                 await prisma.lexicon.create({ data: lexiconData });
               } catch (lexiconError) {
