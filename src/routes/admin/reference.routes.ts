@@ -59,6 +59,7 @@ router.get("/:id", authenticateAdmin, referenceController.getReferenceById);
  * @body {string} url - URL (optional)
  * @body {string} authors - Author (optional)
  * @body {string} publicationYear - Publication year (optional)
+ * @body {string} referenceRole - Reference role (PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING) (optional)
  * @body {string} status - Status (DRAFT, PUBLISHED, ARCHIVED)
  */
 router.post("/", authenticateAdmin, referenceController.createReference);
@@ -74,6 +75,7 @@ router.post("/", authenticateAdmin, referenceController.createReference);
  * @body {string} url - URL (optional)
  * @body {string} authors - Author (optional)
  * @body {string} publicationYear - Publication year (optional)
+ * @body {string} referenceRole - Reference role (PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING) (optional)
  * @body {string} status - Status
  */
 router.put("/:id", authenticateAdmin, referenceController.updateReference);

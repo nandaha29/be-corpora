@@ -20,6 +20,7 @@
 - ✅ **Geographic Coordinates**: Support for latitude/longitude coordinates in cultures (not PostGIS)
 - ✅ **Public API Integration**: Detailed documentation with frontend usage notes
 - ✅ **Database Optimization**: Improved query performance and data relationships
+- ✅ **Bulk Import Production Fix**: CSV bulk import now compatible with Vercel serverless environment
 
 ---
 

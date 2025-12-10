@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CitationNoteType, AdminRole, StatusPublish, StatusKonservasi, StatusPriority, ReferenceType, AssetType, ReferenceRole } from "@prisma/client";
+import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CultureReferenceRole, SubcultureReferenceRole, LexiconReferenceRole, AdminRole, StatusPublish, StatusKonservasi, StatusPriority, ReferenceType, AssetType } from "@prisma/client";
 
 /* =======================
    🔐 ADMIN AUTHENTICATION
@@ -108,7 +108,7 @@ export type UpdateLexiconInput = z.infer<typeof updateLexiconSchema>;
 export const createReferenceSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   referenceType: z.nativeEnum(ReferenceType, {
-    message: "Reference type must be one of: JOURNAL, BOOK, ARTICLE, WEBSITE, REPORT, THESIS, DISSERTATION, FIELD_NOTE",
+    message: "Reference type must be one of: JOURNAL, BOOK, ARTICLE, WEBSITE, REPORT, ORAL_TRADITION, FIELD_OBSERVATION",
   }),
   description: z.string().optional(),
   url: z.string().url({ message: "Invalid URL" }).optional(),
@@ -181,26 +181,39 @@ export const createSubcultureAssetSchema = z.object({
 export const createCultureAssetSchema = z.object({
   cultureId: z.number().min(1, { message: "Culture ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
-  assetRole: z.nativeEnum(CultureAssetRole, { message: "Asset role must be one of: THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
+  assetRole: z.nativeEnum(CultureAssetRole, { message: "Asset role must be one of: HIGHLIGHT, THUMBNAIL, GALLERY, BANNER, VIDEO_DEMO, MODEL_3D" }),
+});
+export const createCultureReferenceSchema = z.object({
+  cultureId: z.number().min(1, { message: "Culture ID is required" }),
+  referenceId: z.number().min(1, { message: "Reference ID is required" }),
+  referenceRole: z.nativeEnum(CultureReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
 });
 export const createLexiconReferenceSchema = z.object({
   lexiconId: z.number().min(1, { message: "Lexicon ID is required" }),
   referenceId: z.number().min(1, { message: "Reference ID is required" }),
-  referenceRole: z.nativeEnum(ReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, ILLUSTRATIVE, BACKGROUND, SUPPORTING" }).optional(),
+  referenceRole: z.nativeEnum(LexiconReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
 });
 export const createSubcultureReferenceSchema = z.object({
   subcultureId: z.number().min(1, { message: "Subculture ID is required" }),
   referenceId: z.number().min(1, { message: "Reference ID is required" }),
   lexiconId: z.number().optional(),
-  referenceRole: z.nativeEnum(ReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, ILLUSTRATIVE, BACKGROUND, SUPPORTING" }).optional(),
+  referenceRole: z.nativeEnum(SubcultureReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
 });
 export const createContributorAssetSchema = z.object({
   contributorId: z.number().min(1, { message: "Contributor ID is required" }),
   assetId: z.number().min(1, { message: "Asset ID is required" }),
   assetNote: z.nativeEnum(ContributorAssetRole, { message: "Asset role must be one of: LOGO, SELF_PHOTO, SIGNATURE, CERTIFICATE, GALLERY, VIDEO_DEMO" }),
 });
-export const updateReferenceRoleSchema = z.object({
-  referenceRole: z.nativeEnum(ReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, ILLUSTRATIVE, BACKGROUND, SUPPORTING" }).optional(),
+export const updateLexiconReferenceRoleSchema = z.object({
+  referenceRole: z.nativeEnum(LexiconReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
+});
+
+export const updateSubcultureReferenceRoleSchema = z.object({
+  referenceRole: z.nativeEnum(SubcultureReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
+});
+
+export const updateCultureReferenceRoleSchema = z.object({
+  referenceRole: z.nativeEnum(CultureReferenceRole, { message: "Reference role must be one of: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING" }).optional(),
 });
 
 export type CreateLexiconAssetInput = z.infer<typeof createLexiconAssetSchema>;
@@ -208,7 +221,10 @@ export type CreateSubcultureAssetInput = z.infer<typeof createSubcultureAssetSch
 export type CreateCultureAssetInput = z.infer<typeof createCultureAssetSchema>;
 export type CreateLexiconReferenceInput = z.infer<typeof createLexiconReferenceSchema>;
 export type CreateSubcultureReferenceInput = z.infer<typeof createSubcultureReferenceSchema>;
+export type CreateCultureReferenceInput = z.infer<typeof createCultureReferenceSchema>;
 export type CreateContributorAssetInput = z.infer<typeof createContributorAssetSchema>;
-export type UpdateReferenceRoleInput = z.infer<typeof updateReferenceRoleSchema>;
+export type UpdateLexiconReferenceRoleInput = z.infer<typeof updateLexiconReferenceRoleSchema>;
+export type UpdateSubcultureReferenceRoleInput = z.infer<typeof updateSubcultureReferenceRoleSchema>;
+export type UpdateCultureReferenceRoleInput = z.infer<typeof updateCultureReferenceRoleSchema>;
 
 
