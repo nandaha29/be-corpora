@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, LexiconReferenceRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -103,7 +103,10 @@ export const getAllLexicons = async (regionFilter: string = 'all', searchQuery: 
       otherDescription: lexicon.otherDescription || '',
     },
     leksikonAssets: (lexicon as any).lexiconAssets || [],
-    leksikonReferensis: (lexicon as any).lexiconReferences || [],
+    leksikonReferensis: ((lexicon as any).lexiconReferences || []).map((ref: any) => ({
+      ...ref.reference,
+      referenceRole: LexiconReferenceRole.SUPPORTING
+    })),
   }));
 
   return {
@@ -249,6 +252,9 @@ export const getLexiconDetail = async (identifier: string) => {
     },
     galleryImages,
     lexiconAssets: (lexicon as any).lexiconAssets || [],
-    lexiconReferences: (lexicon as any).lexiconReferences || [],
+    lexiconReferences: ((lexicon as any).lexiconReferences || []).map((ref: any) => ({
+      ...ref.reference,
+      referenceRole: LexiconReferenceRole.SUPPORTING
+    })),
   };
 };

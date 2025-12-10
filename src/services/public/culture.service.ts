@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import { Prisma, StatusPublish } from '@prisma/client';
+import { Prisma, StatusPublish, CultureReferenceRole } from '@prisma/client';
 
 // Get all published cultures with pagination
 export const getAllPublishedCultures = async (page: number = 1, limit: number = 20) => {
@@ -244,7 +244,10 @@ export const getAboutPageData = async (identifier?: string) => {
       subcultureName: sub.subcultureName,
       domainCount: sub._count.codificationDomains
     })),
-    cultureReferences: culture.cultureReferences || [],
+    cultureReferences: (culture.cultureReferences || []).map((ref: any) => ({
+      ...ref.reference,
+      referenceRole: CultureReferenceRole.PRIMARY_SOURCE
+    })),
     cultureAssets: culture.cultureAssets || []
   };
 };

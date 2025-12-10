@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, SubcultureAssetRole, ReferenceRole } from "@prisma/client";
+import { Prisma, PrismaClient, SubcultureAssetRole, SubcultureReferenceRole } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { CreateSubcultureInput, UpdateSubcultureInput } from "../../lib/validators.js";
 
@@ -391,7 +391,7 @@ export const getReferenceUsage = async (referenceId: number) => {
   });
 };
 
-export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number, referenceRole?: ReferenceRole) => {
+export const addReferenceToSubculture = async (subcultureId: number, referenceId: number, lexiconId?: number, referenceRole?: SubcultureReferenceRole) => {
   // Verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });
   if (!subculture) {
@@ -726,7 +726,7 @@ export const addReferenceToSubcultureDirect = async (
   subcultureId: number,
   referenceId: number,
   displayOrder?: number,
-  referenceRole?: ReferenceRole
+  referenceRole?: SubcultureReferenceRole
 ) => {
   // Verify subculture exists
   const subculture = await prisma.subculture.findUnique({ where: { subcultureId } });

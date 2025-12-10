@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { CreateCultureInput, UpdateCultureInput } from '../../lib/validators.js';
-import { StatusKonservasi, StatusPublish } from '@prisma/client';
+import { StatusKonservasi, StatusPublish, CultureReferenceRole } from '@prisma/client';
 
 // Helper function to generate slug
 const generateSlug = (name: string): string => {
@@ -215,7 +215,7 @@ export const addReferenceToCulture = async (
   cultureId: number,
   referenceId: number,
   displayOrder?: number,
-  referenceRole?: string
+  referenceRole?: CultureReferenceRole
 ) => {
   // Verify culture exists
   const culture = await prisma.culture.findUnique({ where: { cultureId } });
@@ -242,13 +242,13 @@ export const addReferenceToCulture = async (
       },
     },
     update: {
-      referenceRole: referenceRole as any,
+      referenceRole,
       displayOrder: displayOrder ?? 0,
     },
     create: {
       cultureId,
       referenceId,
-      referenceRole: referenceRole as any,
+      referenceRole,
       displayOrder: displayOrder ?? 0,
     },
     include: {

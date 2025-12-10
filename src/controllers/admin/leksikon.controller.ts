@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
-import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, createLexiconReferenceSchema, updateReferenceRoleSchema } from '../../lib/validators.js';
+import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, createLexiconReferenceSchema, updateLexiconReferenceRoleSchema } from '../../lib/validators.js';
 import { ZodError } from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { LeksikonAssetRole } from '@prisma/client';
@@ -504,7 +504,7 @@ export const updateReferenceRole = async (req: Request, res: Response) => {
     if (Number.isNaN(leksikonId) || Number.isNaN(referenceId))
       return res.status(400).json({ message: 'Invalid IDs' });
 
-    const validated = updateReferenceRoleSchema.parse(req.body);
+    const validated = updateLexiconReferenceRoleSchema.parse(req.body);
     const result = await leksikonService.updateReferenceRole(
       leksikonId,
       referenceId,

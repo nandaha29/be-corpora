@@ -14,10 +14,16 @@ export const getAllReferences = async () => {
       authors: true,
       publicationYear: true,
       topicCategory: true,
-      referenceRole: true,
       status: true,
       createdAt: true,
       updatedAt: true,
+      _count: {
+        select: {
+          lexiconReferences: true,
+          subcultureReferences: true,
+          cultureReferences: true,
+        }
+      }
     },
   });
 };
@@ -34,10 +40,16 @@ export const getReferenceById = async (id: number) => {
       authors: true,
       publicationYear: true,
       topicCategory: true,
-      referenceRole: true,
       status: true,
       createdAt: true,
       updatedAt: true,
+      _count: {
+        select: {
+          lexiconReferences: true,
+          subcultureReferences: true,
+          cultureReferences: true,
+        }
+      }
     },
   });
 };
@@ -51,7 +63,6 @@ export const createReference = async (data: CreateReferenceInput) => {
       authors: data.authors ?? "",
       publicationYear: data.publicationYear ?? "",
       topicCategory: data.topicCategory ?? "",
-      referenceRole: data.referenceRole ?? null,
     },
   });
 };
@@ -89,10 +100,16 @@ export const getAllReferensiPaginated = async (page = 1, limit = 10, type?: stri
         authors: true,
         publicationYear: true,
         topicCategory: true,
-        referenceRole: true,
         status: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            lexiconReferences: true,
+            subcultureReferences: true,
+            cultureReferences: true,
+          }
+        }
       },
     }),
     prisma.reference.count(),
@@ -151,7 +168,6 @@ export const searchReferensi = async (keyword: string, page = 1, limit = 20) => 
         authors: true,
         publicationYear: true,
         topicCategory: true,
-        referenceRole: true,
         status: true,
         createdAt: true,
         updatedAt: true,
@@ -243,10 +259,16 @@ export const filterReferences = async (filters: {
         authors: true,
         publicationYear: true,
         topicCategory: true,
-        referenceRole: true,
         status: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            lexiconReferences: true,
+            subcultureReferences: true,
+            cultureReferences: true,
+          }
+        }
       },
     }),
     prisma.reference.count({ where: whereCondition }),

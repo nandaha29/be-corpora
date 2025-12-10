@@ -52,6 +52,13 @@ export const getPublishedReferenceById = async (referenceId: number) => {
       status: true,
       createdAt: true,
       updatedAt: true,
+      _count: {
+        select: {
+          lexiconReferences: true,
+          subcultureReferences: true,
+          cultureReferences: true,
+        },
+      },
     },
   });
 };

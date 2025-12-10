@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, SubcultureReferenceRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -270,7 +270,10 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
         region: subculture.culture?.cityRegion || 'Unknown Region',
       },
       subcultureAssets: subculture.subcultureAssets, // Add subcultureAssets for frontend gallery handling
-      subcultureReferences: (subculture as any).subcultureReferences || [], // Add subcultureReferences
+      subcultureReferences: ((subculture as any).subcultureReferences || []).map((ref: any) => ({
+        ...ref.reference,
+        referenceRole: SubcultureReferenceRole.SECONDARY_SOURCE
+      })), // Add subcultureReferences
       searchResults: lexicon, // Return filtered results as searchResults
     };
   }
@@ -290,7 +293,10 @@ export const getSubcultureDetail = async (identifier: string, searchQuery?: stri
       region: subculture.culture?.cityRegion || 'Unknown Region',
     },
     subcultureAssets: subculture.subcultureAssets, // Add subcultureAssets for frontend gallery handling
-    subcultureReferences: (subculture as any).subcultureReferences || [], // Add subcultureReferences
+    subcultureReferences: ((subculture as any).subcultureReferences || []).map((ref: any) => ({
+      ...ref.reference,
+      referenceRole: SubcultureReferenceRole.SECONDARY_SOURCE
+    })), // Add subcultureReferences
   };
 };
 

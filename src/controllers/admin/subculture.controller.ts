@@ -3,7 +3,7 @@ import * as subcultureService from "../../services/admin/subculture.service.js";
 import { createSubcultureSchema, updateSubcultureSchema, createSubcultureAssetSchema, createSubcultureReferenceSchema } from "../../lib/validators.js";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { ReferenceRole } from "@prisma/client";
+import { SubcultureReferenceRole } from "@prisma/client";
 
 // export const getAllSubcultures = async (req: Request, res: Response) => {
 //   try {
@@ -586,9 +586,9 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
     if (!referenceRole || referenceRole === '') {
       const issues = [{
         code: 'invalid_value',
-        values: Object.values(ReferenceRole),
+        values: Object.values(SubcultureReferenceRole),
         path: ['referenceRole'],
-        message: `Reference role is required when linking reference. Must be one of: ${Object.values(ReferenceRole).join(', ')}`
+        message: `Reference role is required when linking reference. Must be one of: ${Object.values(SubcultureReferenceRole).join(', ')}`
       }];
       return res.status(400).json({
         success: false,
@@ -601,12 +601,12 @@ export const addReferenceToSubcultureDirect = async (req: Request, res: Response
     }
 
     // Validate referenceRole enum
-    if (!Object.values(ReferenceRole).includes(referenceRole)) {
+    if (!Object.values(SubcultureReferenceRole).includes(referenceRole)) {
       const issues = [{
         code: 'invalid_enum_value',
-        options: Object.values(ReferenceRole),
+        options: Object.values(SubcultureReferenceRole),
         path: ['referenceRole'],
-        message: `Reference role must be one of: ${Object.values(ReferenceRole).join(', ')}`
+        message: `Reference role must be one of: ${Object.values(SubcultureReferenceRole).join(', ')}`
       }];
       return res.status(400).json({
         success: false,
