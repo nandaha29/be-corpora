@@ -1,0 +1,100 @@
+@startuml SD05_Assign_Reference_to_Entity
+!theme plain
+title Sequence Diagram - SD05: Assign Reference to Entity
+
+actor Admin
+participant "Frontend\n(React)" as FE
+participant "Auth Middleware" as AM
+participant "Leksikon\nController" as LC
+participant "Leksikon\nService" as LS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+Admin -> FE: Pilih referensi & leksikon untuk assign
+activate FE
+
+FE -> AM: POST /api/admin/leksikons/:lexiconId/references\n+ Bearer Token\n{referenceId, referenceRole, citationNote}
+activate AM
+
+AM -> AM: Verify JWT Token
+
+alt Token Invalid
+    AM --> FE: 401 Unauthorized
+else Token Valid
+    AM -> LC: Forward request
+    activate LC
+    
+    LC -> LC: Validate input (Zod)
+    note right of LC
+    Validate:
+    - lexiconId exists
+    - referenceId exists
+    - referenceRole valid
+    - citationNote optional
+    end note
+    
+    LC -> LS: assignReferenceToLexicon(lexiconId, referenceId, referenceRole, citationNote)
+    activate LS
+    
+    LS -> PR: Check if assignment exists
+    note right of PR
+    SELECT * FROM LEXICONREFERENCE
+    WHERE lexiconId = ? AND referenceId = ?
+    end note
+    activate PR
+    PR -> DB: Query LEXICONREFERENCE table
+    activate DB
+    DB --> PR: Result (exists/not exists)
+    deactivate DB
+    
+    alt Assignment already exists
+        PR --> LS: Record exists
+        LS --> LC: 409 Conflict\n"Reference already assigned to this lexicon"
+        LC --> FE: 409 Conflict
+    else Assignment doesn't exist
+        PR --> LS: No record found
+        
+        LS -> PR: Create new assignment
+        note right of PR
+        INSERT INTO LEXICONREFERENCE
+        (lexiconId, referenceId, referenceRole, citationNote, createdAt)
+        VALUES (?, ?, ?, ?, NOW())
+        end note
+        
+        PR -> DB: INSERT into LEXICONREFERENCE
+        activate DB
+        DB --> PR: New record created
+        deactivate DB
+        
+        PR --> LS: Assignment created
+        deactivate PR
+        
+        LS -> PR: Get updated lexicon with references
+        note right of PR
+        SELECT * FROM LEXICON
+        LEFT JOIN LEXICONREFERENCE ON ...
+        LEFT JOIN REFERENCE ON ...
+        WHERE LEXICON.id = ?
+        end note
+        activate PR
+        PR -> DB: Query updated data
+        activate DB
+        DB --> PR: Updated lexicon data
+        deactivate DB
+        PR --> LS: Updated lexicon object
+        deactivate PR
+        
+        LS --> LC: Success with updated lexicon
+        deactivate LS
+        
+        LC --> FE: 201 Created\n{lexicon, references: [...]}
+        deactivate LC
+    end
+    
+    FE --> Admin: Show success message\n"Reference assigned successfully"
+    deactivate FE
+end
+
+deactivate AM
+
+@enduml

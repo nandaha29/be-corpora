@@ -532,7 +532,204 @@ Sudirta, Wayan. Field notes: Ngaben Ceremony in Ubud, Bali, March 15, 2024. Pers
 
 ---
 
-## 8. NOTES
+## 8. ABOUT REFERENCES MANAGEMENT
+
+### 8.1 Overview
+About References API mengelola referensi yang ditampilkan di halaman "About" aplikasi. Sistem ini memungkinkan admin untuk memilih referensi tertentu yang akan ditampilkan secara publik dengan urutan tampilan yang dapat dikustomisasi.
+
+### 8.2 Get All About References
+**Endpoint**: `GET /api/v1/admin/about-references`
+
+**Deskripsi**: Mengambil semua about references yang aktif dengan urutan display order
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "About references retrieved successfully",
+  "data": [
+    {
+      "aboutReferenceId": 1,
+      "displayOrder": 1,
+      "isActive": true,
+      "reference": {
+        "referenceId": 1,
+        "title": "Javanese Cultural Heritage",
+        "referenceType": "BOOK",
+        "authors": "Dr. Ahmad Santoso",
+        "publicationYear": "2020"
+      }
+    }
+  ]
+}
+```
+
+### 8.3 Get About Reference by ID
+**Endpoint**: `GET /api/v1/admin/about-references/:id`
+
+**Deskripsi**: Mengambil about reference spesifik berdasarkan ID
+
+### 8.4 Create About Reference
+**Endpoint**: `POST /api/v1/admin/about-references`
+
+**Request Body**:
+```json
+{
+  "referenceId": 1,
+  "displayOrder": 1,
+  "isActive": true
+}
+```
+
+### 8.5 Update About Reference
+**Endpoint**: `PUT /api/v1/admin/about-references/:id`
+
+**Request Body** (partial update):
+```json
+{
+  "displayOrder": 2,
+  "isActive": false
+}
+```
+
+### 8.6 Delete About Reference
+**Endpoint**: `DELETE /api/v1/admin/about-references/:id`
+
+### 8.7 Reorder About References
+**Endpoint**: `PUT /api/v1/admin/about-references/reorder`
+
+**Deskripsi**: Mengubah urutan tampilan about references
+
+**Request Body**:
+```json
+[
+  {
+    "aboutReferenceId": 1,
+    "displayOrder": 2
+  },
+  {
+    "aboutReferenceId": 2,
+    "displayOrder": 1
+  }
+]
+```
+
+---
+
+## 9. REFERENCE JUNCTIONS MANAGEMENT
+
+### 9.1 Overview
+Reference Junctions API mengelola assignment referensi ke berbagai entitas (lexicon, subculture, culture). Sistem ini menggunakan junction tables untuk menghubungkan referensi dengan konten dengan peran spesifik.
+
+### 9.2 Lexicon Reference Assignments
+
+#### Assign Reference to Lexicon
+**Endpoint**: `POST /api/v1/admin/reference-junctions/lexicon/assign`
+
+**Request Body**:
+```json
+{
+  "lexiconId": 1,
+  "referenceId": 1,
+  "referenceRole": "PRIMARY_SOURCE"
+}
+```
+
+#### Remove Reference from Lexicon
+**Endpoint**: `DELETE /api/v1/admin/reference-junctions/lexicon/:lexiconId/:referenceId`
+
+#### Get References by Lexicon
+**Endpoint**: `GET /api/v1/admin/reference-junctions/lexicon/:lexiconId`
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "References retrieved successfully",
+  "data": [
+    {
+      "lexiconId": 1,
+      "referenceId": 1,
+      "referenceRole": "PRIMARY_SOURCE",
+      "reference": {
+        "referenceId": 1,
+        "title": "Javanese Cultural Heritage",
+        "referenceType": "BOOK",
+        "authors": "Dr. Ahmad Santoso",
+        "publicationYear": "2020"
+      }
+    }
+  ]
+}
+```
+
+### 9.3 Subculture Reference Assignments
+
+#### Assign Reference to Subculture
+**Endpoint**: `POST /api/v1/admin/reference-junctions/subculture/assign`
+
+**Request Body**:
+```json
+{
+  "subcultureId": 1,
+  "referenceId": 1,
+  "referenceRole": "SECONDARY_SOURCE"
+}
+```
+
+#### Remove Reference from Subculture
+**Endpoint**: `DELETE /api/v1/admin/reference-junctions/subculture/:subcultureId/:referenceId`
+
+#### Get References by Subculture
+**Endpoint**: `GET /api/v1/admin/reference-junctions/subculture/:subcultureId`
+
+### 9.4 Culture Reference Assignments
+
+#### Assign Reference to Culture
+**Endpoint**: `POST /api/v1/admin/reference-junctions/culture/assign`
+
+**Request Body**:
+```json
+{
+  "cultureId": 1,
+  "referenceId": 1,
+  "referenceRole": "PRIMARY_SOURCE"
+}
+```
+
+#### Remove Reference from Culture
+**Endpoint**: `DELETE /api/v1/admin/reference-junctions/culture/:cultureId/:referenceId`
+
+#### Get References by Culture
+**Endpoint**: `GET /api/v1/admin/reference-junctions/culture/:cultureId`
+
+### 9.5 Reference Usage Statistics
+**Endpoint**: `GET /api/v1/admin/reference-junctions/stats/:referenceId`
+
+**Deskripsi**: Mengambil statistik penggunaan referensi di seluruh entitas
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Reference usage statistics retrieved successfully",
+  "data": {
+    "referenceId": 1,
+    "lexiconCount": 5,
+    "subcultureCount": 2,
+    "cultureCount": 1,
+    "totalUsage": 8
+  }
+}
+```
+
+### 9.6 Reference Roles
+- `PRIMARY_SOURCE`: Sumber utama
+- `SECONDARY_SOURCE`: Sumber sekunder
+
+---
+
+## 10. NOTES
 
 - **Reference Types**: 8 jenis referensi yang komprehensif untuk berbagai sumber akademik
 - **Flexible Fields**: URL, authors, publication year bersifat optional untuk akomodasi berbagai jenis referensi
@@ -542,5 +739,9 @@ Sudirta, Wayan. Field notes: Ngaben Ceremony in Ubud, Bali, March 15, 2024. Pers
 - **Filter Combination**: Multiple filter criteria dapat dikombinasikan untuk query yang kompleks
 - **Pagination**: Semua list endpoints mendukung pagination
 - **Validation**: Strict validation untuk reference types dan URL formats
-- **Usage Tracking**: Reference usage dapat dilacak untuk melihat seberapa sering direferensikan</content>
+- **Usage Tracking**: Reference usage dapat dilacak untuk melihat seberapa sering direferensikan
+- **About References**: Sistem untuk menampilkan referensi terpilih di halaman about dengan custom ordering
+- **Reference Junctions**: Many-to-many relationships untuk assignment referensi ke lexicon, subculture, dan culture
+- **Role-based Assignments**: PRIMARY_SOURCE dan SECONDARY_SOURCE untuk klasifikasi peran referensi
+- **Statistics Tracking**: Comprehensive usage statistics across all content entities
 <parameter name="filePath">d:\my-code\1_home\leksikon-proj\leksikon-be-2\REFERENCE_API_DOCUMENTATION.md

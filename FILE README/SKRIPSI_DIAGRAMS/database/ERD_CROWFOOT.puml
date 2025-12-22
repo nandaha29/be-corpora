@@ -1,0 +1,305 @@
+@startuml ERD_Leksikon_CrowFoot
+' ===========================================
+' CROW'S FOOT ERD - LEKSIKON DATABASE
+' ===========================================
+' Author: Nanda Hafiza
+' Date: December 2025
+' Database: PostgreSQL (Neon)
+' ORM: Prisma 6.16.2
+' ===========================================
+
+!define TABLE(name) entity name << (T,#FFAAAA) >>
+!define PK(x) <b><color:#b8860b>x</color></b>
+!define FK(x) <color:#ff6347>x</color>
+!define ENUM(x) <i><color:#9370db>x</color></i>
+
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+skinparam roundcorner 5
+
+skinparam entity {
+    BackgroundColor #F5F5F5
+    BorderColor #2E2E2E
+    ArrowColor #333333
+}
+
+' ===========================================
+' MAIN ENTITIES
+' ===========================================
+
+entity "ADMIN" as admin {
+    * PK(admin_id) : INT <<PK>>
+    --
+    * username : VARCHAR(255) <<UNIQUE>>
+    * email : VARCHAR(255) <<UNIQUE>>
+    * password : VARCHAR(255)
+    * role : ENUM(AdminRole)
+    * is_active : BOOLEAN
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "CULTURE" as culture {
+    * PK(culture_id) : INT <<PK>>
+    --
+    * slug : VARCHAR(255) <<UNIQUE>>
+    * culture_name : VARCHAR(255)
+    * origin_island : VARCHAR(255)
+    * province : VARCHAR(255)
+    * city_region : VARCHAR(255)
+    classification : VARCHAR(255)
+    characteristics : TEXT
+    * conservation_status : ENUM(StatusKonservasi)
+    latitude : FLOAT
+    longitude : FLOAT
+    * status : ENUM(StatusPublish)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "SUBCULTURE" as subculture {
+    * PK(subculture_id) : INT <<PK>>
+    --
+    * slug : VARCHAR(255) <<UNIQUE>>
+    * subculture_name : VARCHAR(255)
+    * traditional_greeting : TEXT
+    greeting_meaning : VARCHAR(255)
+    * explanation : TEXT
+    * FK(culture_id) : INT <<FK>>
+    * status : ENUM(StatusPublish)
+    display_priority_status : ENUM(StatusPriority)
+    * conservation_status : ENUM(StatusKonservasi)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "CODIFICATION_DOMAIN" as domain {
+    * PK(domain_id) : INT <<PK>>
+    --
+    * code : VARCHAR(255)
+    * domain_name : VARCHAR(255)
+    * explanation : TEXT
+    * FK(subculture_id) : INT <<FK>>
+    * status : ENUM(StatusPublish)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "LEXICON" as lexicon {
+    * PK(lexicon_id) : INT <<PK>>
+    --
+    * slug : VARCHAR(255) <<UNIQUE>>
+    * lexicon_word : VARCHAR(255)
+    ipa_international_phonetic_alphabet : VARCHAR(255)
+    * transliteration : VARCHAR(255)
+    * etymological_meaning : TEXT
+    * cultural_meaning : TEXT
+    * common_meaning : TEXT
+    * translation : VARCHAR(255)
+    variant : VARCHAR(255)
+    variant_translations : VARCHAR(255)
+    other_description : TEXT
+    * FK(domain_id) : INT <<FK>>
+    * preservation_status : ENUM(StatusKonservasi)
+    * FK(contributor_id) : INT <<FK>>
+    * status : ENUM(StatusPublish)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "CONTRIBUTOR" as contributor {
+    * PK(contributor_id) : INT <<PK>>
+    --
+    * contributor_name : VARCHAR(255)
+    * institution : VARCHAR(255)
+    * email : VARCHAR(255)
+    * expertise_area : VARCHAR(255)
+    * contact_info : VARCHAR(255)
+    display_priority_status : ENUM(StatusPriority)
+    * is_coordinator : BOOLEAN
+    * coordinator_status : ENUM(StatusCoordinator)
+    * registered_at : TIMESTAMP
+}
+
+entity "ASSET" as asset {
+    * PK(asset_id) : INT <<PK>>
+    --
+    * file_name : VARCHAR(255)
+    * file_type : ENUM(AssetType)
+    description : TEXT
+    * url : VARCHAR(500)
+    file_size : VARCHAR(50)
+    hash_checksum : VARCHAR(255)
+    metadata_json : TEXT
+    * status : ENUM(StatusFile)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "REFERENCE" as reference {
+    * PK(reference_id) : INT <<PK>>
+    --
+    * title : VARCHAR(500)
+    * reference_type : ENUM(ReferenceType)
+    description : TEXT
+    url : VARCHAR(500)
+    authors : VARCHAR(500)
+    publication_year : VARCHAR(10)
+    topic_category : VARCHAR(255)
+    * status : ENUM(StatusPublish)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+entity "ABOUT_REFERENCE" as about_ref {
+    * PK(about_reference_id) : INT <<PK>>
+    --
+    * FK(reference_id) : INT <<FK>>
+    * display_order : INT
+    * is_active : BOOLEAN
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+' ===========================================
+' JUNCTION TABLES (Many-to-Many)
+' ===========================================
+
+entity "LEXICON_ASSETS" as lex_asset {
+    * PK(lexicon_id) : INT <<PK,FK>>
+    * PK(asset_id) : INT <<PK,FK>>
+    --
+    * asset_role : ENUM(LeksikonAssetRole)
+    * created_at : TIMESTAMP
+}
+
+entity "SUBCULTURE_ASSETS" as sub_asset {
+    * PK(subculture_id) : INT <<PK,FK>>
+    * PK(asset_id) : INT <<PK,FK>>
+    * PK(asset_role) : ENUM <<PK>>
+    --
+    * asset_role : ENUM(SubcultureAssetRole)
+    * created_at : TIMESTAMP
+}
+
+entity "CULTURE_ASSETS" as cul_asset {
+    * PK(culture_id) : INT <<PK,FK>>
+    * PK(asset_id) : INT <<PK,FK>>
+    --
+    * asset_role : ENUM(CultureAssetRole)
+    * created_at : TIMESTAMP
+}
+
+entity "CONTRIBUTOR_ASSETS" as con_asset {
+    * PK(contributor_id) : INT <<PK,FK>>
+    * PK(asset_id) : INT <<PK,FK>>
+    --
+    * asset_note : ENUM(ContributorAssetRole)
+    * created_at : TIMESTAMP
+}
+
+entity "LEXICON_REFERENCE" as lex_ref {
+    * PK(lexicon_id) : INT <<PK,FK>>
+    * PK(reference_id) : INT <<PK,FK>>
+    --
+    reference_role : ENUM(LexiconReferenceRole)
+    display_order : INT
+    * created_at : TIMESTAMP
+}
+
+entity "SUBCULTURE_REFERENCE" as sub_ref {
+    * PK(subculture_id) : INT <<PK,FK>>
+    * PK(reference_id) : INT <<PK,FK>>
+    --
+    reference_role : ENUM(SubcultureReferenceRole)
+    display_order : INT
+    * created_at : TIMESTAMP
+}
+
+entity "CULTURE_REFERENCE" as cul_ref {
+    * PK(culture_id) : INT <<PK,FK>>
+    * PK(reference_id) : INT <<PK,FK>>
+    --
+    reference_role : ENUM(CultureReferenceRole)
+    display_order : INT
+    * created_at : TIMESTAMP
+}
+
+' ===========================================
+' RELATIONSHIPS (Crow's Foot Notation)
+' ===========================================
+
+' One-to-Many: Culture -> Subculture
+culture ||--o{ subculture : "has"
+
+' One-to-Many: Subculture -> CodificationDomain
+subculture ||--o{ domain : "contains"
+
+' One-to-Many: CodificationDomain -> Lexicon
+domain ||--o{ lexicon : "defines"
+
+' One-to-Many: Contributor -> Lexicon
+contributor ||--o{ lexicon : "contributes"
+
+' One-to-Many: Reference -> AboutReference
+reference ||--o{ about_ref : "displayed_on"
+
+' Many-to-Many: Lexicon <-> Asset (via LexiconAsset)
+lexicon ||--o{ lex_asset : "has"
+asset ||--o{ lex_asset : "used_in"
+
+' Many-to-Many: Subculture <-> Asset (via SubcultureAsset)
+subculture ||--o{ sub_asset : "has"
+asset ||--o{ sub_asset : "used_in"
+
+' Many-to-Many: Culture <-> Asset (via CultureAsset)
+culture ||--o{ cul_asset : "has"
+asset ||--o{ cul_asset : "used_in"
+
+' Many-to-Many: Contributor <-> Asset (via ContributorAsset)
+contributor ||--o{ con_asset : "has"
+asset ||--o{ con_asset : "used_in"
+
+' Many-to-Many: Lexicon <-> Reference (via LexiconReference)
+lexicon ||--o{ lex_ref : "cites"
+reference ||--o{ lex_ref : "cited_by"
+
+' Many-to-Many: Subculture <-> Reference (via SubcultureReference)
+subculture ||--o{ sub_ref : "cites"
+reference ||--o{ sub_ref : "cited_by"
+
+' Many-to-Many: Culture <-> Reference (via CultureReference)
+culture ||--o{ cul_ref : "cites"
+reference ||--o{ cul_ref : "cited_by"
+
+' ===========================================
+' NOTES / LEGEND
+' ===========================================
+
+note bottom of admin
+  <b>Admin Roles:</b>
+  - SUPER_ADMIN
+  - EDITOR
+  - VIEWER
+end note
+
+note bottom of asset
+  <b>Asset Types:</b>
+  - PHOTO
+  - AUDIO
+  - VIDEO
+  - MODEL_3D
+end note
+
+note bottom of reference
+  <b>Reference Types:</b>
+  - JOURNAL
+  - BOOK
+  - ARTICLE
+  - WEBSITE
+  - REPORT
+  - ORAL_TRADITION
+  - FIELD_OBSERVATION
+end note
+
+@enduml

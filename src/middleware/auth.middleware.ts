@@ -1,3 +1,48 @@
+/**
+ * ===========================================
+ * AUTHENTICATION MIDDLEWARE
+ * ===========================================
+ * 
+ * File: src/middleware/auth.middleware.ts
+ * 
+ * Purpose:
+ * Validates JWT tokens for protected admin routes.
+ * Extracts admin information from token and attaches to request object.
+ * 
+ * How it works:
+ * 1. Extract Bearer token from Authorization header
+ * 2. Verify token signature using JWT_SECRET
+ * 3. Check if admin exists and is active in database
+ * 4. Attach admin info to req.admin for use in controllers
+ * 
+ * Usage:
+ * - Import and use as middleware in routes
+ * - app.use('/api/v1/admin/cultures', authenticateAdmin, cultureRoutes)
+ * 
+ * Token Format:
+ * Authorization: Bearer <jwt_token>
+ * 
+ * Token Payload:
+ * {
+ *   adminId: number,
+ *   email: string,
+ *   role: string,
+ *   iat: number,
+ *   exp: number
+ * }
+ * 
+ * Error Codes:
+ * - NO_TOKEN: No authorization header
+ * - INVALID_TOKEN: Token verification failed
+ * - ADMIN_NOT_FOUND: Admin deleted from database
+ * - ACCOUNT_INACTIVE: Admin account deactivated
+ * - TOKEN_EXPIRED: Token has expired
+ * 
+ * @module middleware/auth
+ * @author Development Team
+ * @since 2025-01-01
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';

@@ -1,0 +1,128 @@
+@startuml SD07_Search_Lexicons
+!theme plain
+title Sequence Diagram - SD07: Search Lexicons
+
+actor "Pengguna" as User
+participant "Frontend\n(React)" as FE
+participant "Public\nController" as PC
+participant "Public\nService" as PS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+== Basic Search ==
+User -> FE: Enter search keyword
+activate FE
+FE -> FE: Debounce input (300ms)
+
+FE -> PC: GET /api/public/leksikon?\nq=betawi&page=1&limit=10
+activate PC
+
+PC -> PC: Parse query parameters
+note right of PC
+  Query params:
+  - q: search keyword
+  - page: pagination
+  - limit: items per page
+  - subcultureId: filter
+  - domainId: filter
+  - sort: asc/desc
+end note
+
+PC -> PS: searchLeksikon(params)
+activate PS
+
+PS -> PR: prisma.leksikon.findMany()
+activate PR
+
+note right of PR
+  WHERE:
+  - kata ILIKE '%betawi%' OR
+  - definisi ILIKE '%betawi%' OR
+  - contoh ILIKE '%betawi%'
+  
+  Include:
+  - subculture
+  - domain_kodifikasi
+  - assets
+end note
+
+PR -> DB: SELECT with full-text search
+activate DB
+DB --> PR: Matching leksikon records
+deactivate DB
+
+PR -> DB: SELECT COUNT(*) for pagination
+activate DB
+DB --> PR: Total count
+deactivate DB
+
+PR --> PS: {records, count}
+deactivate PR
+
+PS -> PS: Transform response
+PS --> PC: {data, pagination}
+deactivate PS
+
+PC --> FE: 200 OK\n{data: [...], pagination: {...}}
+deactivate PC
+
+FE --> User: Display search results
+deactivate FE
+
+== Advanced Search with Filters ==
+User -> FE: Apply filters\n(subculture, domain)
+activate FE
+
+FE -> PC: GET /api/public/leksikon?\nq=makanan&subcultureId=1&domainId=2
+activate PC
+
+PC -> PS: searchLeksikon(params)
+activate PS
+
+PS -> PR: prisma.leksikon.findMany()
+activate PR
+PR -> DB: SELECT with filters\nWHERE subcultureId = 1\nAND domainId = 2
+activate DB
+DB --> PR: Filtered results
+deactivate DB
+PR --> PS: Results
+deactivate PR
+
+PS --> PC: {data, pagination}
+deactivate PS
+
+PC --> FE: 200 OK
+deactivate PC
+
+FE --> User: Display filtered results
+deactivate FE
+
+== View Leksikon Detail ==
+User -> FE: Click on leksikon
+activate FE
+
+FE -> PC: GET /api/public/leksikon/:slug
+activate PC
+
+PC -> PS: getLeksikonBySlug(slug)
+activate PS
+
+PS -> PR: prisma.leksikon.findUnique()\ninclude: all relations
+activate PR
+PR -> DB: SELECT with all relations
+activate DB
+DB --> PR: Full leksikon data
+deactivate DB
+PR --> PS: Leksikon with relations
+deactivate PR
+
+PS --> PC: Leksikon detail
+deactivate PS
+
+PC --> FE: 200 OK\n{leksikon}
+deactivate PC
+
+FE --> User: Display full leksikon page
+deactivate FE
+
+@enduml

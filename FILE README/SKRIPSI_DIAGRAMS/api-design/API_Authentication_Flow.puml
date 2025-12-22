@@ -1,0 +1,117 @@
+@startuml API_Authentication_Flow
+!theme plain
+title Sequence Diagram - Authentication Flow\nJWT-based Authentication
+
+actor "Client\n(Frontend)" as Client
+participant "Express\nRouter" as Router
+participant "Auth\nMiddleware" as AuthMW
+participant "Admin\nController" as Controller
+participant "Auth\nService" as Service
+participant "JWT\nLibrary" as JWT
+participant "bcrypt" as Bcrypt
+database "PostgreSQL\n(Prisma)" as DB
+
+== LOGIN FLOW ==
+
+Client -> Router: POST /api/v1/admin/auth/login\n{email, password}
+activate Router
+
+Router -> Controller: login(req, res)
+activate Controller
+
+Controller -> Controller: Validate input\n(Zod schema)
+
+alt Validation Failed
+    Controller --> Client: 400 Bad Request\n{error: "Validation failed"}
+else Validation Passed
+    Controller -> Service: login(email, password)
+    activate Service
+    
+    Service -> DB: findUnique({email})
+    activate DB
+    DB --> Service: Admin | null
+    deactivate DB
+    
+    alt Admin Not Found
+        Service --> Controller: throw AuthError
+        Controller --> Client: 401 Unauthorized\n{error: "Invalid credentials"}
+    else Admin Found
+        Service -> Bcrypt: compare(password, hash)
+        activate Bcrypt
+        Bcrypt --> Service: boolean
+        deactivate Bcrypt
+        
+        alt Password Invalid
+            Service --> Controller: throw AuthError
+            Controller --> Client: 401 Unauthorized\n{error: "Invalid credentials"}
+        else Password Valid
+            Service -> JWT: sign(payload, secret, {expiresIn})
+            activate JWT
+            note right of JWT
+              Payload:
+              - adminId
+              - email
+              - role
+              - iat, exp
+            end note
+            JWT --> Service: JWT Token
+            deactivate JWT
+            
+            Service --> Controller: {token, admin}
+            deactivate Service
+            
+            Controller --> Client: 200 OK\n{success: true, token, admin}
+        end
+    end
+end
+deactivate Controller
+deactivate Router
+
+== PROTECTED ROUTE ACCESS ==
+
+Client -> Router: GET /api/v1/admin/leksikons\nAuthorization: Bearer {token}
+activate Router
+
+Router -> AuthMW: authMiddleware(req, res, next)
+activate AuthMW
+
+AuthMW -> AuthMW: Extract token from header
+
+alt No Token Provided
+    AuthMW --> Client: 401 Unauthorized\n{error: "No token provided"}
+else Token Exists
+    AuthMW -> JWT: verify(token, secret)
+    activate JWT
+    
+    alt Token Invalid/Expired
+        JWT --> AuthMW: throw JsonWebTokenError
+        deactivate JWT
+        AuthMW --> Client: 401 Unauthorized\n{error: "Invalid or expired token"}
+    else Token Valid
+        JWT --> AuthMW: Decoded payload
+        deactivate JWT
+        
+        AuthMW -> AuthMW: req.admin = decoded
+        AuthMW -> Router: next()
+        deactivate AuthMW
+        
+        Router -> Controller: getAllLeksikons(req, res)
+        activate Controller
+        
+        Controller -> Service: findAll(params)
+        activate Service
+        Service -> DB: findMany()
+        activate DB
+        DB --> Service: Leksikon[]
+        deactivate DB
+        Service --> Controller: {data, pagination}
+        deactivate Service
+        
+        Controller --> Client: 200 OK\n{success: true, data, pagination}
+        deactivate Controller
+    end
+end
+
+deactivate Router
+
+@enduml

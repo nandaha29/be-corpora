@@ -1,0 +1,55 @@
+@startuml SD09_Get_Media_File
+!theme plain
+title Sequence Diagram - SD09: Get Media File
+
+actor "Public User" as User
+participant "Frontend\n(React)" as FE
+participant "Asset\nController" as AC
+participant "Asset\nService" as AS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+User -> FE: Request media file info by ID
+activate FE
+
+FE -> AC: GET /api/v1/public/assets/:id/file
+activate AC
+
+AC -> AC: Validate ID parameter
+note right of AC
+Validate:
+- id is number
+- id > 0
+end note
+
+AC -> AS: getPublicAssetFile(id)
+activate AS
+
+AS -> PR: Find published asset
+note right of PR
+SELECT * FROM ASSET
+WHERE id = ? AND status = 'PUBLISHED'
+end note
+activate PR
+PR -> DB: Query ASSET table
+activate DB
+DB --> PR: Asset data or null
+deactivate DB
+PR --> AS: Asset object
+deactivate PR
+
+alt Asset not found or not published
+    AS --> AC: null
+    AC --> FE: 404 Not Found\n"File not found or not published"
+else Asset found
+    AS --> AC: Asset data
+    deactivate AS
+    
+    AC --> FE: 200 OK\n{asset info, url, metadata}
+    deactivate AC
+end
+
+FE --> User: Display or download media file
+deactivate FE
+
+@enduml

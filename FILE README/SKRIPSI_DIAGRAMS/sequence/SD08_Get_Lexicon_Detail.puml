@@ -1,0 +1,60 @@
+@startuml SD08_Get_Lexicon_Detail
+!theme plain
+title Sequence Diagram - SD08: Get Lexicon Detail
+
+actor "Public User" as User
+participant "Frontend\n(React)" as FE
+participant "Public\nController" as PC
+participant "Public\nService" as PS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+User -> FE: Request lexicon detail by identifier
+activate FE
+
+FE -> PC: GET /api/v1/public/lexicons/:identifier
+activate PC
+
+PC -> PC: Validate identifier parameter
+note right of PC
+Validate:
+- identifier is string
+- identifier not empty
+end note
+
+PC -> PS: getLexiconDetail(identifier)
+activate PS
+
+PS -> PR: Find lexicon with details
+note right of PR
+SELECT lexicon with:
+- assets
+- references
+- contributor
+- domain
+- culture/subculture
+WHERE slug = identifier OR id = identifier
+end note
+activate PR
+PR -> DB: Query LEXICON with joins
+activate DB
+DB --> PR: Lexicon data or null
+deactivate DB
+PR --> PS: Lexicon detail object
+deactivate PR
+
+alt Lexicon not found
+    PS --> PC: null
+    PC --> FE: 404 Not Found\n"Lexicon not found"
+else Lexicon found
+    PS --> PC: Lexicon detail data
+    deactivate PS
+    
+    PC --> FE: 200 OK\n{lexicon, assets, references, ...}
+    deactivate PC
+end
+
+FE --> User: Display lexicon detail page
+deactivate FE
+
+@enduml

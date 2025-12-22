@@ -1,0 +1,118 @@
+@startuml AD02_Proses_Pencarian_Publik
+!theme plain
+title Activity Diagram - AD02: Proses Pencarian & Eksplorasi Leksikon (Public)
+
+|Pengguna|
+start
+
+:Akses website leksikon;
+
+|Sistem|
+:Load halaman utama;
+:Tampilkan statistik & featured content;
+
+|Pengguna|
+fork
+    :Cari via search bar;
+    
+    |Sistem|
+    :Terima keyword pencarian;
+    :Query database dengan keyword;
+    
+    if (Hasil ditemukan?) then (ya)
+        :Tampilkan hasil pencarian;
+        :Urutkan berdasarkan relevansi;
+    else (tidak)
+        :Tampilkan "Tidak ada hasil";
+        :Saran pencarian alternatif;
+    endif
+    
+fork again
+    :Browse via Budaya;
+    
+    |Sistem|
+    :Tampilkan daftar budaya;
+    
+    |Pengguna|
+    :Pilih budaya (Betawi);
+    
+    |Sistem|
+    :Load detail budaya;
+    :Tampilkan subbudaya terkait;
+    
+    |Pengguna|
+    :Pilih subbudaya;
+    
+    |Sistem|
+    :Tampilkan leksikon dalam subbudaya;
+    
+fork again
+    :Browse via Domain;
+    
+    |Sistem|
+    :Tampilkan daftar domain kodifikasi;
+    
+    |Pengguna|
+    :Pilih domain;
+    
+    |Sistem|
+    :Filter leksikon berdasarkan domain;
+    :Tampilkan hasil filter;
+    
+fork again
+    :Lihat Kontributor;
+    
+    |Sistem|
+    :Tampilkan daftar kontributor;
+    
+    |Pengguna|
+    :Pilih kontributor;
+    
+    |Sistem|
+    :Tampilkan profil kontributor;
+    :Tampilkan leksikon yang dikontribusi;
+    
+end fork
+
+|Pengguna|
+:Pilih leksikon dari hasil;
+
+|Sistem|
+:Query detail leksikon;
+:Load relasi (subculture, domain, references, assets);
+
+:Tampilkan halaman detail leksikon;
+note right
+  Informasi ditampilkan:
+  - Kata & definisi
+  - Contoh kalimat
+  - Gambar/audio (jika ada)
+  - Subbudaya terkait
+  - Domain kodifikasi
+  - Referensi sumber
+  - Kontributor
+end note
+
+|Pengguna|
+if (Eksplorasi lanjut?) then (ya)
+    :Klik entitas terkait;
+    note right
+      Bisa klik:
+      - Subbudaya
+      - Domain
+      - Referensi
+      - Kontributor
+    end note
+    
+    |Sistem|
+    :Navigate ke halaman terkait;
+    
+    |Pengguna|
+    :Lanjut eksplorasi;
+else (tidak)
+    :Selesai browsing;
+endif
+
+stop
+
+@enduml

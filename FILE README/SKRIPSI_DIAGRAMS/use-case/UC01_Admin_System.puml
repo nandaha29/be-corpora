@@ -1,0 +1,98 @@
+@startuml UC01_Admin_System
+!theme plain
+title Use Case Diagram - Admin System\nSistem Leksikon Bahasa Betawi
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Admin" as admin
+
+rectangle "Sistem Leksikon Bahasa Betawi\n(Admin Panel)" {
+    ' Authentication
+    usecase "UC01: Login" as UC01
+    usecase "UC02: Logout" as UC02
+    
+    ' Leksikon Management
+    usecase "UC03: Kelola Leksikon" as UC03
+    usecase "UC03a: Tambah Leksikon" as UC03a
+    usecase "UC03b: Edit Leksikon" as UC03b
+    usecase "UC03c: Hapus Leksikon" as UC03c
+    usecase "UC03d: Lihat Detail Leksikon" as UC03d
+    
+    ' Contributor Management
+    usecase "UC04: Kelola Kontributor" as UC04
+    usecase "UC04a: Tambah Kontributor" as UC04a
+    usecase "UC04b: Edit Kontributor" as UC04b
+    usecase "UC04c: Hapus Kontributor" as UC04c
+    
+    ' Culture Management
+    usecase "UC05: Kelola Budaya" as UC05
+    usecase "UC05a: Tambah Budaya" as UC05a
+    usecase "UC05b: Edit Budaya" as UC05b
+    usecase "UC05c: Hapus Budaya" as UC05c
+    
+    ' Subculture Management
+    usecase "UC06: Kelola Subbudaya" as UC06
+    usecase "UC06a: Tambah Subbudaya" as UC06a
+    usecase "UC06b: Edit Subbudaya" as UC06b
+    usecase "UC06c: Hapus Subbudaya" as UC06c
+    
+    ' Reference Management
+    usecase "UC07: Kelola Referensi" as UC07
+    usecase "UC07a: Tambah Referensi" as UC07a
+    usecase "UC07b: Edit Referensi" as UC07b
+    usecase "UC07c: Hapus Referensi" as UC07c
+    usecase "UC07d: Assign Referensi" as UC07d
+    
+    ' Domain Kodifikasi Management
+    usecase "UC08: Kelola Domain Kodifikasi" as UC08
+    
+    ' Asset Management
+    usecase "UC09: Kelola Asset" as UC09
+    usecase "UC09a: Upload Asset" as UC09a
+    usecase "UC09b: Hapus Asset" as UC09b
+    
+    ' About Reference Management
+    usecase "UC10: Kelola About Reference" as UC10
+}
+
+' Admin connections
+admin --> UC01
+admin --> UC02
+admin --> UC03
+admin --> UC04
+admin --> UC05
+admin --> UC06
+admin --> UC07
+admin --> UC08
+admin --> UC09
+admin --> UC10
+
+' Include relationships
+UC03 ..> UC03a : <<include>>
+UC03 ..> UC03b : <<include>>
+UC03 ..> UC03c : <<include>>
+UC03 ..> UC03d : <<include>>
+
+UC04 ..> UC04a : <<include>>
+UC04 ..> UC04b : <<include>>
+UC04 ..> UC04c : <<include>>
+
+UC05 ..> UC05a : <<include>>
+UC05 ..> UC05b : <<include>>
+UC05 ..> UC05c : <<include>>
+
+UC06 ..> UC06a : <<include>>
+UC06 ..> UC06b : <<include>>
+UC06 ..> UC06c : <<include>>
+
+UC07 ..> UC07a : <<include>>
+UC07 ..> UC07b : <<include>>
+UC07 ..> UC07c : <<include>>
+UC07 ..> UC07d : <<include>>
+
+UC09 ..> UC09a : <<include>>
+UC09 ..> UC09b : <<include>>
+
+@enduml

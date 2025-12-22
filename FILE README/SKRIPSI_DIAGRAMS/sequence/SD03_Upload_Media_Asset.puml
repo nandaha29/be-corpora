@@ -1,0 +1,71 @@
+@startuml SD03_Upload_Media_Asset
+!theme plain
+title Sequence Diagram - SD03: Upload Media Asset
+
+actor Admin
+participant "Frontend\n(React)" as FE
+participant "Auth Middleware" as AM
+participant "Multer\nMiddleware" as MM
+participant "Asset Controller" as AC
+participant "Asset Service" as AS
+participant "Vercel Blob\nStorage" as VB
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+Admin -> FE: Select file to upload
+activate FE
+FE -> FE: Validate file type & size
+
+FE -> AM: POST /api/admin/assets\nContent-Type: multipart/form-data\n+ Bearer Token + File
+activate AM
+
+AM -> AM: Verify JWT Token
+
+alt Token Invalid
+    AM --> FE: 401 Unauthorized
+else Token Valid
+    AM -> MM: Forward request with file
+    activate MM
+    
+    MM -> MM: Parse multipart data
+    MM -> MM: Store file temporarily\n(temp-uploads/)
+    
+    alt File too large / invalid type
+        MM --> FE: 400 Bad Request\n"Invalid file"
+    else File valid
+        MM -> AC: Forward with req.file
+        activate AC
+        
+        AC -> AS: uploadAsset(file, metadata)
+        activate AS
+        
+        AS -> VB: Upload to Vercel Blob\nput(filename, buffer)
+        activate VB
+        VB --> AS: {url, pathname}
+        deactivate VB
+        
+        AS -> PR: prisma.asset.create()
+        activate PR
+        PR -> DB: INSERT INTO asset\n(url, type, entityId, etc)
+        activate DB
+        DB --> PR: New asset record
+        deactivate DB
+        PR --> AS: Created asset
+        deactivate PR
+        
+        AS -> AS: Delete temp file
+        
+        AS --> AC: Asset object
+        deactivate AS
+        
+        AC --> FE: 201 Created\n{asset}
+        deactivate AC
+    end
+    deactivate MM
+end
+deactivate AM
+
+FE --> Admin: Show uploaded asset
+deactivate FE
+
+@enduml

@@ -1,3 +1,42 @@
+/**
+ * ===========================================
+ * LEKSIKON CONTROLLER
+ * ===========================================
+ * 
+ * File: src/controllers/admin/leksikon.controller.ts
+ * Service: src/services/admin/leksikon.service.ts
+ * Routes: src/routes/admin/leksikon.routes.ts
+ * 
+ * Purpose:
+ * Handle HTTP requests for lexicon management operations.
+ * Controllers receive requests from routes, validate input,
+ * call appropriate service methods, and return responses.
+ * 
+ * Features:
+ * - CRUD operations for lexicons
+ * - Asset management (assign/remove assets to lexicons)
+ * - Reference management (assign/remove references with citation notes)
+ * - Status management (DRAFT, PUBLISHED, ARCHIVED)
+ * - Bulk import from CSV files
+ * - Search and advanced filtering
+ * - Usage tracking for assets and references
+ * 
+ * Authentication:
+ * All endpoints require admin authentication via JWT token.
+ * Token is validated in auth.middleware.ts
+ * 
+ * Related Models:
+ * - Lexicon
+ * - LexiconAsset (junction with Asset)
+ * - LexiconReference (junction with Reference)
+ * - CodificationDomain
+ * - Contributor
+ * 
+ * @module controllers/admin/leksikon
+ * @author Development Team
+ * @since 2025-01-01
+ */
+
 import { Request, Response } from 'express';
 import * as leksikonService from '../../services/admin/leksikon.service.js';
 import { createLexiconSchema, updateLexiconSchema, createLexiconAssetSchema, createLexiconReferenceSchema, updateLexiconReferenceRoleSchema } from '../../lib/validators.js';

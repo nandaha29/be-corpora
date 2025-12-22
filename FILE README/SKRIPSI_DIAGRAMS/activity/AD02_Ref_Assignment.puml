@@ -1,0 +1,237 @@
+@startuml AD02_Ref_Assignment
+!theme plain
+title Activity Diagram - AD02: Reference Assignment Process\nSistem Leksikon Bahasa Betawi
+
+|Admin|
+start
+:Login ke sistem;
+
+:Pilih menu Reference Management;
+
+fork
+    :Kelola Referensi;
+fork again
+    :Assign Referensi;
+end fork
+
+|Admin|
+if (Pilih aksi?) then (Assign Referensi)
+    
+    :Pilih target assignment;
+    
+    switch (Target entity?)
+    case (Leksikon)
+        |Sistem|
+        :Load daftar Leksikon;
+        :Tampilkan dengan pagination & search;
+        
+        |Admin|
+        :Cari dan pilih Leksikon;
+        
+        |Sistem|
+        :Load referensi yang sudah ter-assign;
+        :Load daftar referensi tersedia;
+        
+    case (Subbudaya)
+        |Sistem|
+        :Load daftar Subbudaya;
+        :Tampilkan grouped by Culture;
+        
+        |Admin|
+        :Pilih Subbudaya;
+        
+        |Sistem|
+        :Load referensi yang sudah ter-assign;
+        :Load daftar referensi tersedia;
+        
+    case (Budaya)
+        |Sistem|
+        :Load daftar Budaya;
+        
+        |Admin|
+        :Pilih Budaya;
+        
+        |Sistem|
+        :Load referensi yang sudah ter-assign;
+        :Load daftar referensi tersedia;
+        
+    case (About Page)
+        |Sistem|
+        :Load About References;
+        :Tampilkan dengan display order;
+        
+    endswitch
+    
+    |Admin|
+    :Tampilkan panel assignment;
+    note right
+      Panel menampilkan:
+      - Entity yang dipilih
+      - Referensi sudah ter-assign
+      - Referensi tersedia
+    end note
+    
+    |Admin|
+    switch (Aksi assignment?)
+    case (Tambah Referensi)
+        :Pilih referensi dari list tersedia;
+        :Pilih role referensi;
+        note right
+          Role options:
+          - PRIMARY_SOURCE
+          - SECONDARY_SOURCE
+          - SUPPORTING
+        end note
+        
+        |Sistem|
+        :Validasi input;
+        
+        if (Referensi sudah ter-assign?) then (ya)
+            :Tampilkan warning "Already assigned";
+            
+            |Admin|
+            :Pilih referensi lain;
+        else (tidak)
+            :Create junction record;
+            note right
+              POST /api/admin/reference-junctions/{entity}
+              Body: {
+                entityId,
+                referenceId,
+                role,
+                displayOrder
+              }
+            end note
+            
+            :Simpan ke database;
+            
+            if (Sukses?) then (ya)
+                :Tampilkan success message;
+                :Refresh list assigned references;
+            else (tidak)
+                :Tampilkan error message;
+            endif
+        endif
+        
+    case (Hapus Assignment)
+        |Admin|
+        :Pilih referensi yang akan di-unassign;
+        :Konfirmasi penghapusan;
+        
+        if (Dikonfirmasi?) then (ya)
+            |Sistem|
+            :Delete junction record;
+            note right
+              DELETE /api/admin/reference-junctions/{entity}
+              Body: {entityId, referenceId}
+            end note
+            
+            :Refresh list;
+            :Tampilkan success message;
+        else (tidak)
+            :Batalkan;
+        endif
+        
+    case (Ubah Role)
+        |Admin|
+        :Pilih referensi yang akan diubah;
+        :Pilih role baru;
+        
+        |Sistem|
+        :Update junction record;
+        :Tampilkan success message;
+        
+    case (Reorder)
+        |Admin|
+        :Drag & drop untuk ubah urutan;
+        
+        |Sistem|
+        :Update displayOrder;
+        :Simpan urutan baru;
+        
+    endswitch
+    
+else (Kelola Referensi)
+    |Admin|
+    :Lihat daftar semua referensi;
+    
+    switch (Aksi?)
+    case (Tambah Baru)
+        :Isi form referensi baru;
+        note right
+          Fields:
+          - title (required)
+          - referenceType (BOOK/JOURNAL/etc)
+          - authors
+          - publicationYear
+          - url
+          - description
+        end note
+        
+        |Sistem|
+        :Validasi dengan Zod;
+        :Simpan ke database;
+        :Tampilkan di list;
+        
+    case (Edit)
+        |Admin|
+        :Pilih referensi;
+        :Edit data;
+        
+        |Sistem|
+        :Update database;
+        
+    case (Hapus)
+        |Admin|
+        :Pilih referensi;
+        
+        |Sistem|
+        :Check apakah ada assignment;
+        
+        if (Ada assignment?) then (ya)
+            :Tampilkan warning;
+            note right
+              "Referensi ini ter-assign ke:
+              - 5 Leksikon
+              - 2 Subbudaya
+              Hapus semua assignment dulu?"
+            end note
+            
+            |Admin|
+            if (Konfirmasi cascade delete?) then (ya)
+                |Sistem|
+                :Delete semua junction;
+                :Delete referensi;
+            else (tidak)
+                :Batalkan;
+            endif
+        else (tidak)
+            |Sistem|
+            :Delete referensi;
+        endif
+        
+    case (View Usage)
+        |Admin|
+        :Pilih referensi;
+        
+        |Sistem|
+        :Query semua junction tables;
+        :Tampilkan usage report;
+        note right
+          Referensi digunakan oleh:
+          - Leksikon: [list]
+          - Subbudaya: [list]
+          - Budaya: [list]
+          - About Page: Yes/No
+        end note
+        
+    endswitch
+    
+endif
+
+|Admin|
+:Selesai kelola referensi;
+
+stop
+
+@enduml

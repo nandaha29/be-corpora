@@ -1,0 +1,228 @@
+@startuml CM_Layer_Architecture
+!theme plain
+title Class/Module Layer Architecture\nBackend Application Structure
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+package "Routes Layer" as Routes #FFFDE7 {
+    class "admin.routes.ts" as AdminRoutes {
+        + /auth/*
+        + /leksikons/*
+        + /cultures/*
+        + /subcultures/*
+        + /references/*
+        + /assets/*
+    }
+    
+    class "public.routes.ts" as PublicRoutes {
+        + /landing
+        + /lexicons/*
+        + /subcultures/*
+        + /about
+        + /search/*
+    }
+}
+
+package "Middleware Layer" as Middlewares #E1BEE7 {
+    class "auth.middleware.ts" as AuthMW {
+        + authMiddleware(req, res, next)
+        + authorize(...roles)
+        - extractToken(header): string
+        - verifyToken(token): JWTPayload
+    }
+    
+    class "upload.middleware.ts" as UploadMW {
+        + upload: Multer
+        + singleUpload(fieldName)
+        + multiUpload(fieldName, maxCount)
+        - fileFilter(req, file, cb)
+        - limits: {fileSize: 10MB}
+    }
+    
+    class "error.middleware.ts" as ErrorMW {
+        + errorHandler(err, req, res, next)
+        + notFoundHandler(req, res)
+        - logError(error)
+        - formatError(error): ErrorResponse
+    }
+}
+
+package "Controller Layer" as Controllers #E3F2FD {
+    
+    package "Admin Controllers" {
+        class "admin.controller.ts" as AdminCtrl {
+            + register(req, res)
+            + login(req, res)
+            + getProfile(req, res)
+            + changePassword(req, res)
+            + updateProfile(req, res)
+        }
+        
+        class "leksikon.controller.ts" as LeksikonCtrl {
+            + getAllLeksikonsPaginated(req, res)
+            + getLeksikonById(req, res)
+            + createLeksikon(req, res)
+            + updateLeksikon(req, res)
+            + deleteLeksikon(req, res)
+            + bulkImportLeksikons(req, res)
+            + addAssetToLeksikon(req, res)
+            + addReferenceToLeksikon(req, res)
+        }
+        
+        class "culture.controller.ts" as CultureCtrl {
+            + getAllCulturesPaginated(req, res)
+            + getCultureById(req, res)
+            + createCulture(req, res)
+            + updateCulture(req, res)
+            + deleteCulture(req, res)
+            + addReferenceToCulture(req, res)
+        }
+        
+        class "asset.controller.ts" as AssetCtrl {
+            + getAllAssetsPaginated(req, res)
+            + getAssetById(req, res)
+            + createAsset(req, res)
+            + updateAsset(req, res)
+            + deleteAsset(req, res)
+            + bulkUploadAssets(req, res)
+        }
+    }
+    
+    package "Public Controllers" {
+        class "landing.controller.ts" as LandingCtrl {
+            + getLandingData(req, res)
+        }
+        
+        class "search.controller.ts" as SearchCtrl {
+            + globalSearch(req, res)
+            + advancedSearch(req, res)
+            + searchReferences(req, res)
+        }
+    }
+}
+
+package "Service Layer" as Services #C8E6C9 {
+    
+    class "auth.service.ts" as AuthSvc {
+        - prisma: PrismaClient
+        + login(email, password): AuthResult
+        + register(data): Admin
+        + hashPassword(password): string
+        + comparePassword(plain, hash): boolean
+        + generateToken(payload): string
+        + verifyToken(token): JWTPayload
+    }
+    
+    class "leksikon.service.ts" as LeksikonSvc {
+        - prisma: PrismaClient
+        + findAll(params): PaginatedResult
+        + findById(id): Lexicon
+        + findBySlug(slug): Lexicon
+        + create(data): Lexicon
+        + update(id, data): Lexicon
+        + delete(id): void
+        + bulkImport(records): ImportResult
+        + addAsset(lexiconId, assetId, role): void
+        + addReference(lexiconId, refId): void
+    }
+    
+    class "culture.service.ts" as CultureSvc {
+        - prisma: PrismaClient
+        + findAll(params): PaginatedResult
+        + findById(id): Culture
+        + create(data): Culture
+        + update(id, data): Culture
+        + delete(id): void
+    }
+    
+    class "asset.service.ts" as AssetSvc {
+        - prisma: PrismaClient
+        - blobClient: VercelBlobClient
+        + findAll(params): PaginatedResult
+        + findById(id): Asset
+        + upload(file, metadata): Asset
+        + update(id, data): Asset
+        + delete(id): void
+        - uploadToBlob(buffer): BlobResult
+        - deleteFromBlob(url): void
+    }
+    
+    class "search.service.ts" as SearchSvc {
+        - prisma: PrismaClient
+        + globalSearch(query): SearchResult
+        + advancedSearch(params): SearchResult
+        + searchReferences(query): Reference[]
+    }
+}
+
+package "Validator Layer" as Validators #FFE0B2 {
+    class "validators.ts" as ValidatorAdmin {
+        + loginSchema: ZodSchema
+        + registerSchema: ZodSchema
+        + leksikonSchema: ZodSchema
+        + cultureSchema: ZodSchema
+        + subcultureSchema: ZodSchema
+        + referenceSchema: ZodSchema
+        + assetSchema: ZodSchema
+        + paginationSchema: ZodSchema
+    }
+    
+    class "public.validator.ts" as ValidatorPublic {
+        + searchQuerySchema: ZodSchema
+        + advancedSearchSchema: ZodSchema
+    }
+}
+
+package "Data Layer" as Data #FFCCBC {
+    class "prisma.ts" as PrismaLib {
+        + prisma: PrismaClient
+        - connectDB(): void
+        - disconnectDB(): void
+    }
+    
+    class "PrismaClient" as Prisma <<external>> {
+        + admin: AdminDelegate
+        + lexicon: LexiconDelegate
+        + culture: CultureDelegate
+        + subculture: SubcultureDelegate
+        + asset: AssetDelegate
+        + reference: ReferenceDelegate
+        + $transaction()
+        + $connect()
+        + $disconnect()
+    }
+}
+
+' Relationships
+AdminRoutes --> AuthMW : uses
+AdminRoutes --> UploadMW : uses
+AdminRoutes --> AdminCtrl : routes to
+AdminRoutes --> LeksikonCtrl : routes to
+AdminRoutes --> CultureCtrl : routes to
+AdminRoutes --> AssetCtrl : routes to
+
+PublicRoutes --> LandingCtrl : routes to
+PublicRoutes --> SearchCtrl : routes to
+
+AdminCtrl --> AuthSvc : uses
+AdminCtrl --> ValidatorAdmin : validates with
+
+LeksikonCtrl --> LeksikonSvc : uses
+LeksikonCtrl --> ValidatorAdmin : validates with
+
+CultureCtrl --> CultureSvc : uses
+AssetCtrl --> AssetSvc : uses
+SearchCtrl --> SearchSvc : uses
+
+AuthSvc --> PrismaLib : uses
+LeksikonSvc --> PrismaLib : uses
+CultureSvc --> PrismaLib : uses
+AssetSvc --> PrismaLib : uses
+SearchSvc --> PrismaLib : uses
+
+PrismaLib --> Prisma : wraps
+
+ErrorMW ..> Controllers : catches errors from
+
+@enduml

@@ -1,0 +1,261 @@
+@startuml ERD_Sistem_Leksikon
+!theme plain
+title Entity Relationship Diagram (ERD)\nSistem Leksikon Bahasa Betawi
+
+' Configuration
+skinparam linetype ortho
+skinparam roundcorner 5
+skinparam class {
+    BackgroundColor White
+    BorderColor #333333
+    ArrowColor #333333
+}
+
+' ============================================
+' MAIN ENTITIES
+' ============================================
+
+entity "ADMIN" as admin {
+    * **admin_id** : INT <<PK>>
+    --
+    * username : VARCHAR <<UNIQUE>>
+    * email : VARCHAR <<UNIQUE>>
+    * password : VARCHAR
+    role : AdminRole
+    is_active : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "CULTURE" as culture {
+    * **culture_id** : INT <<PK>>
+    --
+    * slug : VARCHAR <<UNIQUE>>
+    * culture_name : VARCHAR
+    * origin_island : VARCHAR
+    * province : VARCHAR
+    * city_region : VARCHAR
+    classification : VARCHAR
+    characteristics : TEXT
+    conservation_status : StatusKonservasi
+    latitude : FLOAT
+    longitude : FLOAT
+    status : StatusPublish
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "SUBCULTURE" as subculture {
+    * **subculture_id** : INT <<PK>>
+    --
+    * slug : VARCHAR <<UNIQUE>>
+    * subculture_name : VARCHAR
+    * traditional_greeting : TEXT
+    greeting_meaning : VARCHAR
+    * explanation : TEXT
+    * culture_id : INT <<FK>>
+    status : StatusPublish
+    display_priority_status : StatusPriority
+    conservation_status : StatusKonservasi
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "CODIFICATION_DOMAIN" as domain {
+    * **domain_id** : INT <<PK>>
+    --
+    * code : VARCHAR
+    * domain_name : VARCHAR
+    * explanation : VARCHAR
+    * subculture_id : INT <<FK>>
+    status : StatusPublish
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "LEXICON" as lexicon {
+    * **lexicon_id** : INT <<PK>>
+    --
+    * slug : VARCHAR <<UNIQUE>>
+    * lexicon_word : VARCHAR
+    ipa_international_phonetic_alphabet : VARCHAR
+    * transliteration : VARCHAR
+    * etymological_meaning : VARCHAR
+    * cultural_meaning : VARCHAR
+    * common_meaning : VARCHAR
+    * translation : VARCHAR
+    variant : VARCHAR
+    variant_translations : VARCHAR
+    other_description : TEXT
+    * domain_id : INT <<FK>>
+    preservation_status : StatusKonservasi
+    * contributor_id : INT <<FK>>
+    status : StatusPublish
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "CONTRIBUTOR" as contributor {
+    * **contributor_id** : INT <<PK>>
+    --
+    * contributor_name : VARCHAR
+    * institution : VARCHAR
+    * email : VARCHAR
+    * expertise_area : VARCHAR
+    * contact_info : VARCHAR
+    display_priority_status : StatusPriority
+    is_coordinator : BOOLEAN
+    coordinator_status : StatusCoordinator
+    registered_at : TIMESTAMP
+}
+
+entity "ASSET" as asset {
+    * **asset_id** : INT <<PK>>
+    --
+    * file_name : VARCHAR
+    * file_type : AssetType
+    description : TEXT
+    * url : VARCHAR
+    file_size : VARCHAR
+    hash_checksum : VARCHAR
+    metadata_json : VARCHAR
+    status : StatusFile
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "REFERENCE" as reference {
+    * **reference_id** : INT <<PK>>
+    --
+    * title : VARCHAR
+    * reference_type : ReferenceType
+    description : TEXT
+    url : VARCHAR
+    authors : VARCHAR
+    publication_year : VARCHAR
+    topic_category : VARCHAR
+    status : StatusPublish
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "ABOUT_REFERENCE" as about_ref {
+    * **about_reference_id** : INT <<PK>>
+    --
+    * reference_id : INT <<FK>>
+    display_order : INT
+    is_active : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+' ============================================
+' JUNCTION TABLES - ASSETS
+' ============================================
+
+entity "LEXICON_ASSETS" as lexicon_asset {
+    * **lexicon_id** : INT <<PK,FK>>
+    * **asset_id** : INT <<PK,FK>>
+    --
+    * asset_role : LeksikonAssetRole
+    created_at : TIMESTAMP
+}
+
+entity "SUBCULTURE_ASSETS" as subculture_asset {
+    * **subculture_id** : INT <<PK,FK>>
+    * **asset_id** : INT <<PK,FK>>
+    * **asset_role** : SubcultureAssetRole <<PK>>
+    --
+    created_at : TIMESTAMP
+}
+
+entity "CULTURE_ASSETS" as culture_asset {
+    * **culture_id** : INT <<PK,FK>>
+    * **asset_id** : INT <<PK,FK>>
+    --
+    * asset_role : CultureAssetRole
+    created_at : TIMESTAMP
+}
+
+entity "CONTRIBUTOR_ASSETS" as contributor_asset {
+    * **contributor_id** : INT <<PK,FK>>
+    * **asset_id** : INT <<PK,FK>>
+    --
+    * asset_note : ContributorAssetRole
+    created_at : TIMESTAMP
+}
+
+' ============================================
+' JUNCTION TABLES - REFERENCES
+' ============================================
+
+entity "LEXICON_REFERENCE" as lexicon_ref {
+    * **lexicon_id** : INT <<PK,FK>>
+    * **reference_id** : INT <<PK,FK>>
+    --
+    reference_role : LexiconReferenceRole
+    display_order : INT
+    created_at : TIMESTAMP
+}
+
+entity "SUBCULTURE_REFERENCE" as subculture_ref {
+    * **subculture_id** : INT <<PK,FK>>
+    * **reference_id** : INT <<PK,FK>>
+    --
+    reference_role : SubcultureReferenceRole
+    display_order : INT
+    created_at : TIMESTAMP
+}
+
+entity "CULTURE_REFERENCE" as culture_ref {
+    * **culture_id** : INT <<PK,FK>>
+    * **reference_id** : INT <<PK,FK>>
+    --
+    reference_role : CultureReferenceRole
+    display_order : INT
+    created_at : TIMESTAMP
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Culture - Subculture (1:N)
+culture ||--o{ subculture : "has"
+
+' Subculture - CodificationDomain (1:N)
+subculture ||--o{ domain : "contains"
+
+' CodificationDomain - Lexicon (1:N)
+domain ||--o{ lexicon : "categorizes"
+
+' Contributor - Lexicon (1:N)
+contributor ||--o{ lexicon : "contributes"
+
+' Asset Junction Tables (M:N)
+lexicon ||--o{ lexicon_asset : "has"
+asset ||--o{ lexicon_asset : "belongs to"
+
+subculture ||--o{ subculture_asset : "has"
+asset ||--o{ subculture_asset : "belongs to"
+
+culture ||--o{ culture_asset : "has"
+asset ||--o{ culture_asset : "belongs to"
+
+contributor ||--o{ contributor_asset : "has"
+asset ||--o{ contributor_asset : "belongs to"
+
+' Reference Junction Tables (M:N)
+lexicon ||--o{ lexicon_ref : "cited by"
+reference ||--o{ lexicon_ref : "references"
+
+subculture ||--o{ subculture_ref : "cited by"
+reference ||--o{ subculture_ref : "references"
+
+culture ||--o{ culture_ref : "cited by"
+reference ||--o{ culture_ref : "references"
+
+' About Reference (1:N)
+reference ||--o{ about_ref : "displayed in"
+
+@enduml

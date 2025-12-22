@@ -1,0 +1,98 @@
+@startuml AD01_Proses_Manajemen_Leksikon
+!theme plain
+title Activity Diagram - AD01: Proses Manajemen Leksikon (Admin)
+
+start
+
+:Admin login ke sistem;
+
+if (Login berhasil?) then (ya)
+    :Tampilkan Dashboard;
+    
+    repeat
+        :Pilih menu Leksikon;
+        
+        switch (Pilih aksi?)
+        case (Tambah)
+            :Isi form leksikon;
+            note right
+              - Kata
+              - Definisi
+              - Contoh kalimat
+              - Subculture
+              - Domain
+              - Contributor
+            end note
+            
+            :Validasi input;
+            
+            if (Input valid?) then (ya)
+                :Simpan ke database;
+                :Tampilkan pesan sukses;
+            else (tidak)
+                :Tampilkan pesan error;
+            endif
+            
+        case (Edit)
+            :Pilih leksikon dari list;
+            :Load data leksikon;
+            :Edit form leksikon;
+            :Validasi input;
+            
+            if (Input valid?) then (ya)
+                :Update database;
+                :Tampilkan pesan sukses;
+            else (tidak)
+                :Tampilkan pesan error;
+            endif
+            
+        case (Hapus)
+            :Pilih leksikon dari list;
+            :Konfirmasi penghapusan;
+            
+            if (Dikonfirmasi?) then (ya)
+                :Hapus dari database;
+                :Refresh list;
+            else (tidak)
+                :Batal;
+            endif
+            
+        case (Upload Asset)
+            :Pilih leksikon;
+            :Pilih file gambar/audio;
+            
+            if (File valid?) then (ya)
+                :Upload ke Vercel Blob;
+                :Simpan metadata asset;
+                :Tampilkan asset;
+            else (tidak)
+                :Tampilkan error file;
+            endif
+            
+        case (Assign Referensi)
+            :Pilih leksikon;
+            :Pilih referensi dari list;
+            :Pilih role (PRIMARY/SECONDARY);
+            :Simpan junction;
+            :Tampilkan referensi terkait;
+            
+        case (Lihat Detail)
+            :Tampilkan detail leksikon;
+            :Tampilkan asset terkait;
+            :Tampilkan referensi terkait;
+            
+        endswitch
+        
+    repeat while (Lanjut kelola leksikon?) is (ya)
+    -> tidak;
+    
+else (tidak)
+    :Tampilkan error login;
+    stop
+endif
+
+:Logout;
+
+stop
+
+@enduml

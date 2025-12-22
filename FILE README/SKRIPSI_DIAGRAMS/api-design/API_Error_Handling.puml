@@ -1,0 +1,143 @@
+@startuml API_Error_Handling
+!theme plain
+title Error Handling Flow\nCentralized Error Management
+
+actor Client
+participant "Express\nRouter" as Router
+participant "Controller" as Controller
+participant "Zod\nValidator" as Zod
+participant "Service\nLayer" as Service
+participant "Prisma\nORM" as Prisma
+participant "Error\nMiddleware" as ErrorMW
+database "PostgreSQL" as DB
+
+== Validation Error (400) ==
+
+Client -> Router: POST /api/v1/admin/leksikons\n{invalid data}
+activate Router
+
+Router -> Controller: createLeksikon(req, res)
+activate Controller
+
+Controller -> Zod: leksikonSchema.parse(req.body)
+activate Zod
+
+Zod -> Zod: Validate fields
+Zod --> Controller: throw ZodError
+deactivate Zod
+
+Controller -> Controller: catch (error instanceof ZodError)
+Controller --> Client: 400 Bad Request\n{success: false, error: {code: "VALIDATION_ERROR", details: [...]}}
+
+deactivate Controller
+deactivate Router
+
+== Not Found Error (404) ==
+
+Client -> Router: GET /api/v1/admin/leksikons/999
+activate Router
+
+Router -> Controller: getLeksikonById(req, res)
+activate Controller
+
+Controller -> Service: findById(999)
+activate Service
+
+Service -> Prisma: findUnique({where: {id: 999}})
+activate Prisma
+Prisma -> DB: SELECT * FROM lexicon WHERE id = 999
+activate DB
+DB --> Prisma: null
+deactivate DB
+Prisma --> Service: null
+deactivate Prisma
+
+Service --> Controller: null
+deactivate Service
+
+Controller -> Controller: if (!leksikon) throw NotFoundError
+Controller --> Client: 404 Not Found\n{success: false, error: {code: "NOT_FOUND"}}
+
+deactivate Controller
+deactivate Router
+
+== Authentication Error (401) ==
+
+Client -> Router: GET /api/v1/admin/leksikons\n(No Token / Invalid Token)
+activate Router
+
+Router -> Router: authMiddleware(req, res, next)
+
+alt No Token
+    Router --> Client: 401 Unauthorized\n{error: "No token provided"}
+else Invalid Token
+    Router -> Router: jwt.verify() throws
+    Router --> Client: 401 Unauthorized\n{error: "Invalid or expired token"}
+end
+
+deactivate Router
+
+== Database Error (500) ==
+
+Client -> Router: POST /api/v1/admin/leksikons\n{valid data}
+activate Router
+
+Router -> Controller: createLeksikon(req, res)
+activate Controller
+
+Controller -> Service: create(validatedData)
+activate Service
+
+Service -> Prisma: create({data})
+activate Prisma
+Prisma -> DB: INSERT INTO lexicon...
+activate DB
+DB --> Prisma: DatabaseError (connection failed)
+deactivate DB
+Prisma --> Service: throw PrismaClientKnownRequestError
+deactivate Prisma
+
+Service --> Controller: throw error
+deactivate Service
+
+Controller -> ErrorMW: next(error)
+deactivate Controller
+activate ErrorMW
+
+ErrorMW -> ErrorMW: Log error (console/monitoring)
+ErrorMW --> Client: 500 Internal Server Error\n{success: false, error: {code: "DATABASE_ERROR"}}
+
+deactivate ErrorMW
+deactivate Router
+
+== Duplicate Entry Error (409) ==
+
+Client -> Router: POST /api/v1/admin/leksikons\n{lexiconWord: "abang"} (already exists)
+activate Router
+
+Router -> Controller: createLeksikon(req, res)
+activate Controller
+
+Controller -> Service: create(data)
+activate Service
+
+Service -> Service: Generate slug: "abang"
+Service -> Prisma: create({data: {..., slug: "abang"}})
+activate Prisma
+Prisma -> DB: INSERT INTO lexicon...
+activate DB
+DB --> Prisma: Unique constraint violation
+deactivate DB
+Prisma --> Service: throw P2002 (Unique constraint)
+deactivate Prisma
+
+Service -> Service: catch P2002
+Service --> Controller: throw ConflictError
+deactivate Service
+
+Controller --> Client: 409 Conflict\n{success: false, error: {code: "DUPLICATE_ENTRY"}}
+
+deactivate Controller
+deactivate Router
+
+@enduml

@@ -1,0 +1,185 @@
+@startuml CM_Middleware_Validator
+!theme plain
+title Middleware & Validator Layer - Class Diagram
+
+skinparam classAttributeIconSize 0
+
+package "Middleware Layer" #E1BEE7 {
+    
+    class AuthMiddleware <<Middleware>> {
+        ==Properties==
+        - JWT_SECRET: string
+        ==Public Methods==
+        + authMiddleware(req: Request, res: Response, next: NextFunction): void
+        + authorize(...roles: AdminRole[]): RequestHandler
+        ==Private Methods==
+        - extractToken(authHeader: string): string | null
+        - verifyToken(token: string): JWTPayload
+        - attachUserToRequest(req: Request, payload: JWTPayload): void
+    }
+    
+    class UploadMiddleware <<Middleware>> {
+        ==Properties==
+        - storage: multer.StorageEngine
+        - fileFilter: FileFilterCallback
+        - limits: multer.Options['limits']
+        ==Public Methods==
+        + upload: Multer
+        + singleUpload(fieldName: string): RequestHandler
+        + multiUpload(fieldName: string, maxCount: number): RequestHandler
+        + csvUpload(fieldName: string): RequestHandler
+        ==Private Methods==
+        - validateFileType(mimetype: string): boolean
+        - validateFileSize(size: number): boolean
+    }
+    
+    class ErrorMiddleware <<Middleware>> {
+        ==Public Methods==
+        + errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void
+        + notFoundHandler(req: Request, res: Response): void
+        ==Private Methods==
+        - logError(error: Error, req: Request): void
+        - formatErrorResponse(error: Error): ErrorResponse
+        - getStatusCode(error: Error): number
+        - isOperationalError(error: Error): boolean
+    }
+    
+    class CorsMiddleware <<Middleware>> {
+        ==Properties==
+        - allowedOrigins: string[]
+        - allowedMethods: string[]
+        - allowedHeaders: string[]
+        ==Public Methods==
+        + corsOptions: cors.CorsOptions
+    }
+    
+    note right of AuthMiddleware
+      JWT Token Structure:
+      {
+        adminId: number,
+        email: string,
+        role: AdminRole,
+        iat: number,
+        exp: number
+      }
+    end note
+    
+    note right of UploadMiddleware
+      Supported File Types:
+      - Images: jpeg, png, webp, gif
+      - Audio: mp3, wav, ogg
+      - Video: mp4, webm
+      - Documents: csv (for import)
+      
+      Max File Size: 10MB
+    end note
+}
+
+package "Validator Layer (Zod Schemas)" #FFE0B2 {
+    
+    class AdminValidators <<Validators>> {
+        ==Authentication Schemas==
+        + loginSchema: ZodObject
+        + registerSchema: ZodObject
+        + changePasswordSchema: ZodObject
+        + updateProfileSchema: ZodObject
+        ==Type Exports==
+        + LoginDTO: z.infer<typeof loginSchema>
+        + RegisterDTO: z.infer<typeof registerSchema>
+    }
+    
+    class LeksikonValidators <<Validators>> {
+        ==CRUD Schemas==
+        + createLeksikonSchema: ZodObject
+        + updateLeksikonSchema: ZodObject
+        + updateStatusSchema: ZodObject
+        ==Junction Schemas==
+        + addAssetSchema: ZodObject
+        + addReferenceSchema: ZodObject
+        + updateAssetRoleSchema: ZodObject
+        ==Type Exports==
+        + CreateLeksikonDTO: z.infer<typeof createLeksikonSchema>
+        + UpdateLeksikonDTO: z.infer<typeof updateLeksikonSchema>
+    }
+    
+    class CultureValidators <<Validators>> {
+        + createCultureSchema: ZodObject
+        + updateCultureSchema: ZodObject
+        + addReferenceSchema: ZodObject
+        ==Type Exports==
+        + CreateCultureDTO: z.infer<typeof createCultureSchema>
+    }
+    
+    class SubcultureValidators <<Validators>> {
+        + createSubcultureSchema: ZodObject
+        + updateSubcultureSchema: ZodObject
+        + addAssetSchema: ZodObject
+        + addReferenceDirectSchema: ZodObject
+    }
+    
+    class ReferenceValidators <<Validators>> {
+        + createReferenceSchema: ZodObject
+        + updateReferenceSchema: ZodObject
+        + referenceAssignmentSchema: ZodObject
+        ==Type Exports==
+        + CreateReferenceDTO: z.infer<typeof createReferenceSchema>
+    }
+    
+    class AssetValidators <<Validators>> {
+        + uploadAssetSchema: ZodObject
+        + updateAssetSchema: ZodObject
+        ==Type Exports==
+        + UploadAssetDTO: z.infer<typeof uploadAssetSchema>
+    }
+    
+    class CommonValidators <<Validators>> {
+        ==Shared Schemas==
+        + paginationSchema: ZodObject
+        + idParamSchema: ZodObject
+        + slugParamSchema: ZodObject
+        + searchQuerySchema: ZodObject
+        ==Enum Schemas==
+        + statusPublishSchema: ZodEnum
+        + statusKonservasiSchema: ZodEnum
+        + assetTypeSchema: ZodEnum
+        + referenceTypeSchema: ZodEnum
+        + referenceRoleSchema: ZodEnum
+        + assetRoleSchema: ZodEnum
+    }
+    
+    class PublicValidators <<Validators>> {
+        + globalSearchSchema: ZodObject
+        + advancedSearchSchema: ZodObject
+        ==Type Exports==
+        + GlobalSearchParams: z.infer<typeof globalSearchSchema>
+        + AdvancedSearchParams: z.infer<typeof advancedSearchSchema>
+    }
+}
+
+' Schema Detail Notes
+note bottom of LeksikonValidators
+  createLeksikonSchema = z.object({
+    lexiconWord: z.string().min(1).max(100),
+    transliteration: z.string().min(1),
+    etymologicalMeaning: z.string().min(10),
+    culturalMeaning: z.string().min(10),
+    commonMeaning: z.string().min(10),
+    translation: z.string().min(1),
+    domainId: z.number().int().positive(),
+    contributorId: z.number().int().positive(),
+    status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
+    preservationStatus: z.enum([...]).default('MAINTAINED')
+  })
+end note
+
+note bottom of CommonValidators
+  paginationSchema = z.object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+    search: z.string().optional(),
+    sort: z.string().optional(),
+    order: z.enum(['asc', 'desc']).default('desc')
+  })
+end note
+
+@enduml

@@ -1,0 +1,117 @@
+@startuml Architecture_System
+!theme plain
+title Arsitektur Sistem Leksikon Bahasa Betawi
+
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+
+' ============================================
+' CLIENT LAYER
+' ============================================
+
+package "Client Layer" as ClientLayer #E3F2FD {
+    component "Web Admin\n(React + Vite)" as AdminWeb #BBDEFB
+    component "Public Website\n(React)" as PublicWeb #BBDEFB
+}
+
+' ============================================
+' FRONTEND HOSTING
+' ============================================
+
+package "Frontend Server\n(Custom Domain)" as FrontendHost #F3E5F5 {
+    component "Static Hosting\n(Nginx/Apache)" as StaticServer #E1BEE7
+}
+
+' ============================================
+' VERCEL CLOUD
+' ============================================
+
+cloud "Vercel Cloud Platform" as VercelCloud #E8F5E9 {
+    
+    package "API Gateway" as APIGateway #C8E6C9 {
+        component "Vercel Edge\nNetwork" as EdgeNetwork #A5D6A7
+        component "Rate Limiting" as RateLimit #A5D6A7
+        component "Auth Middleware\n(JWT)" as AuthMW #A5D6A7
+    }
+    
+    package "Backend Services" as BackendServices #C8E6C9 {
+        component "Express.js API\n(TypeScript)" as ExpressAPI #81C784
+        component "Authentication\nService" as AuthService #81C784
+        component "File Upload\nService" as UploadService #81C784
+        component "Search\nService" as SearchService #81C784
+    }
+    
+    package "Controllers" as Controllers #DCEDC8 {
+        component "Leksikon\nController" as LeksikonCtrl #C5E1A5
+        component "Culture\nController" as CultureCtrl #C5E1A5
+        component "Reference\nController" as RefCtrl #C5E1A5
+        component "Asset\nController" as AssetCtrl #C5E1A5
+        component "Admin\nController" as AdminCtrl #C5E1A5
+    }
+    
+    package "Data Layer" as DataLayer #FFE0B2 {
+        database "PostgreSQL\n(Neon Serverless)" as NeonDB #FFCC80
+        storage "Vercel Blob\n(Object Storage)" as BlobStorage #FFCC80
+    }
+}
+
+' ============================================
+' EXTERNAL / LIBRARIES
+' ============================================
+
+package "Libraries" as Libraries #E0F7FA {
+    component "Prisma ORM" as PrismaORM #B2EBF2
+    component "Zod Validation" as ZodVal #B2EBF2
+    component "bcrypt" as Bcrypt #B2EBF2
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Client to Frontend
+AdminWeb --> StaticServer
+PublicWeb --> StaticServer
+
+' Frontend to Vercel
+StaticServer --> EdgeNetwork : HTTPS
+
+' API Gateway Flow
+EdgeNetwork --> RateLimit
+RateLimit --> AuthMW
+AuthMW --> ExpressAPI
+
+' Express to Services
+ExpressAPI --> AuthService
+ExpressAPI --> UploadService
+ExpressAPI --> SearchService
+
+' Express to Controllers
+ExpressAPI --> LeksikonCtrl
+ExpressAPI --> CultureCtrl
+ExpressAPI --> RefCtrl
+ExpressAPI --> AssetCtrl
+ExpressAPI --> AdminCtrl
+
+' Controllers to Prisma
+LeksikonCtrl --> PrismaORM
+CultureCtrl --> PrismaORM
+RefCtrl --> PrismaORM
+AdminCtrl --> PrismaORM
+AssetCtrl --> PrismaORM
+
+' Prisma to Database
+PrismaORM --> NeonDB
+
+' Asset to Blob
+AssetCtrl --> BlobStorage
+UploadService --> BlobStorage
+
+' Validation
+ExpressAPI ..> ZodVal : validates
+
+' Auth uses bcrypt
+AuthService --> Bcrypt
+
+@enduml

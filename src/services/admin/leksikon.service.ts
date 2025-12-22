@@ -1,3 +1,48 @@
+/**
+ * ===========================================
+ * LEKSIKON SERVICE
+ * ===========================================
+ * 
+ * File: src/services/admin/leksikon.service.ts
+ * Controller: src/controllers/admin/leksikon.controller.ts
+ * Routes: src/routes/admin/leksikon.routes.ts
+ * 
+ * Purpose:
+ * Contains business logic for lexicon operations.
+ * Services interact directly with the database via Prisma ORM
+ * and are called by controllers.
+ * 
+ * Database Operations:
+ * - CRUD for Lexicon table
+ * - Junction table operations (LexiconAsset, LexiconReference)
+ * - Complex queries with filtering, search, and pagination
+ * - Bulk import with validation
+ * 
+ * Features:
+ * - getAllLeksikons() - Get all lexicons
+ * - getLeksikonById() - Get single lexicon with relations
+ * - createLeksikon() - Create new lexicon
+ * - updateLeksikon() - Update existing lexicon
+ * - deleteLeksikon() - Soft/hard delete lexicon
+ * - Asset operations: addAsset, removeAsset, getAssets, updateRole
+ * - Reference operations: addReference, removeReference, getReferences
+ * - Search and filter with pagination
+ * - Bulk import from CSV
+ * 
+ * Related Tables:
+ * - lexicons
+ * - lexicon_assets (junction)
+ * - lexicon_references (junction)
+ * - assets
+ * - references
+ * - codification_domains
+ * - contributors
+ * 
+ * @module services/admin/leksikon
+ * @author Development Team
+ * @since 2025-01-01
+ */
+
 import { prisma } from '../../lib/prisma.js';
 import { CreateLexiconInput, UpdateLexiconInput } from '../../lib/validators.js';
 import { Prisma, LeksikonAssetRole, LexiconReferenceRole } from '@prisma/client';
@@ -190,32 +235,6 @@ export const deleteLeksikon = async (id: number) => {
   });
 };
 
-// export const addAssetToLeksikon = async (leksikonId: number, assetId: number, assetRole: string) => {
-//   // verify leksikon exists
-//   const leksikon = await prisma.leksikon.findUnique({
-//     where: { leksikonId },
-//   });
-//   if (!leksikon) {
-//     const err = new Error('Leksikon not found');
-//     (err as any).code = 'LEKSIKON_NOT_FOUND';
-//     throw err;
-//   }
-
-//   // verify asset exists
-//   const asset = await prisma.asset.findUnique({
-//     where: { assetId },
-//   });
-//   if (!asset) {
-//     const err = new Error('Asset not found');
-//     (err as any).code = 'ASSET_NOT_FOUND';
-//     throw err;
-//   }
-
-//   return prisma.leksikonAsset.create({
-//     data: { leksikonId, assetId, assetRole },
-//     include: { asset: true },
-//   });
-// };
 
 export const addAssetToLeksikon = async (leksikonId: number, assetId: number, assetRole: LeksikonAssetRole) => {
   // Pastikan leksikon dan asset ada
@@ -266,32 +285,6 @@ export const getLeksikonAssets = async (id: number) => {
   });
 };
 
-// export const addReferenceToLeksikon = async (leksikonId: number, referensiId: number, citationNote?: string) => {
-//   // verify leksikon exists
-//   const leksikon = await prisma.leksikon.findUnique({
-//     where: { leksikonId },
-//   });
-//   if (!leksikon) {
-//     const err = new Error('Leksikon not found');
-//     (err as any).code = 'LEKSIKON_NOT_FOUND';
-//     throw err;
-//   }
-
-//   // verify referensi exists
-//   const referensi = await prisma.referensi.findUnique({
-//     where: { referensiId },
-//   });
-//   if (!referensi) {
-//     const err = new Error('Referensi not found');
-//     (err as any).code = 'REFERENSI_NOT_FOUND';
-//     throw err;
-//   }
-
-//   return prisma.leksikonReferensi.create({
-//     data: { leksikonId, referensiId, citationNote },
-//     include: { referensi: true },
-//   });
-// };
 
 export const addReferenceToLeksikon = async  (leksikonId: number, referenceId: number, referenceRole?: LexiconReferenceRole) => {
   const leksikon = await prisma.lexicon.findUnique({ where: { lexiconId: leksikonId } });

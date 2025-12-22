@@ -1,0 +1,109 @@
+@startuml Architecture_Deployment
+!theme plain
+title Deployment Architecture\nSistem Leksikon Bahasa Betawi
+
+skinparam backgroundColor #FFFFFF
+skinparam nodeStyle rectangle
+
+' ============================================
+' DEVELOPMENT
+' ============================================
+
+node "Development Environment" as DevEnv #E8EAF6 {
+    component "VS Code\n+ TypeScript" as VSCode #C5CAE9
+    component "Local Node.js\nServer" as LocalNode #C5CAE9
+    database "Local PostgreSQL\n(for testing)" as LocalDB #C5CAE9
+}
+
+' ============================================
+' VERSION CONTROL
+' ============================================
+
+cloud "GitHub" as GitHub #F5F5F5 {
+    component "Repository\nnandaha29/be-corpora" as Repo #E0E0E0
+    component "GitHub Actions\n(CI/CD)" as CICD #E0E0E0
+}
+
+' ============================================
+' PRODUCTION - FRONTEND
+' ============================================
+
+node "Frontend Server\n(Custom Domain)" as FEServer #F3E5F5 {
+    component "Nginx Web Server" as Nginx #E1BEE7
+    component "React Build\n(Static Files)" as ReactBuild #E1BEE7
+    note right of FEServer
+        Domain: leksikon.yourdomain.com
+        SSL: Let's Encrypt
+    end note
+}
+
+' ============================================
+' PRODUCTION - BACKEND (VERCEL)
+' ============================================
+
+cloud "Vercel Platform" as Vercel #E8F5E9 {
+    node "Serverless Functions" as ServerlessFn #C8E6C9 {
+        component "Express.js API\n(Node.js 18.x)" as API #A5D6A7
+    }
+    
+    node "Vercel Edge" as Edge #C8E6C9 {
+        component "CDN\n(Global)" as CDN #A5D6A7
+        component "SSL/TLS" as SSL #A5D6A7
+    }
+    
+    storage "Vercel Blob\nStorage" as Blob #FFE0B2
+    
+    note right of Vercel
+        URL: api-leksikon.vercel.app
+        Region: sin1 (Singapore)
+    end note
+}
+
+' ============================================
+' PRODUCTION - DATABASE (NEON)
+' ============================================
+
+cloud "Neon Cloud" as NeonCloud #FFF3E0 {
+    database "PostgreSQL 15\n(Serverless)" as NeonDB #FFCC80
+    
+    note right of NeonCloud
+        Region: ap-southeast-1
+        Connection: Pooled
+    end note
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Development Flow
+VSCode --> LocalNode : npm run dev
+LocalNode --> LocalDB : Prisma
+
+' Push to GitHub
+VSCode --> Repo : git push
+
+' CI/CD Deployment
+Repo --> CICD : trigger
+CICD --> FEServer : deploy frontend
+CICD --> ServerlessFn : deploy backend
+
+' Production Flow
+ReactBuild --> Nginx : serve
+Nginx --> Edge : API calls
+Edge --> CDN
+CDN --> SSL
+SSL --> API
+
+' API to Data
+API --> NeonDB : Prisma
+API --> Blob : upload/download
+
+' Users
+actor "Admin User" as AdminUser
+actor "Public User" as PublicUser
+
+AdminUser --> Nginx : HTTPS
+PublicUser --> Nginx : HTTPS
+
+@enduml

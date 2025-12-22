@@ -1,0 +1,187 @@
+@startuml SD04_Bulk_Import_from_CSV
+!theme plain
+title Sequence Diagram - SD04: Bulk Import from CSV
+
+actor Admin
+participant "Frontend\n(React)" as FE
+participant "Auth Middleware" as AM
+participant "Leksikon\nController" as LC
+participant "Leksikon\nService" as LS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+participant "File System" as FS
+
+Admin -> FE: Upload CSV file untuk bulk import
+activate FE
+
+FE -> AM: POST /api/admin/leksikons/import\n+ Bearer Token\n+ Multipart Form Data (file)
+activate AM
+
+AM -> AM: Verify JWT Token
+
+alt Token Invalid
+    AM --> FE: 401 Unauthorized
+else Token Valid
+    AM -> LC: Forward request with file
+    activate LC
+    
+    LC -> LC: Multer file validation
+    note right of LC
+    Validate:
+    - File exists
+    - File size <= 10MB
+    - File type is CSV
+    end note
+    
+    alt File validation failed
+        LC --> FE: 400 Bad Request\n"File validation error"
+    else File valid
+        LC -> LS: bulkImportLeksikonsFromCSV(filePath)
+        activate LS
+        
+        LS -> FS: Read CSV file stream
+        activate FS
+        FS --> LS: CSV data stream
+        deactivate FS
+        
+        LS -> LS: Parse CSV with header mapping
+        note right of LS
+        Map headers like:
+        'Leksikon' -> 'lexiconWord'
+        'Transliterasi' -> 'transliteration'
+        etc.
+        end note
+        
+        loop For each CSV row
+            LS -> LS: Validate row with Zod schema
+            note right of LS
+            Validate required fields:
+            - lexiconWord
+            - transliteration
+            - etymologicalMeaning
+            - culturalMeaning
+            - domainId
+            - contributorId
+            end note
+            
+            alt Validation failed
+                LS -> LS: Record validation error
+                note right of LS
+                Add to results.errors
+                Increment results.skipped
+                end note
+            else Validation passed
+                LS -> PR: Check contributor exists
+                activate PR
+                PR -> DB: SELECT * FROM CONTRIBUTOR WHERE contributorId = ?
+                activate DB
+                DB --> PR: Contributor data or null
+                deactivate DB
+                
+                alt Contributor not found
+                    PR --> LS: Contributor not found
+                    LS -> LS: Record error "Contributor ID not found"
+                    note right of LS
+                    Add to results.errors
+                    Increment results.skipped
+                    end note
+                else Contributor exists
+                    PR --> LS: Contributor found
+                    deactivate PR
+                    
+                    LS -> PR: Check domain exists
+                    activate PR
+                    PR -> DB: SELECT * FROM CODIFICATIONDOMAIN WHERE domainId = ?
+                    activate DB
+                    DB --> PR: Domain data or null
+                    deactivate DB
+                    
+                    alt Domain not found
+                        PR --> LS: Domain not found
+                        LS -> LS: Record error "Domain ID not found"
+                        note right of LS
+                        Add to results.errors
+                        Increment results.skipped
+                        end note
+                    else Domain exists
+                        PR --> LS: Domain found
+                        deactivate PR
+                        
+                        LS -> LS: Generate slug if missing
+                        note right of LS
+                        If no slug provided:
+                        slug = generateSlug(lexiconWord)
+                        end note
+                        
+                        LS -> PR: Check slug uniqueness
+                        activate PR
+                        PR -> DB: SELECT * FROM LEXICON WHERE slug = ?
+                        activate DB
+                        DB --> PR: Existing record or null
+                        deactivate DB
+                        
+                        alt Slug exists
+                            PR --> LS: Slug already exists
+                            LS -> LS: Record error "Slug already exists"
+                            note right of LS
+                            Add to results.errors
+                            Increment results.skipped
+                            end note
+                        else Slug unique
+                            PR --> LS: Slug available
+                            deactivate PR
+                            
+                            LS -> LS: Add to valid data batch
+                        end
+                    end
+                end
+            end
+        end
+        
+        LS -> LS: Process valid data in batches
+        loop For each batch (100 records)
+            LS -> PR: Batch insert lexicons
+            activate PR
+            PR -> DB: INSERT INTO LEXICON (multiple rows)
+            activate DB
+            DB --> PR: Insert result (count inserted)
+            deactivate DB
+            
+            PR --> LS: Insert successful
+            deactivate PR
+            
+            LS -> LS: Update results counters
+            note right of LS
+            results.imported += insertedCount
+            Add lexiconWords to results.importedLexicons
+            end note
+        end
+        
+        LS -> FS: Delete temp file
+        activate FS
+        FS --> LS: File deleted
+        deactivate FS
+        
+        LS --> LC: Import results
+        note right of LS
+        {
+          imported: number,
+          skipped: number,
+          errors: string[],
+          importedLexicons: string[],
+          skippedLexicons: string[]
+        }
+        end note
+        deactivate LS
+        
+        LC --> FE: 200 OK\nBulk import completed with results
+        deactivate LC
+    end
+    
+    FE --> Admin: Show import summary\n"X imported, Y skipped, Z errors"
+    deactivate FE
+end
+
+deactivate AM
+
+@enduml

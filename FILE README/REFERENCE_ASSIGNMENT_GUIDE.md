@@ -4,8 +4,8 @@
 
 Sistem referensi bisa ditampilkan di **4 tempat berbeda**:
 1. **Page Leksikon** - via `LexiconReference` junction table
-2. **Page Subculture** - via `SubcultureReference` junction table  
-3. **Page About** - via `CultureReference` junction table
+2. **Page Subculture** - via `SubcultureReference` junction table
+3. **Page About** - via `AboutReference` table
 4. **List All References** - langsung dari tabel `Reference` (otomatis jika status `PUBLISHED`)
 
 ---
@@ -14,27 +14,27 @@ Sistem referensi bisa ditampilkan di **4 tempat berbeda**:
 
 ### **Endpoint:**
 ```
-POST /api/v1/admin/leksikons/:id/references
+POST /api/v1/admin/reference-junctions/lexicon/assign
 ```
 
 ### **Request Body:**
 ```json
 {
+  "lexiconId": 5,
   "referenceId": 1,
-  "citationNote": "SECONDARY_SOURCE",  // Optional
-  "displayOrder": 1                     // Optional, default: 0
+  "referenceRole": "SECONDARY_SOURCE"
 }
 ```
 
 ### **Contoh:**
 ```bash
-curl -X POST http://localhost:8000/api/v1/admin/leksikons/5/references \
+curl -X POST http://localhost:8000/api/v1/admin/reference-junctions/lexicon/assign \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
+    "lexiconId": 5,
     "referenceId": 1,
-    "citationNote": "SECONDARY_SOURCE",
-    "displayOrder": 1
+    "referenceRole": "SECONDARY_SOURCE"
   }'
 ```
 
@@ -43,8 +43,7 @@ curl -X POST http://localhost:8000/api/v1/admin/leksikons/5/references \
 {
   "lexiconId": 5,
   "referenceId": 1,
-  "citationNote": "SECONDARY_SOURCE",
-  "displayOrder": 1,
+  "referenceRole": "SECONDARY_SOURCE",
   "reference": {
     "referenceId": 1,
     "title": "Pemetaan Kebudayaan di Jawa Timur",
@@ -56,98 +55,255 @@ curl -X POST http://localhost:8000/api/v1/admin/leksikons/5/references \
 
 ### **Get References dari Leksikon:**
 ```
-GET /api/v1/admin/leksikons/:id/references
+GET /api/v1/admin/reference-junctions/lexicon/5
 ```
 
 ### **Remove Reference dari Leksikon:**
 ```
-DELETE /api/v1/admin/leksikons/:id/references/:referenceId
-```
-
-### **Update Citation Note:**
-```
-PUT /api/v1/admin/leksikons/:id/references/:referenceId
-Body: { "citationNote": "GENERAL_REFERENCE" }
+DELETE /api/v1/admin/reference-junctions/lexicon/5/1
 ```
 
 ---
 
-## ✅ **2. ASSIGN REFERENCE KE SUBCULTURE** (Langsung ke SubcultureReference)
+## ✅ **2. ASSIGN REFERENCE KE SUBCULTURE**
 
 ### **Endpoint:**
 ```
-POST /api/v1/admin/subcultures/:id/references-direct
+POST /api/v1/admin/reference-junctions/subculture/assign
 ```
 
 ### **Request Body:**
 ```json
 {
+  "subcultureId": 2,
   "referenceId": 1,
-  "citationNote": "GENERAL_REFERENCE",  // Optional
-  "displayOrder": 1                      // Optional, default: 0
+  "referenceRole": "SECONDARY_SOURCE"
 }
 ```
 
 ### **Contoh:**
 ```bash
-curl -X POST http://localhost:8000/api/v1/admin/subcultures/2/references-direct \
+curl -X POST http://localhost:8000/api/v1/admin/reference-junctions/subculture/assign \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
+    "subcultureId": 2,
     "referenceId": 1,
-    "citationNote": "GENERAL_REFERENCE",
-    "displayOrder": 1
+    "referenceRole": "SECONDARY_SOURCE"
   }'
 ```
 
 ### **Get References dari Subculture:**
 ```
-GET /api/v1/admin/subcultures/:id/references-direct
+GET /api/v1/admin/reference-junctions/subculture/2
 ```
 
 ### **Remove Reference dari Subculture:**
 ```
-DELETE /api/v1/admin/subcultures/:id/references-direct/:referenceId
+DELETE /api/v1/admin/reference-junctions/subculture/2/1
 ```
 
 ---
 
-## ✅ **3. ASSIGN REFERENCE KE CULTURE** (Untuk About Page)
+## ✅ **3. ASSIGN REFERENCE KE ABOUT PAGE**
 
 ### **Endpoint:**
 ```
-POST /api/v1/admin/cultures/:id/references
+POST /api/v1/admin/about-references
 ```
 
 ### **Request Body:**
 ```json
 {
   "referenceId": 1,
-  "citationNote": "DIRECT_QUOTE",  // Optional
-  "displayOrder": 2                 // Optional, default: 0
+  "displayOrder": 2,
+  "isActive": true
 }
 ```
 
 ### **Contoh:**
 ```bash
-curl -X POST http://localhost:8000/api/v1/admin/cultures/1/references \
+curl -X POST http://localhost:8000/api/v1/admin/about-references \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "referenceId": 1,
-    "citationNote": "DIRECT_QUOTE",
-    "displayOrder": 2
+    "displayOrder": 2,
+    "isActive": true
+  }'
+```
+
+### **Get All About References:**
+```
+GET /api/v1/admin/about-references
+```
+
+### **Reorder About References:**
+```
+PUT /api/v1/admin/about-references/reorder
+Body: [
+  {"aboutReferenceId": 1, "displayOrder": 2},
+  {"aboutReferenceId": 2, "displayOrder": 1}
+]
+```
+
+### **Remove Reference dari About Page:**
+```
+DELETE /api/v1/admin/about-references/1
+```
+
+## ✅ **4. ASSIGN REFERENCE KE CULTURE**
+
+### **Endpoint:**
+```
+POST /api/v1/admin/reference-junctions/culture/assign
+```
+
+### **Request Body:**
+```json
+{
+  "cultureId": 1,
+  "referenceId": 1,
+  "referenceRole": "PRIMARY_SOURCE"
+}
+```
+
+### **Contoh:**
+```bash
+curl -X POST http://localhost:8000/api/v1/admin/reference-junctions/culture/assign \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "cultureId": 1,
+    "referenceId": 1,
+    "referenceRole": "PRIMARY_SOURCE"
   }'
 ```
 
 ### **Get References dari Culture:**
 ```
-GET /api/v1/admin/cultures/:id/references
+GET /api/v1/admin/reference-junctions/culture/1
 ```
 
 ### **Remove Reference dari Culture:**
 ```
-DELETE /api/v1/admin/cultures/:id/references/:referenceId
+DELETE /api/v1/admin/reference-junctions/culture/1/1
+```
+
+---
+
+## 📊 **REFERENCE USAGE STATISTICS**
+
+### **Get Usage Stats untuk Reference Tertentu:**
+```
+GET /api/v1/admin/reference-junctions/stats/1
+```
+
+### **Response:**
+```json
+{
+  "referenceId": 1,
+  "lexiconCount": 12,
+  "subcultureCount": 3,
+  "cultureCount": 1,
+  "totalUsage": 16
+}
+```
+
+---
+
+## 🔄 **WORKFLOW LENGKAP**
+
+### **Step 1: Buat Reference Baru**
+```
+POST /api/v1/admin/references
+Body: {
+  "title": "Pemetaan Kebudayaan di Jawa Timur",
+  "referenceType": "BOOK",
+  "authors": "Ayu Sutarto",
+  "publicationYear": "2004",
+  "status": "PUBLISHED"
+}
+```
+
+### **Step 2: Assign ke Leksikon**
+```
+POST /api/v1/admin/reference-junctions/lexicon/assign
+Body: { "lexiconId": 5, "referenceId": 1, "referenceRole": "SECONDARY_SOURCE" }
+```
+
+### **Step 3: Assign ke Subculture**
+```
+POST /api/v1/admin/reference-junctions/subculture/assign
+Body: { "subcultureId": 2, "referenceId": 1, "referenceRole": "SECONDARY_SOURCE" }
+```
+
+### **Step 4: Assign ke About Page**
+```
+POST /api/v1/admin/about-references
+Body: { "referenceId": 1, "displayOrder": 2, "isActive": true }
+```
+
+### **Step 5: Assign ke Culture**
+```
+POST /api/v1/admin/reference-junctions/culture/assign
+Body: { "cultureId": 1, "referenceId": 1, "referenceRole": "PRIMARY_SOURCE" }
+```
+
+### **Step 6: Reference Otomatis Muncul di List**
+Karena status `PUBLISHED`, reference otomatis muncul di:
+- `GET /api/v1/public/references`
+
+---
+
+## 📊 **USE CASE REAL**
+
+### **Contoh: Reference "Ayu Sutarto (2004)"**
+
+1. **Admin assign** ke:
+   - 12 leksikon (via `LexiconReference`)
+   - 3 subculture (via `SubcultureReference`)
+   - 1 about page (via `AboutReference`)
+   - 1 culture (via `CultureReference`)
+
+2. **User buka `/lexicons/danyang`**
+   - Muncul reference dengan role "SECONDARY_SOURCE"
+
+3. **User buka `/subcultures/tengger`**
+   - Muncul reference dengan role "SECONDARY_SOURCE"
+
+4. **User buka `/about`**
+   - Muncul reference dengan display order 2
+
+5. **User buka `/references`**
+   - Muncul card dengan stats:
+     - 📖 12 lexicons
+     - 🎭 3 subcultures
+     - 🌍 1 culture
+     - ℹ️ 1 about
+
+---
+
+## ⚠️ **CATATAN PENTING**
+
+1. **1 Reference bisa muncul di BANYAK tempat** - Fleksibel!
+2. **Setiap tempat bisa punya `referenceRole` berbeda** - Contextual!
+3. **`displayOrder` mengatur urutan tampil di about page** - Customizable!
+4. **Hanya reference dengan status `PUBLISHED` yang muncul di public** - Security!
+5. **Gunakan unique constraints untuk avoid duplicates** - Safe!
+6. **About references terpisah dari culture references** - Independent!
+
+---
+
+## ✅ **STATUS IMPLEMENTASI**
+
+Semua endpoint sudah diimplementasikan:
+- ✅ `src/controllers/admin/about-reference.controller.ts` - CRUD untuk about references
+- ✅ `src/controllers/admin/reference-junction.controller.ts` - Junction management untuk lexicon, subculture, culture
+- ✅ `src/services/admin/about-reference.service.ts` - Service functions untuk about references
+- ✅ `src/services/admin/reference-junction.service.ts` - Service functions untuk reference junctions
+- ✅ `src/routes/admin/about-reference.routes.ts` - Routes untuk about references
+- ✅ `src/routes/admin/reference-junction.routes.ts` - Routes untuk reference junctions
 ```
 
 ---

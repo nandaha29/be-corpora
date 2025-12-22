@@ -5,6 +5,23 @@ import { authenticateAdmin } from '../../middleware/auth.middleware.js';
 const router = Router();
 
 // ============================================
+// LEKSIKON (LEXICONS) MANAGEMENT ROUTES
+// Main endpoints for managing lexicon entries
+// 
+// File: src/routes/admin/leksikon.routes.ts
+// Controller: src/controllers/admin/leksikon.controller.ts
+// Service: src/services/admin/leksikon.service.ts
+// 
+// Features:
+// - CRUD operations for lexicons
+// - Asset management (GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D)
+// - Reference management with citation notes
+// - Status management (DRAFT, PUBLISHED, ARCHIVED)
+// - Bulk import from CSV
+// - Search and filter functionality
+// ============================================
+
+// ============================================
 // 🔍 SEARCH & FILTERING (Must be before /:id routes)
 // ============================================
 

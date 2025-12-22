@@ -1,0 +1,344 @@
+@startuml CD_Backend_Architecture
+!theme plain
+title Class Diagram - Backend Architecture\nSistem Leksikon Bahasa Betawi
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ============================================
+' CONTROLLERS (Admin)
+' ============================================
+
+package "Controllers" <<Rectangle>> {
+    
+    package "Admin Controllers" {
+        class AdminController {
+            + login(req, res): Promise<Response>
+            + logout(req, res): Promise<Response>
+            + getProfile(req, res): Promise<Response>
+            + changePassword(req, res): Promise<Response>
+        }
+        
+        class LeksikonController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class ContributorController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class CultureController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class SubcultureController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class ReferenceController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class AssetController {
+            + getAll(req, res): Promise<Response>
+            + upload(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class DomainKodifikasiController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+        }
+        
+        class AboutReferenceController {
+            + getAll(req, res): Promise<Response>
+            + create(req, res): Promise<Response>
+            + update(req, res): Promise<Response>
+            + delete(req, res): Promise<Response>
+            + reorder(req, res): Promise<Response>
+        }
+        
+        class ReferenceJunctionController {
+            + assignToLeksikon(req, res): Promise<Response>
+            + assignToSubculture(req, res): Promise<Response>
+            + assignToCulture(req, res): Promise<Response>
+            + removeFromEntity(req, res): Promise<Response>
+        }
+    }
+    
+    package "Public Controllers" {
+        class PublicLeksikonController {
+            + getAll(req, res): Promise<Response>
+            + getBySlug(req, res): Promise<Response>
+            + search(req, res): Promise<Response>
+        }
+        
+        class PublicCultureController {
+            + getAll(req, res): Promise<Response>
+            + getBySlug(req, res): Promise<Response>
+        }
+        
+        class PublicSubcultureController {
+            + getAll(req, res): Promise<Response>
+            + getBySlug(req, res): Promise<Response>
+        }
+        
+        class PublicContributorController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+        }
+        
+        class PublicReferenceController {
+            + getAll(req, res): Promise<Response>
+            + getById(req, res): Promise<Response>
+        }
+        
+        class PublicStatisticsController {
+            + getStats(req, res): Promise<Response>
+        }
+    }
+}
+
+' ============================================
+' SERVICES
+' ============================================
+
+package "Services" <<Rectangle>> {
+    
+    class LeksikonService {
+        - prisma: PrismaClient
+        + findAll(params): Promise<PaginatedResult>
+        + findById(id): Promise<Lexicon>
+        + findBySlug(slug): Promise<Lexicon>
+        + create(data): Promise<Lexicon>
+        + update(id, data): Promise<Lexicon>
+        + delete(id): Promise<void>
+        + search(query): Promise<Lexicon[]>
+        - generateSlug(word): string
+    }
+    
+    class ContributorService {
+        - prisma: PrismaClient
+        + findAll(params): Promise<PaginatedResult>
+        + findById(id): Promise<Contributor>
+        + create(data): Promise<Contributor>
+        + update(id, data): Promise<Contributor>
+        + delete(id): Promise<void>
+    }
+    
+    class CultureService {
+        - prisma: PrismaClient
+        + findAll(params): Promise<PaginatedResult>
+        + findById(id): Promise<Culture>
+        + findBySlug(slug): Promise<Culture>
+        + create(data): Promise<Culture>
+        + update(id, data): Promise<Culture>
+        + delete(id): Promise<void>
+        - generateSlug(name): string
+    }
+    
+    class SubcultureService {
+        - prisma: PrismaClient
+        + findAll(params): Promise<PaginatedResult>
+        + findById(id): Promise<Subculture>
+        + findBySlug(slug): Promise<Subculture>
+        + create(data): Promise<Subculture>
+        + update(id, data): Promise<Subculture>
+        + delete(id): Promise<void>
+        - generateSlug(name): string
+    }
+    
+    class ReferenceService {
+        - prisma: PrismaClient
+        + findAll(params): Promise<PaginatedResult>
+        + findById(id): Promise<Reference>
+        + create(data): Promise<Reference>
+        + update(id, data): Promise<Reference>
+        + delete(id): Promise<void>
+    }
+    
+    class AssetService {
+        - prisma: PrismaClient
+        - blobClient: VercelBlobClient
+        + upload(file, metadata): Promise<Asset>
+        + delete(id): Promise<void>
+        + findAll(params): Promise<Asset[]>
+        - uploadToVercelBlob(file): Promise<BlobResult>
+    }
+    
+    class DomainKodifikasiService {
+        - prisma: PrismaClient
+        + findAll(): Promise<Domain[]>
+        + findById(id): Promise<Domain>
+        + create(data): Promise<Domain>
+        + update(id, data): Promise<Domain>
+        + delete(id): Promise<void>
+    }
+    
+    class AuthService {
+        - prisma: PrismaClient
+        + login(credentials): Promise<AuthResult>
+        + verifyToken(token): Promise<Admin>
+        + changePassword(id, passwords): Promise<void>
+        - hashPassword(password): Promise<string>
+        - comparePassword(plain, hash): Promise<boolean>
+        - generateToken(payload): string
+    }
+}
+
+' ============================================
+' MIDDLEWARE
+' ============================================
+
+package "Middleware" <<Rectangle>> {
+    class AuthMiddleware {
+        + authenticate(req, res, next): void
+        + authorize(roles): Function
+        - extractToken(req): string
+    }
+    
+    class MulterMiddleware {
+        + upload: Multer
+        + handleUpload(req, res, next): void
+        - fileFilter(req, file, cb): void
+        - limits: MulterLimits
+    }
+    
+    class ErrorMiddleware {
+        + handleError(err, req, res, next): void
+        + notFound(req, res, next): void
+    }
+}
+
+' ============================================
+' VALIDATORS
+' ============================================
+
+package "Validators" <<Rectangle>> {
+    class ZodValidators {
+        + leksikonSchema: ZodSchema
+        + contributorSchema: ZodSchema
+        + cultureSchema: ZodSchema
+        + subcultureSchema: ZodSchema
+        + referenceSchema: ZodSchema
+        + assetSchema: ZodSchema
+        + loginSchema: ZodSchema
+        + validate(schema, data): ValidationResult
+    }
+}
+
+' ============================================
+' DATABASE
+' ============================================
+
+package "Database" <<Database>> {
+    class PrismaClient {
+        + admin: AdminDelegate
+        + culture: CultureDelegate
+        + subculture: SubcultureDelegate
+        + lexicon: LexiconDelegate
+        + contributor: ContributorDelegate
+        + asset: AssetDelegate
+        + reference: ReferenceDelegate
+        + codificationDomain: DomainDelegate
+        + aboutReference: AboutRefDelegate
+        + $connect(): Promise<void>
+        + $disconnect(): Promise<void>
+        + $transaction(): Promise<T>
+    }
+}
+
+' ============================================
+' EXTERNAL SERVICES
+' ============================================
+
+package "External Services" <<Cloud>> {
+    class VercelBlobStorage {
+        + put(path, file, options): Promise<BlobResult>
+        + del(url): Promise<void>
+        + list(options): Promise<BlobList>
+    }
+    
+    class JWTService {
+        + sign(payload, secret, options): string
+        + verify(token, secret): DecodedToken
+    }
+    
+    class BcryptService {
+        + hash(password, rounds): Promise<string>
+        + compare(plain, hash): Promise<boolean>
+    }
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Controllers use Services
+LeksikonController --> LeksikonService
+ContributorController --> ContributorService
+CultureController --> CultureService
+SubcultureController --> SubcultureService
+ReferenceController --> ReferenceService
+AssetController --> AssetService
+DomainKodifikasiController --> DomainKodifikasiService
+AdminController --> AuthService
+
+PublicLeksikonController --> LeksikonService
+PublicCultureController --> CultureService
+PublicSubcultureController --> SubcultureService
+PublicContributorController --> ContributorService
+PublicReferenceController --> ReferenceService
+
+' Services use PrismaClient
+LeksikonService --> PrismaClient
+ContributorService --> PrismaClient
+CultureService --> PrismaClient
+SubcultureService --> PrismaClient
+ReferenceService --> PrismaClient
+AssetService --> PrismaClient
+DomainKodifikasiService --> PrismaClient
+AuthService --> PrismaClient
+
+' Asset Service uses Vercel Blob
+AssetService --> VercelBlobStorage
+
+' Auth Service uses JWT and Bcrypt
+AuthService --> JWTService
+AuthService --> BcryptService
+
+' Middleware
+AuthMiddleware --> AuthService
+AssetController --> MulterMiddleware
+
+' Validators
+LeksikonController ..> ZodValidators : uses
+ContributorController ..> ZodValidators : uses
+CultureController ..> ZodValidators : uses
+SubcultureController ..> ZodValidators : uses
+ReferenceController ..> ZodValidators : uses
+
+@enduml

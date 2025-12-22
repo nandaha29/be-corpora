@@ -1,0 +1,178 @@
+@startuml SD10_Get_About_Page_Data
+!theme plain
+title Sequence Diagram - SD10: Get About Page Data
+
+actor "Pengguna" as User
+participant "Frontend\n(React)" as FE
+participant "Public\nController" as PC
+participant "Public\nService" as PS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+== View Contributor List ==
+User -> FE: Navigate to contributors
+activate FE
+
+FE -> PC: GET /api/public/contributors
+activate PC
+
+PC -> PS: getContributorList()
+activate PS
+
+PS -> PR: prisma.contributor.findMany()
+activate PR
+PR -> DB: SELECT contributors\nwith asset (photo)
+activate DB
+DB --> PR: Contributor records
+deactivate DB
+PR --> PS: Contributors array
+deactivate PR
+
+PS --> PC: {data}
+deactivate PS
+
+PC --> FE: 200 OK\n{contributors: [...]}
+deactivate PC
+
+FE --> User: Display contributor cards
+deactivate FE
+
+== View Contributor Detail ==
+User -> FE: Click on contributor
+activate FE
+
+FE -> PC: GET /api/public/contributors/:id
+activate PC
+
+PC -> PS: getContributorById(id)
+activate PS
+
+PS -> PR: prisma.contributor.findUnique()
+activate PR
+
+note right of PR
+  Include:
+  - assets (photo)
+  - leksikons (contributed)
+end note
+
+PR -> DB: SELECT contributor\nJOIN assets\nJOIN leksikons
+activate DB
+DB --> PR: Contributor with relations
+deactivate DB
+PR --> PS: Contributor object
+deactivate PR
+
+PS --> PC: Contributor detail
+deactivate PS
+
+PC --> FE: 200 OK\n{contributor}
+deactivate PC
+
+FE --> User: Display contributor profile\nwith contributed leksikons
+deactivate FE
+
+== View Reference List ==
+User -> FE: Navigate to references
+activate FE
+
+FE -> PC: GET /api/public/references?\ntype=BOOK&page=1
+activate PC
+
+PC -> PS: getReferenceList(params)
+activate PS
+
+PS -> PR: prisma.reference.findMany()
+activate PR
+
+note right of PR
+  Filter by:
+  - type: BOOK, ARTICLE, etc.
+  
+  Order by:
+  - author, year
+end note
+
+PR -> DB: SELECT references\nWHERE type = 'BOOK'
+activate DB
+DB --> PR: Reference records
+deactivate DB
+PR --> PS: References array
+deactivate PR
+
+PS --> PC: {data, pagination}
+deactivate PS
+
+PC --> FE: 200 OK\n{references: [...]}
+deactivate PC
+
+FE --> User: Display reference list
+deactivate FE
+
+== View Reference Detail ==
+User -> FE: Click on reference
+activate FE
+
+FE -> PC: GET /api/public/references/:id
+activate PC
+
+PC -> PS: getReferenceById(id)
+activate PS
+
+PS -> PR: prisma.reference.findUnique()
+activate PR
+
+note right of PR
+  Include:
+  - leksikonReferences
+    (leksikons using this ref)
+  - subcultureReferences
+  - cultureReferences
+  - aboutReferences
+end note
+
+PR -> DB: SELECT reference\nwith all junctions
+activate DB
+DB --> PR: Reference with usages
+deactivate DB
+PR --> PS: Reference object
+deactivate PR
+
+PS --> PC: Reference detail
+deactivate PS
+
+PC --> FE: 200 OK\n{reference}
+deactivate PC
+
+FE --> User: Display reference\nwith linked entities
+deactivate FE
+
+== View About Page References ==
+User -> FE: Navigate to About page
+activate FE
+
+FE -> PC: GET /api/public/about-references
+activate PC
+
+PC -> PS: getAboutReferences()
+activate PS
+
+PS -> PR: prisma.aboutReference.findMany()
+activate PR
+PR -> DB: SELECT about_references\nORDER BY displayOrder
+activate DB
+DB --> PR: About references
+deactivate DB
+PR --> PS: References array
+deactivate PR
+
+PS --> PC: {data}
+deactivate PS
+
+PC --> FE: 200 OK
+deactivate PC
+
+FE --> User: Display about page\nwith ordered references
+deactivate FE
+
+@enduml

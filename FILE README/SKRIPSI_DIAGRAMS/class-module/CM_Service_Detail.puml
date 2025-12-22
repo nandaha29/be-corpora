@@ -1,0 +1,216 @@
+@startuml CM_Service_Detail
+!theme plain
+title Service Layer - Detailed Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor #C8E6C9
+    BorderColor #388E3C
+}
+
+package "Admin Services" {
+    
+    class AuthService <<Service>> {
+        - prisma: PrismaClient
+        - JWT_SECRET: string
+        - JWT_EXPIRES_IN: string
+        - SALT_ROUNDS: number
+        __
+        + login(email: string, password: string): Promise<AuthResult>
+        + register(data: RegisterDTO): Promise<Admin>
+        + getProfile(adminId: number): Promise<Admin>
+        + changePassword(adminId: number, oldPass: string, newPass: string): Promise<void>
+        + updateProfile(adminId: number, data: UpdateProfileDTO): Promise<Admin>
+        + updateAdminStatus(adminId: number, isActive: boolean): Promise<Admin>
+        __
+        - hashPassword(password: string): Promise<string>
+        - comparePassword(plain: string, hash: string): Promise<boolean>
+        - generateToken(payload: JWTPayload): string
+        - verifyToken(token: string): JWTPayload
+    }
+    
+    class LeksikonService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(params: QueryParams): Promise<PaginatedResult<Lexicon>>
+        + findById(id: number): Promise<Lexicon | null>
+        + findBySlug(slug: string): Promise<Lexicon | null>
+        + create(data: CreateLeksikonDTO): Promise<Lexicon>
+        + update(id: number, data: UpdateLeksikonDTO): Promise<Lexicon>
+        + delete(id: number): Promise<void>
+        + updateStatus(id: number, status: StatusPublish): Promise<Lexicon>
+        __
+        + findByDomain(domainId: number, params: QueryParams): Promise<PaginatedResult>
+        + findByStatus(status: StatusPublish, params: QueryParams): Promise<PaginatedResult>
+        __
+        + getAssets(lexiconId: number): Promise<LexiconAsset[]>
+        + addAsset(lexiconId: number, assetId: number, role: AssetRole): Promise<void>
+        + removeAsset(lexiconId: number, assetId: number): Promise<void>
+        + updateAssetRole(lexiconId: number, assetId: number, role: AssetRole): Promise<void>
+        __
+        + getReferences(lexiconId: number): Promise<LexiconReference[]>
+        + addReference(lexiconId: number, refId: number, role?: RefRole): Promise<void>
+        + removeReference(lexiconId: number, refId: number): Promise<void>
+        __
+        + bulkImport(records: ImportRecord[]): Promise<BulkImportResult>
+        __
+        - generateSlug(word: string): string
+        - buildWhereClause(params: QueryParams): Prisma.LexiconWhereInput
+    }
+    
+    class CultureService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(params: QueryParams): Promise<PaginatedResult<Culture>>
+        + findById(id: number): Promise<Culture | null>
+        + findBySlug(slug: string): Promise<Culture | null>
+        + create(data: CreateCultureDTO): Promise<Culture>
+        + update(id: number, data: UpdateCultureDTO): Promise<Culture>
+        + delete(id: number): Promise<void>
+        __
+        + getCultureWithAssets(id: number): Promise<Culture>
+        + search(query: string): Promise<Culture[]>
+        + filter(params: FilterParams): Promise<Culture[]>
+        __
+        + addReference(cultureId: number, refId: number): Promise<void>
+        + getReferences(cultureId: number): Promise<CultureReference[]>
+        + removeReference(cultureId: number, refId: number): Promise<void>
+        __
+        - generateSlug(name: string): string
+    }
+    
+    class SubcultureService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(params: QueryParams): Promise<PaginatedResult<Subculture>>
+        + findById(id: number): Promise<Subculture | null>
+        + findBySlug(slug: string): Promise<Subculture | null>
+        + create(data: CreateSubcultureDTO): Promise<Subculture>
+        + update(id: number, data: UpdateSubcultureDTO): Promise<Subculture>
+        + delete(id: number): Promise<void>
+        __
+        + findByCulture(cultureId: number): Promise<Subculture[]>
+        __
+        + getAssets(subcultureId: number): Promise<SubcultureAsset[]>
+        + addAsset(subcultureId: number, assetId: number, role: AssetRole): Promise<void>
+        + removeAsset(subcultureId: number, assetId: number): Promise<void>
+        __
+        + getReferencesDirect(subcultureId: number): Promise<SubcultureReference[]>
+        + addReferenceDirect(subcultureId: number, refId: number): Promise<void>
+        + removeReferenceDirect(subcultureId: number, refId: number): Promise<void>
+        __
+        - generateSlug(name: string): string
+    }
+    
+    class ReferenceService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(params: QueryParams): Promise<PaginatedResult<Reference>>
+        + findById(id: number): Promise<Reference | null>
+        + create(data: CreateReferenceDTO): Promise<Reference>
+        + update(id: number, data: UpdateReferenceDTO): Promise<Reference>
+        + delete(id: number): Promise<void>
+        __
+        + search(query: string): Promise<Reference[]>
+        + filter(params: FilterParams): Promise<Reference[]>
+        __
+        + getUsageStats(referenceId: number): Promise<UsageStats>
+    }
+    
+    class AssetService <<Service>> {
+        - prisma: PrismaClient
+        - blobClient: VercelBlobClient
+        __
+        + findAll(params: QueryParams): Promise<PaginatedResult<Asset>>
+        + findById(id: number): Promise<Asset | null>
+        + create(file: Express.Multer.File, metadata: AssetMetadata): Promise<Asset>
+        + update(id: number, data: UpdateAssetDTO): Promise<Asset>
+        + delete(id: number): Promise<void>
+        __
+        + search(query: string): Promise<Asset[]>
+        + filter(params: AssetFilterParams): Promise<Asset[]>
+        __
+        + bulkUpload(files: Express.Multer.File[]): Promise<BulkUploadResult>
+        __
+        - uploadToBlob(buffer: Buffer, filename: string): Promise<BlobResult>
+        - deleteFromBlob(url: string): Promise<void>
+        - generateFilename(originalName: string): string
+    }
+    
+    class DomainKodifikasiService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(): Promise<CodificationDomain[]>
+        + findById(id: number): Promise<CodificationDomain | null>
+        + create(data: CreateDomainDTO): Promise<CodificationDomain>
+        + update(id: number, data: UpdateDomainDTO): Promise<CodificationDomain>
+        + delete(id: number): Promise<void>
+    }
+    
+    class ContributorService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(params: QueryParams): Promise<PaginatedResult<Contributor>>
+        + findById(id: number): Promise<Contributor | null>
+        + create(data: CreateContributorDTO): Promise<Contributor>
+        + update(id: number, data: UpdateContributorDTO): Promise<Contributor>
+        + delete(id: number): Promise<void>
+    }
+    
+    class AboutReferenceService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(): Promise<AboutReference[]>
+        + findById(id: number): Promise<AboutReference | null>
+        + create(data: CreateAboutRefDTO): Promise<AboutReference>
+        + update(id: number, data: UpdateAboutRefDTO): Promise<AboutReference>
+        + delete(id: number): Promise<void>
+        + reorder(items: ReorderItem[]): Promise<void>
+    }
+}
+
+package "Public Services" #E8F5E9 {
+    
+    class LandingService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + getLandingData(): Promise<LandingData>
+        + getStatistics(): Promise<Statistics>
+    }
+    
+    class SearchService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + globalSearch(query: string): Promise<GlobalSearchResult>
+        + globalSearchFormatted(query: string): Promise<FormattedSearchResult>
+        + searchLexicon(query: string, params: QueryParams): Promise<Lexicon[]>
+        + advancedSearch(params: AdvancedSearchParams): Promise<AdvancedSearchResult>
+        + searchCultures(query: string): Promise<Culture[]>
+        + searchReferences(query: string): Promise<Reference[]>
+        + searchCoordinator(query: string): Promise<Contributor[]>
+        __
+        - buildSearchQuery(query: string): Prisma.LexiconWhereInput
+    }
+    
+    class PublicLexiconService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findBySlug(slug: string): Promise<Lexicon | null>
+        + findBySubculture(subcultureSlug: string): Promise<Lexicon[]>
+    }
+    
+    class PublicSubcultureService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + findAll(): Promise<Subculture[]>
+        + findBySlug(slug: string): Promise<Subculture | null>
+    }
+    
+    class AboutService <<Service>> {
+        - prisma: PrismaClient
+        __
+        + getAboutPageData(): Promise<AboutPageData>
+    }
+}
+
+@enduml

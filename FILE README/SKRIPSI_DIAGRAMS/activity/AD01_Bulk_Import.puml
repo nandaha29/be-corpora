@@ -1,0 +1,132 @@
+@startuml AD01_Bulk_Import
+!theme plain
+title Activity Diagram - AD01: Bulk Import Process\nSistem Leksikon Bahasa Betawi
+
+|Admin|
+start
+:Login ke sistem;
+
+:Pilih menu Import Data;
+
+:Pilih jenis data yang akan diimport;
+note right
+  Jenis data:
+  - Leksikon (JSON/CSV)
+  - Kontributor (JSON/CSV)
+  - Domain Kodifikasi (JSON)
+  - Referensi (JSON)
+  - Subbudaya (JSON)
+end note
+
+|Admin|
+:Upload file import;
+
+|Sistem|
+:Terima file upload;
+
+:Validasi format file;
+
+if (Format file valid?) then (ya)
+    :Parse file content;
+    
+    :Validasi struktur data;
+    
+    if (Struktur data valid?) then (ya)
+        :Tampilkan preview data;
+        note right
+          Preview menampilkan:
+          - Jumlah record
+          - Sample data (5 rows)
+          - Field yang akan diimport
+        end note
+        
+        |Admin|
+        :Review preview data;
+        
+        if (Konfirmasi import?) then (ya)
+            |Sistem|
+            :Mulai proses import;
+            
+            :Buka database transaction;
+            
+            repeat
+                :Ambil record dari file;
+                
+                :Validasi record dengan Zod schema;
+                
+                if (Record valid?) then (ya)
+                    :Check apakah data sudah exist;
+                    
+                    if (Data sudah exist?) then (ya)
+                        :Skip atau Update (sesuai setting);
+                        :Catat sebagai "skipped/updated";
+                    else (tidak)
+                        :Generate slug (jika diperlukan);
+                        :Insert ke database via Prisma;
+                        :Catat sebagai "created";
+                    endif
+                else (tidak)
+                    :Catat error pada record;
+                    :Lanjut ke record berikutnya;
+                endif
+                
+            repeat while (Masih ada record?) is (ya)
+            -> tidak;
+            
+            :Commit transaction;
+            
+            :Generate import report;
+            note right
+              Report berisi:
+              - Total processed
+              - Created: X records
+              - Updated: X records
+              - Skipped: X records
+              - Errors: X records
+            end note
+            
+            |Admin|
+            :Lihat hasil import;
+            
+            if (Ada error?) then (ya)
+                :Download error log;
+                :Review dan perbaiki data source;
+            else (tidak)
+                :Import selesai sukses;
+            endif
+            
+        else (tidak)
+            |Admin|
+            :Batalkan import;
+        endif
+        
+    else (tidak)
+        |Sistem|
+        :Tampilkan error struktur;
+        note right
+          Contoh error:
+          - Missing required field
+          - Invalid data type
+          - Foreign key not found
+        end note
+        
+        |Admin|
+        :Perbaiki file dan upload ulang;
+    endif
+    
+else (tidak)
+    |Sistem|
+    :Tampilkan error format;
+    note right
+      Supported formats:
+      - JSON (.json)
+      - CSV (.csv)
+    end note
+    
+    |Admin|
+    :Upload file dengan format benar;
+endif
+
+stop
+
+@enduml

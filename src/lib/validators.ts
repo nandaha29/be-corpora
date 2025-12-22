@@ -1,3 +1,54 @@
+/**
+ * ===========================================
+ * ZOD VALIDATION SCHEMAS
+ * ===========================================
+ * 
+ * File: src/lib/validators.ts
+ * Library: Zod (runtime schema validation)
+ * 
+ * Purpose:
+ * Define and export validation schemas for all API endpoints.
+ * Used in controllers to validate request body data before processing.
+ * 
+ * Benefits:
+ * - Type-safe validation with TypeScript inference
+ * - Detailed error messages for invalid data
+ * - Automatic type generation for inputs
+ * - Runtime validation (not just compile-time)
+ * 
+ * Schema Categories:
+ * - Admin Authentication (register, login, update)
+ * - Culture (create, update)
+ * - Subculture (create, update)
+ * - Codification Domain (create, update)
+ * - Lexicon (create, update, asset, reference)
+ * - Contributor (create, update, asset)
+ * - Reference (create, update)
+ * - Asset (create, update)
+ * 
+ * Usage Example:
+ * ```typescript
+ * import { createLexiconSchema } from '../../lib/validators.js';
+ * 
+ * const validatedData = createLexiconSchema.parse(req.body);
+ * // validatedData is now typed as CreateLexiconInput
+ * ```
+ * 
+ * Enum Types (from Prisma):
+ * - AdminRole: EDITOR, ADMIN, SUPER_ADMIN
+ * - StatusPublish: DRAFT, PUBLISHED, ARCHIVED
+ * - StatusKonservasi: MAINTAINED, TREATED, CRITICAL, ARCHIVED
+ * - StatusPriority: HIGH, MEDIUM, LOW
+ * - ReferenceType: JOURNAL, BOOK, ARTICLE, WEBSITE, REPORT, THESIS, DISSERTATION, FIELD_NOTE
+ * - AssetType: PHOTO, AUDIO, VIDEO, MODEL_3D
+ * - LeksikonAssetRole: GALLERY, PRONUNCIATION, VIDEO_DEMO, MODEL_3D
+ * - LexiconReferenceRole: PRIMARY_SOURCE, SECONDARY_SOURCE, SUPPORTING
+ * 
+ * @module lib/validators
+ * @author Development Team
+ * @since 2025-01-01
+ */
+
 import { z } from "zod";
 import { ContributorAssetRole, SubcultureAssetRole, CultureAssetRole, LeksikonAssetRole, CultureReferenceRole, SubcultureReferenceRole, LexiconReferenceRole, AdminRole, StatusPublish, StatusKonservasi, StatusPriority, ReferenceType, AssetType } from "@prisma/client";
 

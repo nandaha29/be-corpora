@@ -1,0 +1,50 @@
+@startuml SD01_Authenticate_via_JWT
+!theme plain
+title Sequence Diagram - SD01: Authenticate via JWT
+
+actor Admin
+participant "Frontend\n(React)" as FE
+participant "Auth Middleware" as AM
+participant "Admin Controller" as AC
+participant "JWT Service" as JWT
+database "PostgreSQL\n(Neon)" as DB
+
+Admin -> FE: Input username & password
+activate FE
+
+FE -> AC: POST /api/admin/login\n{username, password}
+activate AC
+
+AC -> AC: Validate input (Zod)
+
+AC -> DB: Query admin by username
+activate DB
+DB --> AC: Admin data / null
+deactivate DB
+
+alt Admin not found
+    AC --> FE: 401 Unauthorized\n"Invalid credentials"
+    FE --> Admin: Show error message
+else Admin found
+    AC -> AC: Compare password\n(bcrypt.compare)
+    
+    alt Password invalid
+        AC --> FE: 401 Unauthorized\n"Invalid credentials"
+        FE --> Admin: Show error message
+    else Password valid
+        AC -> JWT: Generate JWT Token\n(jwt.sign)
+        activate JWT
+        JWT --> AC: JWT Token
+        deactivate JWT
+        
+        AC --> FE: 200 OK\n{token, admin: {id, username}}
+        deactivate AC
+        
+        FE -> FE: Store token\n(localStorage/cookie)
+        FE --> Admin: Redirect to Dashboard
+    end
+end
+
+deactivate FE
+
+@enduml

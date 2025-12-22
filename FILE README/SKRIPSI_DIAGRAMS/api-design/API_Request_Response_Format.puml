@@ -1,0 +1,227 @@
+@startuml API_Request_Response_Format
+!theme plain
+title API Request/Response Format Standards
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #333333
+}
+
+package "Request Formats" #E3F2FD {
+    
+    class "Standard JSON Request" as StdReq {
+        Content-Type: application/json
+        --
+        **POST /api/v1/admin/leksikons**
+        ..
+        {
+          "lexiconWord": "string",
+          "transliteration": "string",
+          "etymologicalMeaning": "string",
+          "culturalMeaning": "string",
+          "commonMeaning": "string",
+          "translation": "string",
+          "domainId": number,
+          "contributorId": number,
+          "status": "DRAFT|PUBLISHED"
+        }
+    }
+    
+    class "Multipart Form Request" as MultiReq {
+        Content-Type: multipart/form-data
+        --
+        **POST /api/v1/admin/assets/upload**
+        ..
+        file: <binary>
+        fileName: "string"
+        fileType: "PHOTO|AUDIO|VIDEO"
+        description: "string" (optional)
+    }
+    
+    class "Query Parameters" as QueryReq {
+        URL Query String
+        --
+        **GET /api/v1/admin/leksikons**
+        ..
+        ?page=1
+        &limit=10
+        &search=betawi
+        &status=PUBLISHED
+        &sort=createdAt
+        &order=desc
+    }
+    
+    class "Path Parameters" as PathReq {
+        URL Path Variables
+        --
+        **GET /api/v1/admin/leksikons/:id**
+        ..
+        /api/v1/admin/leksikons/123
+        /api/v1/public/subcultures/kuliner-betawi
+    }
+    
+    class "Authorization Header" as AuthReq {
+        HTTP Headers
+        --
+        **Protected Endpoints**
+        ..
+        Authorization: Bearer <jwt_token>
+    }
+}
+
+package "Response Formats" #E8F5E9 {
+    
+    class "Success Response (Single)" as SuccessSingle {
+        HTTP 200 OK / 201 Created
+        --
+        {
+          "success": true,
+          "message": "Operation successful",
+          "data": {
+            "lexiconId": 132,
+            "lexiconWord": "Abang",
+            "slug": "abang",
+            "transliteration": "...",
+            "createdAt": "2025-12-12T..."
+          }
+        }
+    }
+    
+    class "Success Response (List)" as SuccessList {
+        HTTP 200 OK
+        --
+        {
+          "success": true,
+          "data": [
+            { "lexiconId": 1, ... },
+            { "lexiconId": 2, ... }
+          ],
+          "pagination": {
+            "currentPage": 1,
+            "totalPages": 14,
+            "totalItems": 131,
+            "itemsPerPage": 10,
+            "hasNextPage": true,
+            "hasPrevPage": false
+          }
+        }
+    }
+    
+    class "Login Success Response" as LoginRes {
+        HTTP 200 OK
+        --
+        {
+          "success": true,
+          "token": "eyJhbGciOiJIUzI1...",
+          "admin": {
+            "adminId": 1,
+            "username": "admin",
+            "email": "admin@fib.ac.id",
+            "role": "EDITOR"
+          }
+        }
+    }
+    
+    class "Bulk Import Response" as BulkRes {
+        HTTP 200 OK
+        --
+        {
+          "success": true,
+          "message": "Bulk import completed",
+          "data": {
+            "imported": 100,
+            "skipped": 5,
+            "errors": ["Row 10: Invalid domainId"],
+            "importedLexicons": ["abang", "aye"],
+            "skippedLexicons": ["duplicate"]
+          }
+        }
+    }
+}
+
+package "Error Response Formats" #FFEBEE {
+    
+    class "Validation Error" as ValErr {
+        HTTP 400 Bad Request
+        --
+        {
+          "success": false,
+          "error": {
+            "code": "VALIDATION_ERROR",
+            "message": "Validation failed",
+            "details": [
+              {
+                "field": "lexiconWord",
+                "message": "Required"
+              },
+              {
+                "field": "domainId",
+                "message": "Must be positive integer"
+              }
+            ]
+          }
+        }
+    }
+    
+    class "Authentication Error" as AuthErr {
+        HTTP 401 Unauthorized
+        --
+        {
+          "success": false,
+          "error": {
+            "code": "AUTHENTICATION_ERROR",
+            "message": "Invalid or expired token"
+          }
+        }
+    }
+    
+    class "Authorization Error" as AuthzErr {
+        HTTP 403 Forbidden
+        --
+        {
+          "success": false,
+          "error": {
+            "code": "AUTHORIZATION_ERROR",
+            "message": "Insufficient permissions"
+          }
+        }
+    }
+    
+    class "Not Found Error" as NotFoundErr {
+        HTTP 404 Not Found
+        --
+        {
+          "success": false,
+          "error": {
+            "code": "NOT_FOUND",
+            "message": "Leksikon with ID 999 not found"
+          }
+        }
+    }
+    
+    class "Conflict Error" as ConflictErr {
+        HTTP 409 Conflict
+        --
+        {
+          "success": false,
+          "error": {
+            "code": "DUPLICATE_ENTRY",
+            "message": "Leksikon with slug 'abang' already exists"
+          }
+        }
+    }
+    
+    class "Server Error" as ServerErr {
+        HTTP 500 Internal Server Error
+        --
+        {
+          "success": false,
+          "error": {
+            "code": "DATABASE_ERROR",
+            "message": "An unexpected error occurred"
+          }
+        }
+    }
+}
+
+@enduml

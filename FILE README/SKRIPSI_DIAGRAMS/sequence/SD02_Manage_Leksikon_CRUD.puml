@@ -1,0 +1,121 @@
+@startuml SD02_Manage_Leksikon_CRUD
+!theme plain
+title Sequence Diagram - SD02: Manage Leksikon CRUD
+
+actor Admin
+participant "Frontend\n(React)" as FE
+participant "Auth Middleware" as AM
+participant "Leksikon Controller" as LC
+participant "Leksikon Service" as LS
+participant "Prisma ORM" as PR
+database "PostgreSQL\n(Neon)" as DB
+
+== CREATE Leksikon ==
+Admin -> FE: Fill leksikon form
+activate FE
+FE -> AM: POST /api/admin/leksikon\n+ Bearer Token
+activate AM
+AM -> AM: Verify JWT Token
+
+alt Token Invalid
+    AM --> FE: 401 Unauthorized
+else Token Valid
+    AM -> LC: Forward request
+    activate LC
+    LC -> LC: Validate input (Zod)
+    LC -> LS: createLeksikon(data)
+    activate LS
+    LS -> PR: prisma.leksikon.create()
+    activate PR
+    PR -> DB: INSERT INTO leksikon
+    activate DB
+    DB --> PR: New leksikon record
+    deactivate DB
+    PR --> LS: Created leksikon
+    deactivate PR
+    LS --> LC: Leksikon object
+    deactivate LS
+    LC --> FE: 201 Created\n{leksikon}
+    deactivate LC
+end
+deactivate AM
+FE --> Admin: Show success message
+deactivate FE
+
+== READ Leksikon (List) ==
+Admin -> FE: Navigate to leksikon list
+activate FE
+FE -> AM: GET /api/admin/leksikon?page=1
+activate AM
+AM -> LC: Forward request
+activate LC
+LC -> LS: getLeksikonList(params)
+activate LS
+LS -> PR: prisma.leksikon.findMany()
+activate PR
+PR -> DB: SELECT with pagination
+activate DB
+DB --> PR: Leksikon records
+deactivate DB
+PR --> LS: Leksikon array
+deactivate PR
+LS --> LC: {data, pagination}
+deactivate LS
+LC --> FE: 200 OK\n{data, pagination}
+deactivate LC
+deactivate AM
+FE --> Admin: Display leksikon list
+deactivate FE
+
+== UPDATE Leksikon ==
+Admin -> FE: Edit leksikon data
+activate FE
+FE -> AM: PUT /api/admin/leksikon/:id\n+ Bearer Token
+activate AM
+AM -> LC: Forward request
+activate LC
+LC -> LS: updateLeksikon(id, data)
+activate LS
+LS -> PR: prisma.leksikon.update()
+activate PR
+PR -> DB: UPDATE leksikon SET...
+activate DB
+DB --> PR: Updated record
+deactivate DB
+PR --> LS: Updated leksikon
+deactivate PR
+LS --> LC: Leksikon object
+deactivate LS
+LC --> FE: 200 OK\n{leksikon}
+deactivate LC
+deactivate AM
+FE --> Admin: Show success message
+deactivate FE
+
+== DELETE Leksikon ==
+Admin -> FE: Click delete button
+activate FE
+FE -> FE: Confirm deletion
+FE -> AM: DELETE /api/admin/leksikon/:id\n+ Bearer Token
+activate AM
+AM -> LC: Forward request
+activate LC
+LC -> LS: deleteLeksikon(id)
+activate LS
+LS -> PR: prisma.leksikon.delete()
+activate PR
+PR -> DB: DELETE FROM leksikon
+activate DB
+DB --> PR: Deleted count
+deactivate DB
+PR --> LS: Delete result
+deactivate PR
+LS --> LC: Success
+deactivate LS
+LC --> FE: 200 OK\n{message: "Deleted"}
+deactivate LC
+deactivate AM
+FE --> Admin: Refresh list
+deactivate FE
+
+@enduml

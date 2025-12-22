@@ -1,0 +1,172 @@
+@startuml CM_Controller_Detail
+!theme plain
+title Controller Layer - Detailed Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+
+package "Admin Controllers" {
+    
+    class AdminController <<Controller>> {
+        ==Authentication==
+        + register(req: Request, res: Response): Promise<Response>
+        + login(req: Request, res: Response): Promise<Response>
+        + getProfile(req: Request, res: Response): Promise<Response>
+        + changePassword(req: Request, res: Response): Promise<Response>
+        + updateProfile(req: Request, res: Response): Promise<Response>
+        + updateAdminStatus(req: Request, res: Response): Promise<Response>
+    }
+    
+    class LeksikonController <<Controller>> {
+        ==CRUD Operations==
+        + getAllLeksikonsPaginated(req, res): Promise<Response>
+        + getLeksikonById(req, res): Promise<Response>
+        + createLeksikon(req, res): Promise<Response>
+        + updateLeksikon(req, res): Promise<Response>
+        + deleteLeksikon(req, res): Promise<Response>
+        + updateLeksikonStatus(req, res): Promise<Response>
+        ==Filter & Search==
+        + getLeksikonsByStatus(req, res): Promise<Response>
+        + getLeksikonsByDomain(req, res): Promise<Response>
+        + searchAssetsInLeksikons(req, res): Promise<Response>
+        + searchReferencesInLeksikons(req, res): Promise<Response>
+        ==Asset Management==
+        + getLeksikonAssets(req, res): Promise<Response>
+        + addAssetToLeksikon(req, res): Promise<Response>
+        + removeAssetFromLeksikon(req, res): Promise<Response>
+        + updateAssetRole(req, res): Promise<Response>
+        + getAssetsByRole(req, res): Promise<Response>
+        ==Reference Management==
+        + getLeksikonReferences(req, res): Promise<Response>
+        + addReferenceToLeksikon(req, res): Promise<Response>
+        + removeReferenceFromLeksikon(req, res): Promise<Response>
+        + updateCitationNote(req, res): Promise<Response>
+        ==Usage Tracking==
+        + getAssignedAssets(req, res): Promise<Response>
+        + getAssetUsage(req, res): Promise<Response>
+        + getAssignedReferences(req, res): Promise<Response>
+        + getReferenceUsage(req, res): Promise<Response>
+        ==Bulk Operations==
+        + bulkImportLeksikons(req, res): Promise<Response>
+    }
+    
+    class CultureController <<Controller>> {
+        ==CRUD Operations==
+        + getAllCulturesPaginated(req, res): Promise<Response>
+        + getCultureById(req, res): Promise<Response>
+        + createCulture(req, res): Promise<Response>
+        + updateCulture(req, res): Promise<Response>
+        + deleteCulture(req, res): Promise<Response>
+        ==Additional==
+        + getCultureWithAssets(req, res): Promise<Response>
+        + searchCultures(req, res): Promise<Response>
+        + filterCultures(req, res): Promise<Response>
+        ==Reference Management==
+        + addReferenceToCulture(req, res): Promise<Response>
+        + getCultureReferences(req, res): Promise<Response>
+        + removeReferenceFromCulture(req, res): Promise<Response>
+    }
+    
+    class SubcultureController <<Controller>> {
+        ==CRUD Operations==
+        + getAllSubculturesPaginated(req, res): Promise<Response>
+        + getSubcultureById(req, res): Promise<Response>
+        + createSubculture(req, res): Promise<Response>
+        + updateSubculture(req, res): Promise<Response>
+        + deleteSubculture(req, res): Promise<Response>
+        ==Asset & Reference==
+        + getSubcultureAssets(req, res): Promise<Response>
+        + addAssetToSubculture(req, res): Promise<Response>
+        + addReferenceToSubcultureDirect(req, res): Promise<Response>
+        + getSubcultureReferencesDirect(req, res): Promise<Response>
+    }
+    
+    class ReferenceController <<Controller>> {
+        ==CRUD Operations==
+        + getAllReferencesPaginated(req, res): Promise<Response>
+        + getReferenceById(req, res): Promise<Response>
+        + createReference(req, res): Promise<Response>
+        + updateReference(req, res): Promise<Response>
+        + deleteReference(req, res): Promise<Response>
+        ==Search & Filter==
+        + searchReferences(req, res): Promise<Response>
+        + filterReferences(req, res): Promise<Response>
+    }
+    
+    class AssetController <<Controller>> {
+        ==CRUD Operations==
+        + getAllAssetsPaginated(req, res): Promise<Response>
+        + getAssetById(req, res): Promise<Response>
+        + createAsset(req, res): Promise<Response>
+        + updateAsset(req, res): Promise<Response>
+        + deleteAsset(req, res): Promise<Response>
+        ==Upload Operations==
+        + uploadSingleAsset(req, res): Promise<Response>
+        + bulkUploadAssets(req, res): Promise<Response>
+        ==Search & Filter==
+        + searchAssets(req, res): Promise<Response>
+        + filterAssets(req, res): Promise<Response>
+    }
+    
+    class AboutReferenceController <<Controller>> {
+        + getAllAboutReferences(req, res): Promise<Response>
+        + getAboutReferenceById(req, res): Promise<Response>
+        + createAboutReference(req, res): Promise<Response>
+        + updateAboutReference(req, res): Promise<Response>
+        + deleteAboutReference(req, res): Promise<Response>
+        + reorderAboutReferences(req, res): Promise<Response>
+    }
+    
+    class DomainKodifikasiController <<Controller>> {
+        + getDomains(req, res): Promise<Response>
+        + getDomainById(req, res): Promise<Response>
+        + createDomain(req, res): Promise<Response>
+        + updateDomain(req, res): Promise<Response>
+        + deleteDomain(req, res): Promise<Response>
+    }
+    
+    class ContributorController <<Controller>> {
+        + getAllContributorsPaginated(req, res): Promise<Response>
+        + getContributorById(req, res): Promise<Response>
+        + createContributor(req, res): Promise<Response>
+        + updateContributor(req, res): Promise<Response>
+        + deleteContributor(req, res): Promise<Response>
+    }
+}
+
+package "Public Controllers" #E8F5E9 {
+    
+    class LandingController <<Controller>> {
+        + getLandingData(req, res): Promise<Response>
+        + getStatistics(req, res): Promise<Response>
+    }
+    
+    class PublicLexiconController <<Controller>> {
+        + getLexiconBySlug(req, res): Promise<Response>
+        + getLexiconsBySubculture(req, res): Promise<Response>
+    }
+    
+    class PublicSubcultureController <<Controller>> {
+        + getAllSubcultures(req, res): Promise<Response>
+        + getSubcultureBySlug(req, res): Promise<Response>
+    }
+    
+    class SearchController <<Controller>> {
+        + globalSearch(req, res): Promise<Response>
+        + globalSearchFormatted(req, res): Promise<Response>
+        + searchLexicon(req, res): Promise<Response>
+        + advancedSearch(req, res): Promise<Response>
+        + searchCultures(req, res): Promise<Response>
+        + searchReferences(req, res): Promise<Response>
+        + searchCoordinator(req, res): Promise<Response>
+    }
+    
+    class AboutController <<Controller>> {
+        + getAboutPageData(req, res): Promise<Response>
+    }
+}
+
+@enduml

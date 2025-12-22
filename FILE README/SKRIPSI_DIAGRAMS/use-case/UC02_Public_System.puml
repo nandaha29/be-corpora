@@ -1,0 +1,69 @@
+@startuml UC02_Public_System
+!theme plain
+title Use Case Diagram - Public System\nSistem Leksikon Bahasa Betawi
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Pengguna Publik" as user
+
+rectangle "Sistem Leksikon Bahasa Betawi\n(Public Access)" {
+    ' Leksikon Features
+    usecase "UC11: Lihat Daftar Leksikon" as UC11
+    usecase "UC12: Cari Leksikon" as UC12
+    usecase "UC13: Filter Leksikon" as UC13
+    usecase "UC14: Lihat Detail Leksikon" as UC14
+    
+    ' Culture Features
+    usecase "UC15: Lihat Daftar Budaya" as UC15
+    usecase "UC16: Lihat Detail Budaya" as UC16
+    
+    ' Subculture Features
+    usecase "UC17: Lihat Daftar Subbudaya" as UC17
+    usecase "UC18: Lihat Detail Subbudaya" as UC18
+    
+    ' Contributor Features
+    usecase "UC19: Lihat Daftar Kontributor" as UC19
+    usecase "UC20: Lihat Detail Kontributor" as UC20
+    
+    ' Reference Features
+    usecase "UC21: Lihat Daftar Referensi" as UC21
+    usecase "UC22: Lihat Detail Referensi" as UC22
+    
+    ' Domain Kodifikasi Features
+    usecase "UC23: Lihat Daftar Domain" as UC23
+    
+    ' About Page Features
+    usecase "UC24: Lihat Halaman About" as UC24
+    usecase "UC25: Lihat About References" as UC25
+    
+    ' Statistics
+    usecase "UC26: Lihat Statistik" as UC26
+}
+
+' User connections
+user --> UC11
+user --> UC12
+user --> UC13
+user --> UC14
+user --> UC15
+user --> UC16
+user --> UC17
+user --> UC18
+user --> UC19
+user --> UC20
+user --> UC21
+user --> UC22
+user --> UC23
+user --> UC24
+user --> UC25
+user --> UC26
+
+' Extend relationships
+UC11 <.. UC12 : <<extend>>
+UC11 <.. UC13 : <<extend>>
+UC15 <.. UC17 : <<extend>>
+UC24 <.. UC25 : <<extend>>
+
+@enduml

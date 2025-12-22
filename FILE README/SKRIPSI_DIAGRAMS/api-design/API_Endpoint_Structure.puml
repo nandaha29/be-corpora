@@ -1,0 +1,126 @@
+@startuml API_Endpoint_Structure
+!theme plain
+title API Endpoint Structure\nRESTful URL Pattern
+
+skinparam rectangle {
+    BackgroundColor #F5F5F5
+    BorderColor #333333
+}
+
+' Legend
+legend right
+  |= Color |= Meaning |
+  | <#E3F2FD> | Admin Endpoints |
+  | <#E8F5E9> | Public Endpoints |
+  | <#FFF3E0> | Search Endpoints |
+endlegend
+
+' Base URL
+rectangle "**Base URL**\n/api/v1" as base #EEEEEE {
+    
+    ' Admin Routes
+    rectangle "**Admin Routes** (Auth Required)" as admin #E3F2FD {
+        
+        rectangle "/admin/auth" as auth {
+            card "POST /login" as auth1
+            card "POST /register" as auth2
+            card "GET /profile" as auth3
+            card "PUT /change-password" as auth4
+        }
+        
+        rectangle "/admin/leksikons" as leksikons {
+            card "GET /" as lek1 #BBDEFB
+            card "POST /" as lek2 #BBDEFB
+            card "GET /:id" as lek3 #BBDEFB
+            card "PUT /:id" as lek4 #BBDEFB
+            card "DELETE /:id" as lek5 #BBDEFB
+            card "PATCH /:id/status" as lek6 #BBDEFB
+            card "POST /import" as lek7 #BBDEFB
+            
+            rectangle "/:id/assets" as lekAssets {
+                card "GET /" as la1
+                card "POST /" as la2
+                card "DELETE /:assetId" as la3
+            }
+            
+            rectangle "/:id/references" as lekRefs {
+                card "GET /" as lr1
+                card "POST /" as lr2
+                card "DELETE /:refId" as lr3
+            }
+        }
+        
+        rectangle "/admin/cultures" as cultures {
+            card "CRUD Operations" as cult1 #BBDEFB
+            card "/:id/references" as cult2 #BBDEFB
+        }
+        
+        rectangle "/admin/subcultures" as subcultures {
+            card "CRUD Operations" as sub1 #BBDEFB
+            card "/:id/assets" as sub2 #BBDEFB
+            card "/:id/references-direct" as sub3 #BBDEFB
+        }
+        
+        rectangle "/admin/references" as references {
+            card "CRUD Operations" as ref1 #BBDEFB
+        }
+        
+        rectangle "/admin/assets" as assets {
+            card "GET /" as asset1 #BBDEFB
+            card "POST /upload" as asset2 #BBDEFB
+            card "POST /bulk-upload" as asset3 #BBDEFB
+            card "DELETE /:id" as asset4 #BBDEFB
+        }
+        
+        rectangle "/admin/about-references" as aboutRefs {
+            card "CRUD + Reorder" as about1 #BBDEFB
+        }
+        
+        rectangle "/admin/reference-junctions" as refJunc {
+            card "/lexicon/assign" as rj1 #BBDEFB
+            card "/subculture/assign" as rj2 #BBDEFB
+            card "/culture/assign" as rj3 #BBDEFB
+        }
+    }
+    
+    ' Public Routes
+    rectangle "**Public Routes** (No Auth)" as public #E8F5E9 {
+        
+        rectangle "/public/landing" as landing {
+            card "GET /" as land1 #C8E6C9
+        }
+        
+        rectangle "/public/lexicons" as pubLex {
+            card "GET /:slug" as pl1 #C8E6C9
+        }
+        
+        rectangle "/public/subcultures" as pubSub {
+            card "GET /" as ps1 #C8E6C9
+            card "GET /:slug" as ps2 #C8E6C9
+        }
+        
+        rectangle "/public/about" as pubAbout {
+            card "GET /" as pa1 #C8E6C9
+        }
+        
+        rectangle "/public/references" as pubRef {
+            card "GET /" as pr1 #C8E6C9
+        }
+        
+        rectangle "/public/contributors" as pubCont {
+            card "GET /" as pc1 #C8E6C9
+        }
+    }
+    
+    ' Search Routes
+    rectangle "**Search Routes** (No Auth)" as search #FFF3E0 {
+        rectangle "/search" as searchRoute {
+            card "GET /global" as s1 #FFE0B2
+            card "GET /advanced" as s2 #FFE0B2
+            card "GET /references" as s3 #FFE0B2
+            card "GET /coordinator" as s4 #FFE0B2
+        }
+    }
+}
+
+@enduml
