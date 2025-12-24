@@ -569,3 +569,36 @@ export const searchLexiconWithScoring = async (query: string, fields: string[], 
 
   return scoredResults.slice(0, limit);
 };
+
+// Helper functions for analysis
+export const checkLexiconExists = async (params: { kata?: string; makna?: string }) => {
+  const where: any = {};
+  if (params.kata) {
+    where.OR = [
+      { lexiconWord: { contains: params.kata, mode: 'insensitive' } },
+      { ipaInternationalPhoneticAlphabet: { contains: params.kata, mode: 'insensitive' } },
+      { transliteration: { contains: params.kata, mode: 'insensitive' } }
+    ];
+  }
+  if (params.makna) {
+    where.OR = where.OR || [];
+    where.OR.push(
+      { etymologicalMeaning: { contains: params.makna, mode: 'insensitive' } },
+      { culturalMeaning: { contains: params.makna, mode: 'insensitive' } },
+      { commonMeaning: { contains: params.makna, mode: 'insensitive' } },
+      { translation: { contains: params.makna, mode: 'insensitive' } }
+    );
+  }
+  const count = await prisma.lexicon.count({ where });
+  return count > 0;
+};
+
+export const checkDomainExists = async (domainId: number) => {
+  const count = await prisma.codificationDomain.count({ where: { domainId } });
+  return count > 0;
+};
+
+export const checkCultureExists = async (cultureId: number) => {
+  const count = await prisma.culture.count({ where: { cultureId } });
+  return count > 0;
+};

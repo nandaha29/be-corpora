@@ -1,0 +1,117 @@
+version: 1
+name: Leksikon API Black Box Testing
+requests:
+  - name: Login - Email Kosong
+    method: POST
+    url: http://localhost:3000/api/v1/admin/auth/login
+    headers:
+      Content-Type: application/json
+    body:
+      type: json
+      data: |
+        {
+          "email": "",
+          "password": "password123"
+        }
+
+  - name: Login - Email Format Salah
+    method: POST
+    url: http://localhost:3000/api/v1/admin/auth/login
+    headers:
+      Content-Type: application/json
+    body:
+      type: json
+      data: |
+        {
+          "email": "invalid-email",
+          "password": "password123"
+        }
+
+  - name: Login - Password Salah
+    method: POST
+    url: http://localhost:3000/api/v1/admin/auth/login
+    headers:
+      Content-Type: application/json
+    body:
+      type: json
+      data: |
+        {
+          "email": "admin@ub.ac.id",
+          "password": "wrongpassword"
+        }
+
+  - name: Login - Akun Nonaktif
+    method: POST
+    url: http://localhost:3000/api/v1/admin/auth/login
+    headers:
+      Content-Type: application/json
+    body:
+      type: json
+      data: |
+        {
+          "email": "inactive@ub.ac.id",
+          "password": "password123"
+        }
+
+  - name: Login - Sukses
+    method: POST
+    url: http://localhost:3000/api/v1/admin/auth/login
+    headers:
+      Content-Type: application/json
+    body:
+      type: json
+      data: |
+        {
+          "email": "admin@ub.ac.id",
+          "password": "Password123"
+        }
+
+  - name: Bulk Import - Sukses
+    method: POST
+    url: http://localhost:3000/api/v1/admin/leksikons/import
+    headers:
+      Authorization: Bearer YOUR_TOKEN_HERE
+    body:
+      type: form-data
+      data:
+        - key: file
+          type: file
+          value: ./test_import_dummy.csv
+
+  - name: Advanced Search - Query Saja
+    method: GET
+    url: http://localhost:3000/api/v1/search/advanced
+    params:
+      kata: test
+
+  - name: Advanced Search - Query + Domain
+    method: GET
+    url: http://localhost:3000/api/v1/search/advanced
+    params:
+      kata: test
+      dk_id: "1"
+
+  - name: Advanced Search - Query + Status
+    method: GET
+    url: http://localhost:3000/api/v1/search/advanced
+    params:
+      kata: test
+      status: PUBLISHED
+
+  - name: Advanced Search - Multiple Filters
+    method: GET
+    url: http://localhost:3000/api/v1/search/advanced
+    params:
+      kata: test
+      dk_id: "1"
+      culture_id: "2"
+      status: PUBLISHED
+      page: "1"
+      limit: "10"
+
+  - name: Advanced Search - No Results
+    method: GET
+    url: http://localhost:3000/api/v1/search/advanced
+    params:
+      kata: nonexistentword12345</content>
+<parameter name="filePath">d:\my-code\1_home\leksikon-proj\leksikon-be-2\leksikon-api-blackbox.bru

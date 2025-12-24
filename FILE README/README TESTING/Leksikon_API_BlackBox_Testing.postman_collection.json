@@ -1,0 +1,308 @@
+{
+  "info": {
+    "name": "Leksikon API Black Box Testing",
+    "description": "Collection for black box testing of Leksikon API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login - Email Kosong",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"\", \"password\": \"password123\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/v1/admin/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "admin", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Email Format Salah",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"invalid-email\", \"password\": \"password123\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/v1/admin/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "admin", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Password Salah",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@ub.ac.id\", \"password\": \"wrongpassword\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/v1/admin/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "admin", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Akun Nonaktif",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"inactive@ub.ac.id\", \"password\": \"password123\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/v1/admin/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "admin", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Sukses",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@ub.ac.id\", \"password\": \"Password123\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/v1/admin/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "admin", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bulk Import",
+      "item": [
+        {
+          "name": "Import Leksikon - Sukses",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer YOUR_TOKEN_HERE",
+                "description": "Replace with actual token from login response"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ["test_import_dummy.csv"]
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/v1/admin/leksikons/import",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "admin", "leksikons", "import"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Advanced Search",
+      "item": [
+        {
+          "name": "Search - Query Saja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/search/advanced?kata=test",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "search", "advanced"],
+              "query": [
+                {
+                  "key": "kata",
+                  "value": "test"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search - Query + Domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/search/advanced?kata=test&dk_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "search", "advanced"],
+              "query": [
+                {
+                  "key": "kata",
+                  "value": "test"
+                },
+                {
+                  "key": "dk_id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search - Query + Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/search/advanced?kata=test&status=PUBLISHED",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "search", "advanced"],
+              "query": [
+                {
+                  "key": "kata",
+                  "value": "test"
+                },
+                {
+                  "key": "status",
+                  "value": "PUBLISHED"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search - Multiple Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/search/advanced?kata=test&dk_id=1&culture_id=2&status=PUBLISHED&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "search", "advanced"],
+              "query": [
+                {
+                  "key": "kata",
+                  "value": "test"
+                },
+                {
+                  "key": "dk_id",
+                  "value": "1"
+                },
+                {
+                  "key": "culture_id",
+                  "value": "2"
+                },
+                {
+                  "key": "status",
+                  "value": "PUBLISHED"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search - No Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/search/advanced?kata=nonexistentword12345",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "v1", "search", "advanced"],
+              "query": [
+                {
+                  "key": "kata",
+                  "value": "nonexistentword12345"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    }
+  ]
+}</content>
+<parameter name="filePath">d:\my-code\1_home\leksikon-proj\leksikon-be-2\Leksikon_API_BlackBox_Testing.postman_collection.json

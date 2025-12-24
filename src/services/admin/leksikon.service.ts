@@ -956,47 +956,86 @@ export const bulkImportLeksikonsFromCSV = async (filePath: string) => {
   return new Promise<typeof results>((resolve, reject) => {
     const data: any[] = [];
 
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on('data', (row) => {
-        console.log('CSV row received:', row);
-        data.push(row);
-      })
-      .on('end', async () => {
-        console.log('CSV parsing completed. Total rows:', data.length);
-        try {
-          const validData: any[] = [];
-          const batchSize = 100;
+    const headers = [
+      'lexiconWord',
+      'ipaInternationalPhoneticAlphabet', 
+      'transliteration',
+      'etymologicalMeaning',
+      'culturalMeaning',
+      'commonMeaning',
+      'translation',
+      'variant',
+      'variantTranslations',
+      'otherDescription',
+      'domainId',
+      'contributorId'
+    ];
 
-          // Log first row to see what headers we're working with
-          if (data.length > 0) {
-            // console.log('CSV Headers detected:', Object.keys(data[0]));
-          }
+    // Simple CSV parser
+    fs.readFile(filePath, 'utf8', async (err, content) => {
+      if (err) {
+        console.error('Error reading file:', err);
+        reject(err);
+        return;
+      }
+
+      const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      console.log('CSV lines:', lines.length);
+
+      // Parse header row
+      let csvHeaders: string[] = [];
+      let dataLines: string[] = [];
+
+      if (lines.length > 0) {
+        // Check if first line contains header
+        const firstLine = lines[0];
+        if (firstLine && (firstLine.includes('Leksikon') || firstLine.includes('lexiconWord') || firstLine.includes('lexicon_word'))) {
+          // Parse header row
+          csvHeaders = firstLine.split(',').map(h => h.trim().replace(/"/g, ''));
+          dataLines = lines.slice(1);
+          console.log('Detected headers:', csvHeaders);
+        } else {
+          // No header, use default headers
+          csvHeaders = headers;
+          dataLines = lines;
+        }
+      }
+
+      console.log('Data lines:', dataLines.length);
+
+      for (const line of dataLines) {
+        const values = line.split(',').map(val => val.trim().replace(/^"|"$/g, '')); // Remove surrounding quotes
+        console.log('Parsed values:', values);
+        const row: any = {};
+
+        // Map using header names from CSV
+        csvHeaders.forEach((csvHeader, index) => {
+          const mappedField = headerMapping[csvHeader] || csvHeader; // Use mapping or original name
+          row[mappedField] = values[index] || '';
+        });
+
+        console.log('Mapped row:', row);
+        data.push(row);
+      }
+
+      console.log('Total data rows:', data.length);
+      try {
+        const validData: any[] = [];
+        const batchSize = 100;
+
+        // Log first row to see what we're working with
+        if (data.length > 0) {
+          console.log('First row:', data[0]);
+        }
           
           for (const row of data) {
             // Map headers to expected field names (case-insensitive, whitespace-tolerant)
-            const mappedRow: any = {};
-            for (const [key, value] of Object.entries(row)) {
-              // Normalize key: trim and remove BOM if present
-              const normalizedKey = key.trim().replace(/^\uFEFF/, '');
-              
-              // Try exact match first
-              let mappedKey: string = headerMapping[normalizedKey] || '';
-              
-              // If no exact match, try case-insensitive match
-              if (!mappedKey) {
-                const lowerKey = normalizedKey.toLowerCase();
-                const foundKey = Object.keys(headerMapping).find(
-                  h => h.toLowerCase().trim() === lowerKey
-                );
-                mappedKey = foundKey ? (headerMapping[foundKey] || normalizedKey) : normalizedKey;
-              }
-              
-              mappedRow[mappedKey] = value;
-            }
+            const mappedRow: any = row; // Since headers are explicit, row already has correct keys
             
             // console.log('Original row:', row);
+            console.log('Original row:', row);
             // console.log('Mapped row:', mappedRow);
+            console.log('Mapped row:', mappedRow);
 
             try {
               // Validate row data
@@ -1135,11 +1174,6 @@ export const bulkImportLeksikonsFromCSV = async (filePath: string) => {
           console.error('Error:', error);
           reject(error);
         }
-      })
-      .on('error', (error) => {
-        console.error('=== CSV PARSING ERROR ===');
-        console.error('Error:', error);
-        reject(error);
       });
   });
 };

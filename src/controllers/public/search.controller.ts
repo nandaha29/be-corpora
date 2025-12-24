@@ -91,10 +91,56 @@ export const advancedSearch = async (req: Request, res: Response) => {
 
     const results = await searchService.advancedSearch(params);
 
+    let message = 'Advanced search completed successfully';
+    let analysis = null;
+
+    if (results.length === 0) {
+      analysis = {
+        reason: 'No matching lexicons found',
+        suggestions: [] as string[]
+      };
+
+      // Check if any lexicons exist with the provided kata
+      if (params.kata) {
+        const kataExists = await searchService.checkLexiconExists({ kata: params.kata });
+        if (!kataExists) {
+          analysis.suggestions.push(`No lexicons found with kata "${params.kata}"`);
+        } else {
+          analysis.suggestions.push(`Lexicons with kata "${params.kata}" exist, but filters don't match`);
+        }
+      }
+
+      // Check domain
+      if (params.dk_id) {
+        const domainExists = await searchService.checkDomainExists(params.dk_id);
+        if (!domainExists) {
+          analysis.suggestions.push(`Domain with id ${params.dk_id} does not exist`);
+        }
+      }
+
+      // Check culture
+      if (params.culture_id) {
+        const cultureExists = await searchService.checkCultureExists(params.culture_id);
+        if (!cultureExists) {
+          analysis.suggestions.push(`Culture with id ${params.culture_id} does not exist`);
+        }
+      }
+
+      // Check status
+      if (params.status) {
+        analysis.suggestions.push(`Check if lexicons have status "${params.status}"`);
+      }
+
+      if (analysis.suggestions.length === 0) {
+        analysis.suggestions.push('Try adjusting your search filters');
+      }
+    }
+
     return res.status(200).json({
       success: true,
-      message: 'Advanced search completed successfully',
+      message,
       data: results,
+      ...(analysis && { analysis }),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

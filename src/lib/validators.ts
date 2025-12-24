@@ -64,7 +64,7 @@ export const adminRegisterSchema = z.object({
 });
 
 export const adminLoginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
+  email: z.string().refine(val => val.length > 0, { message: "Email is required" }).email({ message: "Invalid email address" }),
   password: z.string().min(1, { message: "Password is required" }),
 });
 
